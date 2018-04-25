@@ -1,0 +1,3 @@
+# Ignore resources except readme
+resources/*
+!resources/README.md
