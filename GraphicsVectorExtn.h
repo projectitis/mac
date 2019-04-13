@@ -30,7 +30,6 @@
 #define _MAC_GRAPHICSVECTOREXTNH_ 1
 
 #include "GraphicsExtension.h"
-#include <agg2d.h>
 
 /**
  * mac (or μac) stands for "Microprocessor Adventure Creator"
@@ -58,10 +57,32 @@ namespace mac{
 		JOIN_ROUND,
 		JOIN_BEVEL
 	} joinStyle;
+
+	/**
+	 * Defines a span edge for rendering polygons
+	 **/
+	typedef struct SpanEdgeS {
+		float x1;		// X position of start
+		float y1;		// Y position of start
+		float x2;		// X position of end
+		float y2;		// Y position of end
+		float dx;
+		float dy;
+		float g;		// Gradient
+		float ga;		// abs(gradient)
+		float gi;		// 1/gradient (inverse)
+		float gia;		// abs(1/gradient)
+		boolean steep;
+
+		// Temp vars
+		boolean solid;	// Flag that pixels should be solid
+		float x;		// Actual x position
+		uint32_t cx;	// X coord
+		float pc;		// Pixel coverage
+	} SpanEdge;
 	
 	/**
-	 * Adds vector drawing functions to the Graphics library via anti-grain geometry (AGG).
-	 * Many thanks to the grate work of the late Maxim "mcseem" Shemanarev: http://www.antigrain.com/
+	 * Adds vector drawing functions to the Graphics library
 	 */
 	class GraphicsVectorExtn: public GraphicsExtension {
 		public:
@@ -91,8 +112,8 @@ namespace mac{
 			 * @param	join		Join style of line
 			 **/
 			void lineStyle(
-				color color,
-				alpha alpha = 255,
+				uint32_t rgb,
+				float alpha = 1,
 				float thickness = 1,
 				capStyle cap = CAP_ROUND,
 				joinStyle join = JOIN_ROUND
@@ -109,8 +130,8 @@ namespace mac{
 			 * @param	alpha	Alpha from 0 to 1
 			 **/
 			void fillStyle(
-				color color,
-				alpha alpha = 255
+				uint32_t rgb,
+				float alpha = 1
 			);
 			
 			/**
@@ -152,20 +173,73 @@ namespace mac{
 				float x,
 				float y
 			);
+
+			/**
+			 * Triangle
+			 * @param x0 	First point x
+			 * @param y0 	First point y
+			 * @param x1 	Second point x
+			 * @param y1 	Second point y
+			 * @param x2	Third point x
+			 * @param y2 	Third point y
+			 */
+			void triangle(
+				float x0, float y0,
+				float x1, float y1,
+				float x2, float y2
+			);
+			
+			void test();
 			
 		protected:
 			
 			/**
-			 * Instance of the AGG 2D class that does all the work
-			 **/
-			Agg2D *_agg2D;
-			
-			/**
-			 * Cursor position
+			 * Drawing state vars
 			 **/
 			float _cursorX = 0;
 			float _cursorY = 0;
+			boolean _antialias = true;
+			boolean _lineState = true;
+			boolean _fillState = true;
+			uint32_t _lineColorExp = 0; // Pre-expanded
+			uint8_t _lineAlphaPre = 32; // Pre-multiplied
+			float _lineThickness = 1.0;
+			capStyle _lineCap = CAP_SQUARE;
+			joinStyle _lineJoin = JOIN_BEVEL;
+			uint32_t _fillColorExp = 0; // Pre-expanded
+			uint8_t _fillAlphaPre = 32; // Pre-multiplied
 
+			/**
+			 * Scanline temp vars
+			 */
+			float _y1;
+			float _y2;
+			uint32_t _cy1;
+			uint32_t _cy2;
+			float _solid;
+			float _solidPre;
+
+			/**
+			 * Create a span edge (line segment) for rendering a polygon
+			 * @param x1 [description]
+			 * @param y1 [description]
+			 * @param x2 [description]
+			 * @param y2 [description]
+			 */
+			void _createSpanEdge( SpanEdge* edge, float x1, float y1, float x2, float y2 );
+
+			/**
+			 * A span is a left line and a right line, made up of one or more segments, that
+			 * have a solid fill between them. The left and right lines may be made up of
+			 * different numbers of segments, but the left and right lines MUST start and finish
+			 * on the same y coordinates as each other at the start and end of the span.
+			 **/
+			void _span( SpanEdge* edges, uint32_t len );
+
+			/**
+			 * Draw a single horizontal line of a span
+			 */
+			void _scanline( uint32_t cy, SpanEdge* left, SpanEdge* right );
 	};
 	
 } // namespace

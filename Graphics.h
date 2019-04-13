@@ -43,17 +43,14 @@
 namespace mac{
 	
 	/**
-	 * A device and display independent graphics library. All the methods in
-	 * this library work directly on an in-memory framebuffer. It is up to the
-	 * user to write the framebuffer to the display.
+	 * A device- and display- independent graphics library. All the methods in
+	 * this library work directly on an in-memory framebuffer.
 	 */
 	class Graphics {
 		
 		public:
 			/**
-			 * Constructor. Must pass in a display adapter for the hardware display being used. Can optionally
-			 * pass in any number of supported extensions (current "bitmap" and "vector", but in the future could
-			 * include "video", "mandelbrot" etc).
+			 * Constructor. Must pass in a display adapter for the hardware display being used.
 			 * @param	display			A Display instance for the hardware display being used
 			 **/
 			Graphics( Display* display );
@@ -74,6 +71,45 @@ namespace mac{
 			 * Fill the framebuffer with a color
 			 **/
 			void clear( color color );
+			
+			/**
+			 * Get a pixel
+			 **/
+			inline uint16_t pixel(
+				uint32_t x,
+				uint32_t y
+			){
+				return _framebuffer.buffer[_framebuffer.stride*y + x];
+			}
+			
+			/**
+			 * Solid pixel
+			 **/
+			inline void pixel(
+				uint32_t x,
+				uint32_t y,
+				color color
+			){
+				_framebuffer.buffer[_framebuffer.stride*y + x] = color;
+			}
+			
+			/**
+			 * Blend a pixel
+			 * See Common.h alphaBlendRGB565 for explanation
+			 **/
+			inline void pixel(
+				uint32_t x,
+				uint32_t y,
+				color color,
+				alpha alpha
+			){
+				uint32_t fbo = _framebuffer.stride*y + x;
+				alpha = ( alpha + 4 ) >> 3; // Reduce to 0-31
+				uint32_t bg = ((uint32_t)_framebuffer.buffer[fbo] | ((uint32_t)_framebuffer.buffer[fbo] << 16)) & 0b00000111111000001111100000011111;
+				uint32_t fg = ((uint32_t)color | ((uint32_t)color << 16)) & 0b00000111111000001111100000011111;
+				uint32_t result = ((((fg - bg) * alpha) >> 5) + bg) & 0b00000111111000001111100000011111;
+				_framebuffer.buffer[fbo] = (uint16_t)((result >> 16) | result);
+			}
 			
 			/***
 			 *** EXTENSIONS
@@ -135,9 +171,23 @@ namespace mac{
 			 * @param	dst		The destination buffer
 			 **/
 			void _copyArea( BufferRect* src, uint16_t* dst );
-			uint16_t* _copyAreaSrc;
-			uint16_t* _copyAreaDst;
-			int16_t _copyAreaIter;
+			
+			/**
+			 * A span is two lines (one on the left and one on the right) that define a filled
+			 * area between them. The top and bottom of the span are either flat, or come together
+			 * at a point. The span is used as the basis of drawing primitives.
+			 * @param	spans	An array of connected spans to draw
+			 * @param	count	The number of spans in the array
+			 * @param	colorExpanded	Color in format 00000gggggg00000rrrrr000000bbbbb
+			 * @param	alphaReduced	Alpha in range 0-31
+			 **
+			void _span(
+				SpanF* spans,
+				uint32_t count,
+				uint32_t colorExpanded,
+				uint8_t alphaReduced
+			);
+			*/
 			
 	};
 	

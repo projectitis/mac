@@ -1,3 +1,4 @@
 # Ignore resources except readme
 resources/*
 !resources/README.md
+agg-based/

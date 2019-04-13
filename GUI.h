@@ -1,5 +1,5 @@
 /**
- * Graphics library for "mac/μac"
+ * GUI library for "mac/μac"
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  *
@@ -26,10 +26,10 @@
  * SOFTWARE.
  */	
  
-#ifndef _MAC_GRAPHICSEXTNH_
-#define _MAC_GRAPHICSEXTNH_ 1
+#ifndef _MAC_GUIH_
+#define _MAC_GUIH_ 1
 
-#include "Common.h"
+#include "Graphics.h"
 
 /**
  * mac (or μac) stands for "Microprocessor Adventure Creator"
@@ -41,43 +41,28 @@
 namespace mac{
 	
 	/**
-	 * A base class for extending the Graphics object with additional features.
+	 * A device- and display- independent GUI library. All the methods in
+	 * this library work directly on an in-memory framebuffer.
 	 */
-	class GraphicsExtension {
+	class GUI {
+		
 		public:
 			/**
-			 * Called by Graphics to initialise the extension
+			 * Constructor. Must pass in a graphics object to render the interface to.
+			 * @param	graphics			A Graphics instance to render to
 			 **/
-			void init( BufferRect* framebuffer ){
-				_framebuffer = framebuffer;
-			}
-			
-		protected:
+			GUI( Graphics* graphics );
 			
 			/**
-			 * The display instance for the hardware
+			 * Destructor
 			 **/
-			BufferRect* _framebuffer;
+			~GUI();
 
+		protected:
 			/**
-			 * Blend a pixel
-			 * Same as Graphics::pixel but works with premultiplied values to optise inner drawing loops.
-			 * See Common.h alphaBlendRGB565 for explanation
-			 * @param	colorExpanded	Color in format 00000gggggg00000rrrrr000000bbbbb
-			 * @param	alphaReduced	Alpha in range 0-31
+			 * A list of display objects
 			 **/
-			inline void _pixelBlendExp(
-				uint32_t x,
-				uint32_t y,
-				uint32_t colorExpanded,
-				uint8_t alphaReduced
-			){
-				uint32_t fbo = _framebuffer->stride*y + x;
-				uint32_t bg = _framebuffer->buffer[fbo];
-				bg = (bg | (bg << 16)) & 0b00000111111000001111100000011111;
-				uint32_t result = ((((colorExpanded - bg) * alphaReduced) >> 5) + bg) & 0b00000111111000001111100000011111;
-				_framebuffer->buffer[fbo] = (color)((result >> 16) | result);
-			}
+			DisplayObject* _displayList;
 			
 	};
 	

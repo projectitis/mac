@@ -33,14 +33,14 @@ mac has lofty goals. The mac project has the following planned components:
 	 - Vertical sync/Tearing Effect (TE) support (0%)
  - Graphics
 	 - **Basic framebuffer operations (copy, clear etc) - complete (2018-04-24)**
-	 - Sprite blitting: RGB 565 (25%)
+	 - Sprite blitting: RGB 565 (90%)
 	 - Sprite blitting: RGBA 5658 (10%)
 	 - Sprite blitting: RGBA (0%)
 	 - Sprite animation (10%)
-	 - AGG high quality anti-aliased vector drawing support (10%)
+	 - Fast antialiased vector drawing: Thin lines (100%), Triangles (100%), Complex ploygons (50%), Thick lines (0%)
 	 - Double-buffer support (0%)
  - XM audio player
-	 - **Loading and playback - complete**
+	 - Loading and playback - (90% - errors. Only very few mods work)
 	 - Loading and saving to SD card (0%)
 - GUI
 	- Windows, input and output components (0%)

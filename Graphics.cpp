@@ -23,10 +23,7 @@
 namespace mac{
 	
 	/**
-	 * Constructor.
-	 * Pass in a TFT Print instance (e.g. ILI8431_t3 or ADA_GUI) which is used for
-	 * all underlying graphic calls. the GUI is actually the root display object,
-	 * which is empty. Add display objects to this one to render them.
+	 * Constructor. Must pass in a display adapter for the hardware display being used.
 	 * @param	display			A Display instance for the hardware display being used
 	 **/
 	Graphics::Graphics( Display* display ){
@@ -136,11 +133,11 @@ namespace mac{
 	 **/
 	void Graphics::_copyArea( BufferRect* src, uint16_t* dst ){
 		if ((src->w==0) || (src->h==0)) return;
-		
+
 		// Set up src and dst addresses
-		_copyAreaSrc = src->start;
-		_copyAreaDst = dst + src->y*src->stride + src->x;
-		_copyAreaIter = src->h;
+		uint16_t* _copyAreaSrc = src->start;
+		uint16_t* _copyAreaDst = dst + src->y*src->stride + src->x;
+		int16_t _copyAreaIter = src->h;
 		
 		// Copy line by line
 		while (_copyAreaIter>0){
