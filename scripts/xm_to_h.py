@@ -88,6 +88,8 @@ for file in list(resources):
 		outfile.write(outstr)
 		outfile.close()			
 				
-# Wait before exit for user to read messages
-print()
-input("Press enter to exit")
+# If called directly as as script
+if __name__ == '__main__':
+	# Wait before exit for user to read messages
+	print()
+	input("Press enter to close")

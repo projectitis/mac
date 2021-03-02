@@ -31,6 +31,7 @@
  * Modified for Teensy
  **/
  
+#pragma once
 #ifndef _MAC_EASING_H
 #define _MAC_EASING_H 1
 
@@ -39,7 +40,7 @@ namespace mac{
 	/**
 	 * Function pointer to allow specifying any easing function
 	 **/
-	typedef float (*easingFunction)( float );
+	typedef float (*EasingFunction)( float );
 
 	// Linear interpolation (no easing)
 	float easeNone( float p );

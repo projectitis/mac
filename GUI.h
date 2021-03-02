@@ -25,15 +25,23 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */	
- 
+
+#pragma once
 #ifndef _MAC_GUIH_
 #define _MAC_GUIH_ 1
 
+#include "Widget.h"
 #include "Graphics.h"
+#include "Messenger.h"
+#include "Tween.h"
+#include "Input.h"
+#include "Style.h"
+#include "PanelSet.h"
+
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -41,28 +49,85 @@
 namespace mac{
 	
 	/**
-	 * A device- and display- independent GUI library. All the methods in
-	 * this library work directly on an in-memory framebuffer.
+	 * GUI library for user interfaces
 	 */
-	class GUI {
+	class GUI: public PanelSet {
 		
 		public:
+			//static const int default_bg_color = 0x000000;
+
 			/**
-			 * Constructor. Must pass in a graphics object to render the interface to.
+			 * Constructor. Either pass ina graphics instance, or a display instance. If a
+			 * display adapter is passed in, will create the graphics object.
 			 * @param	graphics			A Graphics instance to render to
 			 **/
-			GUI( Graphics* graphics );
+			GUI( Graphics* graphics, Style* style = 0 );
+			GUI( Display* display, Style* style = 0 );
 			
 			/**
 			 * Destructor
 			 **/
 			~GUI();
 
-		protected:
 			/**
-			 * A list of display objects
+			 * The graphics object
 			 **/
-			DisplayObject* _displayList;
+			Graphics* graphics;
+
+			/**
+			 * Input
+			 **/
+			Input* input;
+
+			/**
+			 * For better performance, limit the times that the GUI can update and
+			 * render every second.
+			 * Note that update() should be called as often as possible, as this
+			 * is required for responsive inputs etc, but any graphical updates
+			 * will be limited to a slower speed. 30fps is the default.
+			 * @param fps  		Set maximum update frequency in fps. 30 is default. Set to 0 for no limit.
+			 */
+			void maxUpdateFrequency( uint8_t fps );
+
+			/**
+			 * Update the GUI
+			 */
+			void update();
+
+			/**
+			 * Render the GUI
+			 */
+			void render();
+
+			/**
+			 * Listen for event messages
+			 * @param  event The event of the message
+			 * @param  data  Any user dtaa registered with the listener
+			 * @return       Keep the listener?
+			 */
+			boolean listen( uint32_t event, void* data ) override;
+
+		protected:
+
+			/**
+			 * Called from constructor
+			 */
+			void _init( Style* style = 0 );
+			
+			/**
+			 * Flag if we are internally managing memory for certain objects
+			 */
+			boolean _manageGraphics = false;
+			boolean _manageStyle = false;
+
+			/**
+			 * Timing
+			 */
+			uint32_t _minDeltaMicros = 1/30 * 1000000; // 30fps
+			uint32_t _thisMicros;
+			uint32_t _lastMicros;
+			uint32_t _deltaMicros;
+			float _deltaSecs;
 			
 	};
 	

@@ -26,14 +26,15 @@
  * SOFTWARE.
  */	
  
+#pragma once
 #ifndef _MAC_GRAPHICSBITMAPEXTNH_
 #define _MAC_GRAPHICSBITMAPEXTNH_ 1
 
 #include "GraphicsExtension.h"
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -46,153 +47,104 @@ namespace mac{
 	class GraphicsBitmapExtn: public GraphicsExtension {
 		public:
 
-			/***
-			 *** Tilemap (various pixel formats)
-			 ***/
-
 			/**
-			 * Blit a tile from the tilemap with on/off transparency, and apply
-			 * constant alpha to the blit.
+			 * Blit a tile from the tilemap
 			 * @param 	tileMap A tilemap containing the tile data
 			 * @param 	index   The index of the tile in the map
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
-			 * @param	alpha	The alpha value (0-255)
+			 * @param	alpha	The alpha value (0.0-1.0)
 			 */
-			void blit(
-				TileMap tileMap,
+			virtual void blit(
+				const Tilemap& tilemap,
 				uint32_t index,
-				int16_t dx,
-				int16_t dy,
-				alpha alpha = 255
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1
 			);
-			
-			/***
-			 *** RGB 565 (16 bit color)
-			 ***/
-			
+
 			/**
-			 * Blit an RGB565 bitmap from memory with no alpha
-			 * @param	source	The start address of the source bitmap in memory
-			 * @param	sw		The width, in pixels, of the source bitmap
-			 * @param	sh		The height, in pixels, of the source bitmap 
+			 * Blit a bitmap
+			 * @param 	bitmap 	A bitmap containing the pixel data
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
-			 **/
-			void blitRGB565(
-				const uint16_t* source,
-				uint16_t sw,
-				uint16_t sh,
-				int16_t dx,
-				int16_t dy
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 */
+			virtual void blit(
+				Bitmap bitmap,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1
 			);
-			
+
 			/**
-			 * Blit an RGB565 bitmap from memory with on/off transparency
-			 * @param	source	The start address of the source bitmap in memory
-			 * @param	sw		The width, in pixels, of the source bitmap
-			 * @param	sh		The height, in pixels, of the source bitmap 
+			 * Blit an area of a bitmap
+			 * @param 	bitmap 	A bitmap containing the pixel data
+			 * @param 	rect 	The area of the bitmap to blit
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
-			 * @param	transparentColor		The color to use as transparent
-			 **/
-			void blitRGB565_T(
-				const uint16_t* source,
-				uint16_t sw,
-				uint16_t sh,
-				int16_t dx,
-				int16_t dy,
-				color transparentColor = RGB565_TRANSPARENT
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 */
+			virtual void blit(
+				Bitmap bitmap,
+				ClipRect* rect,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1
 			);
-			
+
 			/**
-			 * Blit an RGB565 bitmap from memory with on/off transparency, and apply
-			 * constant alpha to the blit.
-			 * @param	source	The start address of the source bitmap in memory
-			 * @param	sw		The width, in pixels, of the source bitmap
-			 * @param	sh		The height, in pixels, of the source bitmap 
+			 * Blit a tile from the tilemap as a stamp
+			 * @param 	color 	The color of the stamp
+			 * @param 	tileMap A tilemap containing the tile data
+			 * @param 	index   The index of the tile in the map
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
-			 * @param	transparentColor		The color to use as on/off alpha
-			 * @param	alpha	The alpha value (0-255)
-			 **/
-			void blitRGB565_A(
-				const uint16_t* source,
-				uint16_t sw,
-				uint16_t sh,
-				int16_t dx,
-				int16_t dy,
-				alpha alpha,
-				color transparentColor = RGB565_TRANSPARENT
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 */
+			virtual void stamp(
+				color888 color,
+				const Tilemap& tilemap,
+				uint32_t index,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1
 			);
-			
-			/***
-			 *** RGBA 5658 (16 bit color, 8 bits alpha)
-			 ***/
-			
+
 			/**
-			 * Blit an RGBA5658 bitmap from memory (RGB565 plus alpha, 24bit packed format)
-			 * @param	source	The start address of the source bitmap in memory
-			 * @param	sw		The width, in pixels, of the source bitmap
-			 * @param	sh		The height, in pixels, of the source bitmap 
+			 * Blit a bitmap as a stamp
+			 * @param 	color 	The color of the stamp
+			 * @param 	bitmap 	A bitmap containing the pixel data
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
-			 **/
-			void blitRGBA5658(
-				uint8_t* source,
-				uint16_t sw,
-				uint16_t sh,
-				int16_t dx,
-				int16_t dy
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 */
+			virtual void stamp(
+				color888 color,
+				Bitmap bitmap,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1
 			);
-			
-			/***
-			 *** RGBA 8888
-			 ***/
-			
+
 			/**
-			 * Blit an RGBA 32bit bitmap from memory (8bits per channel plus alpha)
-			 * @param	source	The start address of the source bitmap in memory
-			 * @param	sw		The width, in pixels, of the source bitmap
-			 * @param	sh		The height, in pixels, of the source bitmap 
+			 * Blit an area of a bitmap as a stamp
+			 * @param 	color 	The color of the stamp
+			 * @param 	bitmap 	A bitmap containing the pixel data
+			 * @param 	rect 	The area of the bitmap to blit
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
-			 **/
-			void blitRGBA(
-				uint8_t* source,
-				uint16_t sw,
-				uint16_t sh,
-				int16_t dx,
-				int16_t dy
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 */
+			virtual void stamp(
+				color888 color,
+				Bitmap bitmap,
+				ClipRect* rect,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1
 			);
 			
-			/***
-			 *** RGB 888
-			 ***/
-			
-			/**
-			 * Blit an RGB 24bit bitmap from memory (8bits per channel)
-			 * @param	source	The start address of the source bitmap in memory
-			 * @param	sw		The width, in pixels, of the source bitmap
-			 * @param	sh		The height, in pixels, of the source bitmap 
-			 * @param	dx		The destination x coord within the framebuffer
-			 * @param	dy		The destination y coord within the framebuffer
-			 **/
-			void blitRGB(
-				uint8_t* source,
-				uint16_t sw,
-				uint16_t sh,
-				int16_t dx,
-				int16_t dy
-			);
-		
-		protected:
-			
-			/**
-			 * Temporary values while calculating clipping
-			 **/
-			int16_t _mdx;
-			int16_t _mdy;
 	};
 	
 } // namespace

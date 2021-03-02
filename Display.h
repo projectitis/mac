@@ -26,23 +26,16 @@
  * SOFTWARE.
  */
  
+#pragma once
 #ifndef _MAC_DISPLAYH_
 #define _MAC_DISPLAYH_ 1
 
 #include "Common.h"
+#include "FrameBuffer.h"
 
 /**
- * TEENSY VERSION SUPPORT
- * Because of the memory requirements of a framebuffer (154k) this library will only
- * work with Teensy 3.5 (192k RAM) and Teensy 3.6 (512k RAM).
- */
-#if !defined(__MK64FX512__) && !defined(__MK66FX1M0__)
-#error "The mac::Display library will only work with Teensy 3.5 or 3.6"
-#endif
-
-/**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -53,6 +46,15 @@ namespace mac{
 	 * Make use of DMA for framebuffer transfer to the display. 0 or 1
 	 **/
 	#define DISPLAY_USE_DMA 1
+
+	/**
+	 * Pixel scaling.
+	 */
+	enum PixelScale {
+	    pixelScale_1x1 		= 1,
+	    pixelScale_2x2 		= 2,
+	    pixelScale_4x4 		= 4
+	};
 
 	/**
 	 * Display base class.
@@ -72,28 +74,20 @@ namespace mac{
 			
 			/**
 			 * Update the framebuffer to the display
-			 * @param	buffer		A pointer to the buffer
-			 * @param	rect		If not NULL, the portion of the buffer to refresh
 			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 			 **/
 			virtual void update(
-				uint16_t* buffer,
-				BufferRect* rect = NULL,
 				boolean continuous = false
 			);
-			
-			/**
-			 * Stop the display from continuously refreshing
-			 **/
-			virtual void stopRefresh( void );
-			
-			/**
-			 * Wait until the current refresh is complete. Not recommended if you have other
-			 * (usually non-graphics) code that shouldn't be delayed!
-			 **/
-			virtual void waitForRefresh( void );
-			
 
+			/**
+			 * Update an area of the framebuffer to the display
+			 * @param	rect		The portion of the buffer to refresh
+			 **/
+			virtual void updateRect(
+				ClipRect* rect
+			);
+			
 			/**
 			 * Width of the display in pixels
 			 **/
@@ -103,6 +97,16 @@ namespace mac{
 			 * Height of the display in pixels
 			 **/
 			int16_t height;
+
+			/**
+			 * The pixel format of the display
+			 */
+			PixelFormat pixelFormat;
+
+			/**
+			 * The framebuffer
+			 **/
+			FrameBuffer* framebuffer;
 	};
 
 } // namespace

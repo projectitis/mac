@@ -5,57 +5,35 @@
  **/
 
 #include "GraphicsVectorExtn.h"
+#include <Math.h>
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
  **/
 namespace mac{
-	
-	/**
-	 * Constructor
-	 **/
-	GraphicsVectorExtn::GraphicsVectorExtn(){
-		
-	}
-	
-	/**
-	 * Destructor
-	 **/
-	GraphicsVectorExtn::~GraphicsVectorExtn(){
-		
-	}
-	
-	/**
-	 * Called by the Graphics object internally. Override base method.
-	 * @param	graphics	The graphics object passes itself as a reference
-	 **/
-	void GraphicsVectorExtn::init( BufferRect* framebuffer ){
-		GraphicsExtension::init( framebuffer );
-		
-	}
-	
+
 	/**
 	 * Set the line style for subsequent drawing calls
-	 * @param	color		Color in RGB565 format
-	 * @param	alpha		Alpha from 0 to 255
+	 * @param	color		Color in 24-bit RGB888 format
+	 * @param	alpha		Alpha from 0.0 - 1.0
 	 * @param	thickness	Thickness of line in pixels
 	 * @param	cap			Cap style of line
 	 * @param	join		Join style of line
 	 **/
 	void GraphicsVectorExtn::lineStyle(
-		uint32_t rgb,
-		float alpha,
+		color888 c,
+		alpha alpha,
 		float thickness,
 		capStyle cap,
 		joinStyle join
 	){
-		_lineColorExp = ((rgb & 0xF80000) >> 8) | ((rgb & 0xFC00) << 11) | ((rgb & 0xF8) >> 3);
+		alpha = alphaClamp( alpha );
+		_lineColor = _framebuffer->prepareColor( c, alpha );
 		_lineThickness = thickness;
-		_lineAlphaPre = ((uint8_t)(alpha*255)+4) >> 3;
 		_lineCap = cap;
 		_lineJoin = join;
 		if ((_lineThickness>0) && (alpha>0)){
@@ -80,11 +58,11 @@ namespace mac{
 	 * @param	alpha	Alpha from 0 to 1
 	 **/
 	void GraphicsVectorExtn::fillStyle(
-		uint32_t rgb,
+		color888 c,
 		float alpha
 	){
-		_fillColorExp = ((rgb & 0xF80000) >> 8) | ((rgb & 0xFC00) << 11) | ((rgb & 0xF8) >> 3);
-		_fillAlphaPre = ((uint8_t)(alpha*255)+4) >> 3;
+		alpha = alphaClamp( alpha );
+		_fillColor = _framebuffer->prepareColor( c, alpha );
 		_fillState = (alpha>0);
 	}
 	
@@ -100,11 +78,8 @@ namespace mac{
 	 * @param	x		X Position of end of line
 	 * @param	y		Y position of end of line
 	 **/
-	void GraphicsVectorExtn::lineTo(
-		float x,
-		float y
-	){
-		line( _cursorX, _cursorY, x, y );
+	void GraphicsVectorExtn::lineTo( VertexF p ){
+		line( _cursor, p );
 	}
 	
 	/**
@@ -112,259 +87,239 @@ namespace mac{
 	 * @param	x		X Position of cursor
 	 * @param	y		Y position of cursor
 	 **/
-	void GraphicsVectorExtn::moveTo(
-		float x,
-		float y
-	){
-		_cursorX = x;
-		_cursorY = y;
+	void GraphicsVectorExtn::moveTo( VertexF p ){
+		_cursor.x = p.x;
+		_cursor.y = p.y;
 	}
 
 	/**
-	 * Draw a line from one point to another. Based on wu's algorithm
+	 * Draw a line from one point to another.
 	 * @param	x1		X Position of start of line
 	 * @param	y1		Y position of start of line
 	 * @param	x2		X Position of end of line
 	 * @param	y2		Y position of end of line
 	 **/
-	void GraphicsVectorExtn::line(
-		float x0, float y0,
-		float x1, float y1
-	){
-		_cursorX = x1;
-		_cursorY = y1;
+	void GraphicsVectorExtn::line( VertexF p1, VertexF p2 ){
+		_cursor.x = p2.x;
+		_cursor.y = p2.y;
 
 		if (!_lineState) return;
+		if (_lineThickness<=0) return;
 
+		// Draw a 1-pixel wide line
+		if (_lineThickness <= 1){
+			_line( p1, p2 );
+			return;
+		}
+
+		// Draw a rectangle if line exactly horizontal
 		/*
-		// XXX: If the line is thick, draw a rectanglular polygon
-		if (_lineThickness > 1){
-			rectangle();
+		if (p1.y == p2.y){
+			if (p1.x > p2.x) swap(p1,p2);
+			VertexF p3 = { p1.x, p1.y - _lineThickness*0.5 }; // top-left
+			VertexF p4 = { p2.x, p2.y + _lineThickness*0.5 }; // bottom-right
+			rectangle( p3, p4 );
+			return;
+		}
+
+		// Draw a rectangle if line exactly vertical
+		if (p1.x == p2.x){
+			if (p1.y > p2.y) swap(p1,p2);
+			VertexF p3 = { p1.x - _lineThickness*0.5, p1.y }; // top-left
+			VertexF p4 = { p2.x + _lineThickness*0.5, p2.y }; // bottom-right
+			rectangle( p3, p4 );
 			return;
 		}
 		*/
-		
-		// Split ARGB to alpha and color pre-multiplied for blending 
-		uint8_t alpha = _lineAlphaPre;
 
-		// If the line is very thin, simply modify the alpha to make it appear thinner. The actual algorith
-		// should probably not be linear, but this works ok.
-		if (_lineThickness < 1){
-			alpha = (uint8_t)(alpha * _lineThickness + 0.5);
+		// XXX:
+		// Calculate corners of rotated rect (line with thickness)
+		float g = -(p2.y - p1.y) / (p2.x - p1.x);
+		float a = atan2f((p2.x - p1.x),(p2.y - p1.y));
+		float dy = sinf(a) * _lineThickness * 0.5;
+		float dx = dy * g;
+		VertexF p[6] = {
+			{p1.x-dx, p1.y-dy},
+			{p1.x+dx, p1.y+dy},
+			{p2.x-dx, p2.y-dy},
+			{p2.x+dx, p2.y+dy}
+		};
+		_sortVertical( p, 4 );
+		// p[0] A
+		// p[1] B
+		p[4] = p[2]; // C
+		p[5] = p[3]; // D
+
+		// Calculate additional points to split triangles
+		float m = (p[4].y-p[0].y)/(p[4].x-p[0].x);
+		p[2] = {p[0].x + (p[1].y-p[0].y)/m, p[1].y};
+		p[3] = {p[1].x + (p[4].y-p[1].y)/m, p[4].y};
+
+		if (p[1].x > p[2].x){
+			swap(p[1],p[2]);
+			swap(p[3],p[4]);
 		}
-		
-		// Different tact for lines > 45 degrees (steep)
-		float dx = x1 - x0;
-		float dy = y1 - y0;
-		if (abs(dx) > abs(dy)){
-			// Not steep
-			if (x1 < x0){
-				swap(x0, x1);
-				swap(y0, y1);
-			}
-			
-			// Gradient of line rise/run
-			float gradient = dy / dx;
-			
-			// Pixel pair at end
-			float xs = (uint32_t)(x1 + 0.5);
-			float ys = y1 + gradient * (xs - x1);
-			float gap = (x1+0.5) - xs;
-			float f = ys - (uint32_t)ys;
-			_pixelBlendExp(
-				xs,
-				(uint32_t)ys,
-				_lineColorExp,
-				( alpha * (1 - f) * gap )
-			);
-			_pixelBlendExp(
-				xs,
-				(uint32_t)ys + 1,
-				_lineColorExp,
-				( alpha * f * gap )
-			);
-			float xe = xs;
-			
-			// Pixel pair at the start
-			xs = (uint32_t)(x0+0.5);
-			ys = y0 + gradient * (xs - x0);
-			gap = 1 - ((x0 + 0.5) - xs);
-			f = ys - (uint32_t)ys;
-			_pixelBlendExp(
-				xs,
-				(uint32_t)ys,
-				_lineColorExp,
-				( alpha * (1 - f) * gap )
-			);
-			_pixelBlendExp(
-				xs,
-				(uint32_t)ys + 1,
-				_lineColorExp,
-				( alpha * f * gap )
-			);
-			float y = ys + gradient;
-			
-			// Pixel pairs in between ends
-			for( uint32_t x = xs+1; x < xe; x++) {
-				f = y - (uint32_t)y;
-				_pixelBlendExp(
-					x,
-					(uint32_t)y,
-					_lineColorExp,
-					( alpha * (1 - f) )
-				);
-				_pixelBlendExp(
-					x,
-					(uint32_t)y + 1,
-					_lineColorExp,
-					( alpha * f )
-				);
-				y += gradient;
-			}
-			
+
+		SpanEdge* edges[6];
+		edges[0] = _createSpanEdge( p[0], p[1] );
+		edges[1] = _createSpanEdge( p[0], p[2] );
+		edges[2] = _createSpanEdge( p[1], p[3] );
+		edges[3] = _createSpanEdge( p[2], p[4] );
+		edges[4] = _createSpanEdge( p[3], p[5] );
+		edges[5] = _createSpanEdge( p[4], p[5] );
+		PreparedColor* c = _fillColor;
+		_fillColor = _lineColor;
+		_span( edges, 6 );
+		_fillColor = c;
+		_deleteSpanEdges( edges, sizeof(edges)/sizeof(edges[0]) );
+	}
+
+	/**
+	 * Draw a rectangle
+	 */
+	void GraphicsVectorExtn::rectangle( VertexF p1, VertexF p2 ){
+		// Vertices
+		// p1 top-left
+		// p2 bottom-right
+		VertexF p3 = { p2.x ,p1.y }; // top-right
+		VertexF p4 = { p1.x, p2.y }; // bottom-left
+		if (p2.y < p1.y){
+			swap(p1,p4);
+			swap(p2,p3);
 		}
-		else{
-			// Steep
-			if ( y1 < y0 ) {
-				swap(x0, x1);
-				swap(y0, y1);
-			}
-			
-			// Gradient flipped
-			float gradient = dx / dy;
-			
-			// Pixel pair at end
-			float ys = (uint32_t)(y1 + 0.5);
-			float xs = x1 + gradient * (ys - y1);
-			float gap = (y1+0.5) - ys;
-			float f = xs - (uint32_t)xs;
-			_pixelBlendExp(
-				(uint32_t)xs,
-				ys,
-				_lineColorExp,
-				( alpha * (1 - f) * gap )
-			);
-			_pixelBlendExp(
-				(uint32_t)xs + 1,
-				ys,
-				_lineColorExp,
-				( alpha * (f * gap) )
-			);
-			float ye = ys;
-			
-			// Pixel pair at the start
-			ys = (uint32_t)(y0+0.5);
-			xs = x0 + gradient * (ys - y0);
-			gap = 1 - ((y0 + 0.5) - ys);
-			f = xs - (uint32_t)xs;
-			_pixelBlendExp(
-				(uint32_t)xs,
-				ys,
-				_lineColorExp,
-				( alpha * (1 - f) * gap )
-			);
-			_pixelBlendExp(
-				(uint32_t)xs + 1,
-				ys,
-				_lineColorExp,
-				( alpha * f * gap )
-			);
-			float x = xs + gradient;
-			
-			// Pixel pairs in between ends
-			for( uint32_t y = ys+1; y < ye; y++) {
-				f = x - (uint32_t)x;
-				_pixelBlendExp(
-					(uint32_t)x,
-					y,
-					_lineColorExp,
-					( alpha * (1 - f) )
-				);
-				_pixelBlendExp(
-					(uint32_t)x+1,
-					y,
-					_lineColorExp,
-					( alpha * f )
-				);
-				x += gradient;
-			}
+
+		// Draw solid fill
+		if (_fillState){
+			SpanEdge* edges[2];
+			edges[0] = _createSpanEdge( p1, p4 );
+			edges[1] = _createSpanEdge( p3, p2 );
+			_span( edges, 2 );
+			_deleteSpanEdges( edges, sizeof(edges)/sizeof(edges[0]) );
+		}
+
+		// Draw lines
+		if (_lineState){
+			line( p1, p3 );
+			lineTo( p2 );
+			lineTo( p4 );
+			lineTo( p1 );
 		}
 	}
 	
 	/**
 	 * Triangle
 	 **/
-	void GraphicsVectorExtn::triangle(
-		float x0, float y0,
-		float x1, float y1,
-		float x2, float y2
-	){
-		// Order by Y
-		VertexF p0 = {x0,y0};
-		VertexF p1 = {x1,y1};
-		VertexF p2 = {x2,y2};
-		if (p0.y > p1.y) swap(p0,p1);
-		if (p0.y > p2.y) swap(p0,p2);
-		if (p1.y > p2.y) swap(p1,p2);
-		
-		// Flat top
-		if (p0.y == p1.y){
-			if (p0.x > p1.x) swap(p0,p1);
+	void GraphicsVectorExtn::triangle( VertexF p1, VertexF p2, VertexF p3 ){
+		// Draw solid fill
+		if (_fillState){
+			// Order by Y
+			if (p1.y > p2.y) swap(p1,p2);
+			if (p1.y > p3.y) swap(p1,p3);
+			if (p2.y > p3.y) swap(p2,p3);
+			
+			// Flat top
+			if (p1.y == p2.y){
+				if (p1.x > p2.x) swap(p1,p2);
 
-			SpanEdge* edges = new SpanEdge[2];
-			_createSpanEdge( &edges[0], p0.x,p0.y, p2.x,p2.y );
-			_createSpanEdge( &edges[1], p1.x,p1.y, p2.x,p2.y );
+				SpanEdge* edges[2];
+				edges[0] = _createSpanEdge( p1, p3 );
+				edges[1] = _createSpanEdge( p2, p3 );
+				_span( edges, 2 );
+				_deleteSpanEdges( edges, sizeof(edges)/sizeof(edges[0]) );
+			}
+			// Flat bottom
+			else if (p2.y == p3.y){
+				if (p2.x > p3.x) swap(p2,p3);
 
-			_span( edges, 2 );
+				SpanEdge* edges[2];
+				edges[0] = _createSpanEdge( p1, p2 );
+				edges[1] = _createSpanEdge( p1, p3 );
+				_span( edges, 2 );
+				_deleteSpanEdges( edges, sizeof(edges)/sizeof(edges[0]) );
+			}
+			// Point at top and bottom (and one somewhere inbetween)
+			else{
+				// Split triangle
+				float m = (p3.y-p1.y)/(p3.x-p1.x);
+				VertexF p4 = {p1.x + (p2.y-p1.y)/m, p2.y};
+
+				if (p2.x > p4.x) swap(p2,p4);
+
+				SpanEdge* edges[4];
+				edges[0] = _createSpanEdge( p1, p2 );
+				edges[1] = _createSpanEdge( p1, p4 );
+				edges[2] = _createSpanEdge( p2, p3 );
+				edges[3] = _createSpanEdge( p4, p3 );
+				_span( edges, 4 );
+				_deleteSpanEdges( edges, sizeof(edges)/sizeof(edges[0]) );
+			}
 		}
-		// Flat bottom
-		else if (p1.y == p2.y){
-			if (p1.x > p2.x) swap(p1,p2);
 
-			SpanEdge* edges = new SpanEdge[2];
-			_createSpanEdge( &edges[0], p0.x,p0.y, p1.x,p1.y );
-			_createSpanEdge( &edges[1], p0.x,p0.y, p2.x,p2.y );
-
-			_span( edges, 2 );
-		}
-		// Point at top and bottom (and one somewhere inbetween)
-		else{
-			// Split triangle
-			float m = (p2.y-p0.y)/(p2.x-p0.x);
-			VertexF p3 = {p0.x + (p1.y-p0.y)/m, p1.y};
-
-			if (p1.x > p3.x) swap(p1,p3);
-
-			SpanEdge* edges = new SpanEdge[4];
-			_createSpanEdge( &edges[0], p0.x,p0.y, p1.x,p1.y );
-			_createSpanEdge( &edges[1], p0.x,p0.y, p3.x,p3.y );
-			_createSpanEdge( &edges[2], p1.x,p1.y, p2.x,p2.y );
-			_createSpanEdge( &edges[3], p3.x,p3.y, p2.x,p2.y );
-
-			_span( edges, 4 );
+		// Draw lines
+		if (_lineState){
+			line( p1, p2 );
+			lineTo( p3 );
+			lineTo( p1 );
 		}
 	}
 
-	void GraphicsVectorExtn::test(){
-		SpanEdge* edges = new SpanEdge[2];
-		_createSpanEdge( &edges[0], 10,10, 80,190 );
-		_createSpanEdge( &edges[1], 50,10, 200,190 );
+	/**
+	 * Sort an array of vertices by Y
+	 * @param vertices 		The array of vertices
+	 * @param len      The number of vertices
+	 */
+	void GraphicsVectorExtn::_sortVertical( VertexF* vertices, uint32_t len ){
+		if (len<2) return;
 
-		_span( edges, 2 );
+		// Insertion sort
+		VertexF v;
+		int16_t j;
+		uint16_t i = 0;
+		while (i<len){
+			v = vertices[i];
+			j = i;
+			while (j>0){
+				if (v.y < vertices[j-1].y){
+					vertices[j] = vertices[j-1];
+					j--;
+				}
+				else break;
+			}
+			vertices[j] = v;
+			i++;
+		}
+	}
+
+	/**
+	 * Delete an array of span edges. Actually places them back in the pool.
+	 * @param	edges 		The array of edges to recycle/delete
+	 * @param	numEdges	The number of edges in the array. Use sizeof(edges)/sizeof(edges[0])
+	 **/
+	void GraphicsVectorExtn::_deleteSpanEdges( SpanEdge* edges[], uint32_t numEdges ){
+		while (numEdges--){
+			edges[numEdges]->next = _pool;
+			_pool = edges[numEdges];
+		}
 	}
 	
 	/**
-	 * Create a span edge (line segment) for rendering a polygon
-	 * @param x1 [description]
-	 * @param y1 [description]
-	 * @param x2 [description]
-	 * @param y2 [description]
+	 * Populate a span edge (line segment) for rendering a polygon
 	 */
-	void GraphicsVectorExtn::_createSpanEdge( SpanEdge* edge, float x1, float y1, float x2, float y2 ){
-		edge->x1 = x1;
-		edge->y1 = y1;
-		edge->x2 = x2;
-		edge->y2 = y2;
+	SpanEdge* GraphicsVectorExtn::_createSpanEdge( VertexF& p1, VertexF& p2 ){
+		SpanEdge* edge;
+		if (_pool){
+			edge = _pool;
+			_pool = edge->next;
+		}
+		else{
+			edge = new SpanEdge();
+		}
+		edge->next = 0;
+
+		edge->x1 = p1.x;
+		edge->y1 = p1.y;
+		edge->x2 = p2.x;
+		edge->y2 = p2.y;
 
 		edge->dx = edge->x2-edge->x1;
 		edge->dy = edge->y2-edge->y1;
@@ -379,6 +334,8 @@ namespace mac{
 		edge->ga = abs(edge->g);
 		edge->gia = abs(edge->gi);
 		edge->steep = (edge->g<-1) || (edge->g>1);
+
+		return edge;
 	}
 
 	/**
@@ -387,44 +344,53 @@ namespace mac{
 	 * different numbers of segments, but the left and right lines MUST start and finish
 	 * on the same y coordinates as each other at the start and end of the span.
 	 **/
-	void GraphicsVectorExtn::_span( SpanEdge* edges, uint32_t len ){
+	void GraphicsVectorExtn::_span( SpanEdge* edges[], uint32_t len ){
 		uint32_t indexL = 0;
 		uint32_t indexR = 1;
 
+		float y1;
+		float y2 = 0;
+		uint32_t cy1 = 0;
+		uint32_t cy2;
+		float coverage;
+
 		// Step through pairs
+		// XXX: When a new scanline immediately follows another, the two lines may be partial lines each
+		// and need to be be blended somehow. This should be handled at (1) below.
 		while (indexL<len){
 
 			// Starting values
-			edges[indexL].x = edges[indexL].x1;
-			edges[indexR].x = edges[indexR].x1;
-			_y1 = edges[indexL].y1;
-			_y2 = edges[indexL].y2;
+			edges[indexL]->x = edges[indexL]->x1;
+			edges[indexR]->x = edges[indexR]->x1;
+			y1 = edges[indexL]->y1;
+			y2 = edges[indexL]->y2;
 
 			// Starting and finishing y coords
-			_cy1 = (uint32_t)_y1;
-			_cy2 = (uint32_t)_y2;
+			cy1 = (uint32_t)y1;
+			cy2 = (uint32_t)y2;
+
+			// (1) Very first scanline might be a partial line
+			coverage = 1;
+			if (indexL==0) coverage -= (y1-cy1); // Leading partial scanline
 
 			// Adjust line starting point based on slope. Normally the line will start at the top of the
 			// pixel and travel downward. The following adjusts for the line starting at the bottom of the
 			// pixel and traveling upwards.
-			if (edges[indexL].g < 0) edges[indexL].x += edges[indexL].gi;
-			if (edges[indexR].g > 0) edges[indexR].x += edges[indexR].gi;
-
-			// Very first scanline might be a partial line
-			_solid = 1;
-			if (indexL==0) _solid -= (_y1-_cy1); // Leading partial scanline
+			if (edges[indexL]->g < 0) edges[indexL]->x += edges[indexL]->gi*coverage;
+			if (edges[indexR]->g > 0) edges[indexR]->x += edges[indexR]->gi*coverage;
 
 			// Step each scanline until reach end of span
-			while (_cy1 < _cy2){
+			while (cy1 < cy2){
 				_scanline(
-					_cy1,
-					&edges[indexL],
-					&edges[indexR]
+					cy1,
+					edges[indexL],
+					edges[indexR],
+					coverage
 				);
-				_cy1++;
-				_solid = 1;
-				edges[indexL].x += edges[indexL].gi;
-				edges[indexR].x += edges[indexR].gi;
+				cy1++;
+				coverage = 1;
+				edges[indexL]->x += edges[indexL]->gi;
+				edges[indexR]->x += edges[indexR]->gi;
 			}
 
 			// Next edge pair
@@ -433,103 +399,16 @@ namespace mac{
 		}
 
 		// Final partial scanline
-		if ((_y2-_cy1)>0){
+		if ((y2-cy1)>0){
 			indexL-=2;
 			indexR-=2;
-			_solid = _y2-_cy1;
+			coverage = y2-cy1;
 			_scanline(
-				_cy1,
-				&edges[indexL],
-				&edges[indexR]
+				cy1,
+				edges[indexL],
+				edges[indexR],
+				coverage
 			);
-		}
-	}
-
-	/**
-	 * Draw a single horizontal line of a span
-	 */
-	void GraphicsVectorExtn::_scanline( uint32_t cy, SpanEdge* left, SpanEdge* right ){
-
-		_solidPre = _solid * _fillAlphaPre;
-
-		left->cx = (uint32_t)left->x; 		// Coord-x
-		left->solid = false;
-
-		// Pixel coverage
-		if (left->steep) left->pc = (left->cx+1-left->x) - left->gi*0.5;
-		else left->pc = (left->cx+1-left->x)*left->ga*0.5;
-
-		right->cx = (uint32_t)right->x; 	// Coord-x
-		right->solid = false;
-
-		// Pixel coverage
-		if (right->steep) right->pc = (right->x-right->cx) + right->gi*0.5;
-		else right->pc = (right->x-right->cx)*right->ga*0.5;
-	
-		// Render two points at a time, one from left, one from right, and converge.
-		while (true){
-			// Overlapped. We are done
-			if (left->cx > right->cx) break;
-
-			// Combined
-			if (left->cx==right->cx){
-				left->pc = (left->pc + right->pc)*0.5; // Average
-				_pixelBlendExp(
-					left->cx,
-					cy,
-					_fillColorExp,
-					(uint8_t)(_solidPre * left->pc)
-				);
-				break;
-			}
-
-			if (left->solid){
-				_pixelBlendExp(
-					left->cx,
-					cy,
-					_fillColorExp,
-					(uint8_t)(_solidPre)
-				);
-			}
-			else{
-				_pixelBlendExp(
-					left->cx,
-					cy,
-					_fillColorExp,
-					(uint8_t)(_solidPre * left->pc)
-				);
-
-				left->pc += left->ga;
-				if (left->pc >= 1){
-					left->solid = true;
-					left->pc = 1;
-				}
-			}
-			if (right->solid){
-				_pixelBlendExp(
-					right->cx,
-					cy,
-					_fillColorExp,
-					(uint8_t)(_solidPre)
-				);
-			}
-			else{
-				_pixelBlendExp(
-					right->cx,
-					cy,
-					_fillColorExp,
-					(uint8_t)(_solidPre * right->pc)
-				);
-
-				right->pc += right->ga;
-				if (right->pc >= 1){
-					right->solid = true;
-					right->pc = 1;
-				}
-			}
-
-			left->cx++;
-			right->cx--;
 		}
 	}
 	

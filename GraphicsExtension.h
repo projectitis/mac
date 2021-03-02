@@ -26,14 +26,16 @@
  * SOFTWARE.
  */	
  
+#pragma once
 #ifndef _MAC_GRAPHICSEXTNH_
 #define _MAC_GRAPHICSEXTNH_ 1
 
 #include "Common.h"
+#include "FrameBuffer.h"
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -45,39 +47,20 @@ namespace mac{
 	 */
 	class GraphicsExtension {
 		public:
+
 			/**
 			 * Called by Graphics to initialise the extension
 			 **/
-			void init( BufferRect* framebuffer ){
+			void init( FrameBuffer* framebuffer ){
 				_framebuffer = framebuffer;
 			}
 			
 		protected:
 			
 			/**
-			 * The display instance for the hardware
+			 * The framebuffer to render to
 			 **/
-			BufferRect* _framebuffer;
-
-			/**
-			 * Blend a pixel
-			 * Same as Graphics::pixel but works with premultiplied values to optise inner drawing loops.
-			 * See Common.h alphaBlendRGB565 for explanation
-			 * @param	colorExpanded	Color in format 00000gggggg00000rrrrr000000bbbbb
-			 * @param	alphaReduced	Alpha in range 0-31
-			 **/
-			inline void _pixelBlendExp(
-				uint32_t x,
-				uint32_t y,
-				uint32_t colorExpanded,
-				uint8_t alphaReduced
-			){
-				uint32_t fbo = _framebuffer->stride*y + x;
-				uint32_t bg = _framebuffer->buffer[fbo];
-				bg = (bg | (bg << 16)) & 0b00000111111000001111100000011111;
-				uint32_t result = ((((colorExpanded - bg) * alphaReduced) >> 5) + bg) & 0b00000111111000001111100000011111;
-				_framebuffer->buffer[fbo] = (color)((result >> 16) | result);
-			}
+			FrameBuffer* _framebuffer;
 			
 	};
 	

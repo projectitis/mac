@@ -26,14 +26,15 @@
  * SOFTWARE.
  */	
  
+#pragma once
 #ifndef _MAC_GRAPHICSVECTOREXTNH_
 #define _MAC_GRAPHICSVECTOREXTNH_ 1
 
 #include "GraphicsExtension.h"
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -77,8 +78,12 @@ namespace mac{
 		// Temp vars
 		boolean solid;	// Flag that pixels should be solid
 		float x;		// Actual x position
-		uint32_t cx;	// X coord
+		int16_t cx;		// Current X position
+		uint32_t i;		// Framebuffer index
 		float pc;		// Pixel coverage
+
+		// Linked list
+		SpanEdgeS* next;
 	} SpanEdge;
 	
 	/**
@@ -86,34 +91,18 @@ namespace mac{
 	 */
 	class GraphicsVectorExtn: public GraphicsExtension {
 		public:
-			
-			/**
-			 * Constructor
-			 **/
-			GraphicsVectorExtn();
-			
-			/**
-			 * Destructor
-			 **/
-			~GraphicsVectorExtn();
-			
-			/**
-			 * Called by the Graphics object internally. Override base method.
-			 * @param	graphics	The graphics object passes itself as a reference
-			 **/
-			void init( BufferRect* framebuffer );
-			
+
 			/**
 			 * Set the line style for subsequent drawing calls
-			 * @param	color		Color in RGB565 format
-			 * @param	alpha		Alpha from 0 to 255
+			 * @param	color		Color in 24-bit RGB format
+			 * @param	alpha		Alpha from 0 to 1
 			 * @param	thickness	thickness of line in pixels
 			 * @param	cap			Cap style of line
 			 * @param	join		Join style of line
 			 **/
 			void lineStyle(
-				uint32_t rgb,
-				float alpha = 1,
+				color888 color,
+				alpha alpha = 1,
 				float thickness = 1,
 				capStyle cap = CAP_ROUND,
 				joinStyle join = JOIN_ROUND
@@ -126,12 +115,12 @@ namespace mac{
 			
 			/**
 			 * Set the fill style for subsequent drawing calls
-			 * @param	color	Color in RGB565 format
-			 * @param	alpha	Alpha from 0 to 1
+			 * @param	color		Color in 24-bit RGB format
+			 * @param	alpha		Alpha from 0 to 1
 			 **/
 			void fillStyle(
-				uint32_t rgb,
-				float alpha = 1
+				color888 color,
+				alpha alpha = 1
 			);
 			
 			/**
@@ -142,91 +131,73 @@ namespace mac{
 			/**
 			 * Draw a line from one point to another. This is a call to moveTo
 			 * followed by lineTo.
-			 * @param	x1		X Position of start of line
-			 * @param	y1		Y position of start of line
-			 * @param	x2		X Position of end of line
-			 * @param	y2		Y position of end of line
+			 * @param	p1		Start of line
+			 * @param	p2		End of line
 			 **/
-			void line(
-				float x1,
-				float y1,
-				float x2,
-				float y2
-			);
+			void line( VertexF p1, VertexF p2 );
 			
 			/**
 			 * Draw a line from cursor position to specified coord
-			 * @param	x		X Position of end of line
-			 * @param	y		Y position of end of line
+			 * @param	p		End position of line
 			 **/
-			void lineTo(
-				float x,
-				float y
-			);
+			void lineTo( VertexF p );
 			
 			/**
 			 * Set cursor position without drawing line
-			 * @param	x		X Position of cursor
-			 * @param	y		Y position of cursor
+			 * @param	p		Cursor position
 			 **/
-			void moveTo(
-				float x,
-				float y
-			);
+			void moveTo( VertexF p );
+
+			/**
+			 * Draw a rectangle
+			 * @param p1 	Top-left
+			 * @param p2 	Bottom-right
+			 */
+			void rectangle( VertexF p1, VertexF p2 );
 
 			/**
 			 * Triangle
-			 * @param x0 	First point x
-			 * @param y0 	First point y
-			 * @param x1 	Second point x
-			 * @param y1 	Second point y
-			 * @param x2	Third point x
-			 * @param y2 	Third point y
+			 * @param p1 	First point
+			 * @param p2 	Second point
+			 * @param p3	Third point
 			 */
-			void triangle(
-				float x0, float y0,
-				float x1, float y1,
-				float x2, float y2
-			);
-			
-			void test();
+			void triangle( VertexF p1, VertexF p2, VertexF p3 );
 			
 		protected:
 			
 			/**
 			 * Drawing state vars
 			 **/
-			float _cursorX = 0;
-			float _cursorY = 0;
-			boolean _antialias = true;
-			boolean _lineState = true;
-			boolean _fillState = true;
-			uint32_t _lineColorExp = 0; // Pre-expanded
-			uint8_t _lineAlphaPre = 32; // Pre-multiplied
+			VertexF _cursor = {0,0};
+			boolean _lineState = false;
+			boolean _fillState = false;
+			PreparedColor* _lineColor;
+			PreparedColor* _fillColor;
 			float _lineThickness = 1.0;
 			capStyle _lineCap = CAP_SQUARE;
 			joinStyle _lineJoin = JOIN_BEVEL;
-			uint32_t _fillColorExp = 0; // Pre-expanded
-			uint8_t _fillAlphaPre = 32; // Pre-multiplied
 
 			/**
-			 * Scanline temp vars
+			 * Pool of re-usable span edges
 			 */
-			float _y1;
-			float _y2;
-			uint32_t _cy1;
-			uint32_t _cy2;
-			float _solid;
-			float _solidPre;
+			SpanEdge* _pool = 0;
 
 			/**
-			 * Create a span edge (line segment) for rendering a polygon
-			 * @param x1 [description]
-			 * @param y1 [description]
-			 * @param x2 [description]
-			 * @param y2 [description]
+			 * Delete an array of span edges. Actually places them back in the pool.
+			 * @param	edges 		The array of edges to recycle/delete
+			 * @param	numEdges	The number of edges in the array. Use sizeof(edges)/sizeof(edges[0])
+			 **/
+			void _deleteSpanEdges( SpanEdge* edges[], uint32_t numEdges );
+
+			/**
+			 * Create and populate a span edge (line segment) for rendering a polygon.
+			 * Will take them from the pool if they exist, or allocate new ones.
+			 * @param x1  	X coordinate of first point
+			 * @param y1 	Y coordinate of first point
+			 * @param x2 	X coordinate of second point
+			 * @param y2 	Y coordinate of second point
 			 */
-			void _createSpanEdge( SpanEdge* edge, float x1, float y1, float x2, float y2 );
+			SpanEdge* _createSpanEdge( VertexF& p1, VertexF& p2 );
 
 			/**
 			 * A span is a left line and a right line, made up of one or more segments, that
@@ -234,12 +205,39 @@ namespace mac{
 			 * different numbers of segments, but the left and right lines MUST start and finish
 			 * on the same y coordinates as each other at the start and end of the span.
 			 **/
-			void _span( SpanEdge* edges, uint32_t len );
+			void _span( SpanEdge* edges[], uint32_t len );
 
 			/**
-			 * Draw a single horizontal line of a span
+			 * Sort an array of vertices by Y
+			 * @param vertices 		The array of vertices
+			 * @param len      The number of vertices
 			 */
-			void _scanline( uint32_t cy, SpanEdge* left, SpanEdge* right );
+			void _sortVertical( VertexF* vertices, uint32_t len );
+
+			/**
+			 * ### 
+			 * ### SUBCLASSES TO IMPLEMENT
+			 * ###
+			 * The following methods need to be implemented by the pixel-format specific
+			 * sub-classes.
+			 */
+
+			/**
+			 * Draw a single horizontal line of a span.
+			 * This should be implemented by the pixel-format specific version of the extension.
+			 * @param	cy 			The Y coordinate of the scanline
+			 * @param	left 		The left span edge
+			 * @param 	right 		The right span edge
+			 * @param	coverage 	The proportion of the line that is covered (0.0 - 1.0)
+			 */
+			virtual void _scanline( uint32_t cy, SpanEdge* left, SpanEdge* right, float coverage );
+
+			/**
+			 * Draw a pixel-width line.
+			 * This should be implemented by the pixel-format specific version of the extension.
+			 */
+			virtual void _line( VertexF p1, VertexF p2 );
+
 	};
 	
 } // namespace

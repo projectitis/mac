@@ -31,28 +31,35 @@
  * send the framebuffer to it via SPI and (optionally) DMA.
  *
  * ACKNOWLEDGEMENTS
- * This ILI9341 SPI-based display code has had many smart people contribute to it.
+ * This ILI9341 SPI-based display code has drawn on the contributions of many smart people.
  * Many thanks to:
  *		Paul Stoffregen / ILI9341_t3 - https://github.com/PaulStoffregen/ILI9341_t3
  *		Frank Bösing / ILI9341_t3DMA - https://github.com/FrankBoesing/ILI9341_t3DMA
- *		Kurt E / ILI9341_t3n - https://github.com/KurtE/ILI9341_t3n
+ *		KurtE / ILI9341_t3n - https://github.com/KurtE/ILI9341_t3n
  *
  * TEENSY VERSION SUPPORT
- * Because of the memory requirements of a framebuffer (154k) this library will only
- * work with Teensy 3.5 (192k RAM) and Teensy 3.6 (512k RAM).
+ * The amount of memory will dictate how you use the framebuffer. The framebuffer supports
+ * up-scaling (PixelScale) whereby the framebuffer can be smaller, but each pixel is up-scaled
+ * onto the display. It appears blockier because you have less pixels, but the framebuffer
+ * memory requirement is smaller. For example, PixelScale of 4 (pixelScale_4x4) means each pixel in the
+ * framebuffer is mapped to 4x4 pixels on the display. 
+ * PixelScale	pixelScale_1x1	Requires 154k RAM (320x240 x 16bit)		Teensy 3.5, 3.6
+ * PixelScale	pixelScale_2x2	Requires 39k RAM (160x120 x 16bit)		Teensy 3.1, 3.2
+ * PixelScale	pixelScale_4x4	Requires 10k RAM (80x60 x 16bit)		
  *
- * DMA SUPPORT
+ * XXX: DMA SUPPORT - NOT YET IMPLEMENTED
  * To compile with or without DMA, see the GRAPHICS_USE_DMA define in Display.h
  */
- 
+
+#pragma once
 #ifndef _MAC_DISPLAYILI9341H_
 #define _MAC_DISPLAYILI9341H_ 1
 
 #include "Display.h"
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -77,6 +84,7 @@ namespace mac{
 			 * @param	sclk	Pin used for clock
 			 * @param	miso	Pin used for MISO communication (data out from slave)
 			 * @param	bklt	Pin used for backlight (optional. 255=unused)
+			 * @param	px 		Scale factor from framebuffer to display. Normally 1:1 (pixelScale_1x1)
 			 **/
 			DisplayILI9341(
 				uint8_t cs,		// 10
@@ -85,31 +93,30 @@ namespace mac{
 				uint8_t mosi	= 11,
 				uint8_t sclk	= 13,
 				uint8_t miso	= 12,
-				uint8_t bklt	= 6
+				uint8_t bklt	= 6,
+				PixelScale px 	= pixelScale_1x1
 			);
 
 			/**
+			 * Destructor
+			 */
+			~DisplayILI9341( void );
+
+			/**
 			 * Update the framebuffer to the display
-			 * @param	buffer	A pointer to the buffer
-			 * @param	rect	If not NULL, the portion of the buffer to refresh
 			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 			 **/
-			void update(
-				uint16_t* buffer,
-				BufferRect* rect = NULL,
+			virtual void update(
 				boolean continuous = false
 			);
-			
+
 			/**
-			 * Stop the display from continuously refreshing
+			 * Update an area of the framebuffer to the display
+			 * @param	rect		The portion of the buffer to refresh
 			 **/
-			void stopRefresh( void );
-			
-			/**
-			 * Wait until the current refresh is complete. Not recommended if you have other
-			 * (usually non-graphics) code that shouldn't be delayed!
-			 **/
-			void waitForRefresh( void );
+			virtual void updateRect(
+				ClipRect* rect
+			);
 			
 			/**
 			 * Turn the backlight on or off. If the backlight pin is set, the backlight
@@ -117,14 +124,14 @@ namespace mac{
 			 * setbacklight(0) after construction.
 			 * @param	state	0 = off, 1 = on
 			 **/
-			void setBacklight( boolean state );
+			virtual void setBacklight( boolean state );
 			
 		protected:
 			
 			/**
 			 * Initialise the display. Called from the constructor.
 			 **/
-			void init( void );
+			virtual void init( void );
 			
 			/**
 			 * Display controls
@@ -155,6 +162,7 @@ namespace mac{
 			uint8_t _pcs_data, _pcs_command;
 			uint8_t _miso, _mosi, _sclk;
 			uint8_t _bklt;
+			PixelScale _px;
 	};
 
 } // namespace

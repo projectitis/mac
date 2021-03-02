@@ -82,8 +82,8 @@
 #define SPICLOCK	60e6
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
@@ -108,7 +108,8 @@ namespace mac{
 		uint8_t mosi,
 		uint8_t sclk,
 		uint8_t miso,
-		uint8_t bklt
+		uint8_t bklt,
+		PixelScale px
 	){
 		_cs   = cs;
 		_dc   = dc;
@@ -119,6 +120,8 @@ namespace mac{
 		_bklt = bklt;
 		width    = 320;
 		height   = 240;
+		pixelFormat = PF_565;
+		_px = px;
 		
 		init();
 	}
@@ -205,73 +208,217 @@ namespace mac{
 			pinMode(_bklt, OUTPUT);
 			digitalWrite(_bklt, HIGH);
 		}
+
+		// Create the framebuffer
+		framebuffer = new FrameBuffer( pixelFormat, (uint16_t)(width/_px+0.5), (uint16_t)(height/_px+0.5) );
+	}
+
+	/**
+	 * Destructor
+	 */
+	DisplayILI9341::~DisplayILI9341( void ){
+		delete framebuffer;
+
+		// XXX: Shut down display?
 	}
 
 	/**
 	 * Update the framebuffer to the display
-	 * @param	buffer	A pointer to the buffer
-	 * @param	rect	If not NULL, the portion of the buffer to refresh
 	 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 	 **/
-	void DisplayILI9341::update(
-		uint16_t* buffer,
-		BufferRect* rect,
-		boolean continuous		// XXX: Currently unsupported
-	){
-		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
-		if (rect){
-			// Clipping area
-			setDestinationArea( rect );
-			writeCommand( ILI9341_RAMWR );
+	void DisplayILI9341::update( boolean continuous ){
+		if (framebuffer->invalidated()){	
+			SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
 
-			// XXX: Break up into transactions?
-			uint16_t* row_p = rect->start;
-			for (uint16_t y = 0; y < rect->h; y++) {
-				uint16_t* pixel_p = row_p;
-				for (uint16_t x = 0; x < (rect->w - 1); x++) {
-					writeData16(*pixel_p++);
-				}
-				if (y < (rect->h - 1))
-					writeData16(*pixel_p);
-				else	
-					writeData16_last(*pixel_p);
-				row_p += rect->stride;	// setup for the next row. 
-			}
-		}
-		else{
 			// Full framebuffer
 			resetDestinationArea();
 			writeCommand(ILI9341_RAMWR);
 
-			// XXX: Break up into transactions?
-			uint16_t* buffer_end_p = &buffer[(width*height)-1];	// setup 
-			uint16_t* buffer_p = buffer;
+			// No scaling. 1:1 framebuffer to display
+			if (_px == pixelScale_1x1){
+				/*
+				// XXX: Break up into transactions?
+				uint16_t* buffer_end_p = &framebuffer->data.data16[framebuffer->count-1];
+				uint16_t* buffer_p = framebuffer->data.data16;
 
-			// Quick write out the data;
-			while (buffer_p < buffer_end_p) {
-				writeData16(*buffer_p++);
+				// Quick write out the data;
+				while (buffer_p < buffer_end_p) {
+					writeData16(*buffer_p++);
+				}
+				writeData16_last(*buffer_p);
+				*/
+				uint8_t mv = (framebuffer->height>>4) + 1;
+				uint8_t mh = (framebuffer->width>>4) + 1;
+				uint8_t v = 0; // vert
+				uint8_t h = 0; // horiz
+				ClipRect* rect = new ClipRect();
+				while (v < mv){
+					rect->y = v<<4;
+					h = 0;
+					while (h < mh){
+						rect->x = h<<4;
+						rect->setSize(16,16);
+						this->updateRect( rect );
+						h++;
+					}
+					v++;
+				}
+				delete rect;
 			}
-			writeData16_last(*buffer_p);
+			else{
+				float x = 0;
+				float y = 0;
+				float d = 1.0/(float)_px;
+				uint32_t i = 0;
+				uint32_t t = width * height;
+
+				while (++i < t){
+					writeData16( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
+					x += d;
+					if (x >= framebuffer->width){
+						x = 0;
+						y += d;
+					}
+				}
+				writeData16_last( framebuffer->data.data16[ framebuffer->count-1 ] );
+			}
+
+			SPI.endTransaction();
 		}
-		// End transaction
-		digitalWriteFast(_dc, 1);
-		digitalWriteFast(_cs, 1);
-		SPI.endTransaction();
+		else{
+			// Step all dirty tiles line by line
+			uint8_t v = 0; // vert
+			uint8_t h = 0; // horiz
+			uint32_t m = 0; // mask
+			uint32_t b = 0; // buffer
+			uint8_t mv = (framebuffer->height>>4) + 1;
+			uint8_t mh = (framebuffer->width>>4) + 1;
+/*
+Serial.println("Invalidate buffer:");
+uint8_t t = 0;
+while (t < mv){
+	b = framebuffer->invalideBuffer(t);
+	Serial.println(b,BIN);
+	t++;
+}
+*/
+			uint8_t i = 0;
+			ClipRect* rect = new ClipRect();
+			while (v < mv){
+				// Something in line is invalidated
+				b = framebuffer->invalideBuffer(v);
+				if (b){
+					m = 1;
+					h = 0;
+					while (h < mh){
+						if (b & m){
+							// This bit is invalidated
+							if (!i){
+								rect->x = h<<4;
+								rect->y = v<<4;
+								rect->setHeight(16);
+							}
+							i++;
+						}
+						else if (i){
+							rect->setWidth(16*i);
+							this->updateRect( rect );
+							i = 0;
+						}
+						m = m << 1;
+						h++;
+					} // h
+					if (i){
+						rect->setWidth(16*i);
+						this->updateRect( rect );
+						i = 0;
+					} // i after h
+
+				} //b
+				v++;
+			} // v
+			delete rect;
+		}
+		framebuffer->validate();
 	}
-		
-	/**
-	 * Stop the display from continuously refreshing
-	 **/
-	void DisplayILI9341::stopRefresh( void ){
-		// XXX: Currently unsupported
-	}
-			
-	/**
-	 * Wait until the current refresh is complete. Not recommended if you have other
-	 * (usually non-graphics) code that shouldn't be delayed!
-	 **/
-	void DisplayILI9341::waitForRefresh( void ){
-		// XXX: Currently unsupported
+
+	void DisplayILI9341::updateRect( ClipRect* rect ){
+		rect->clipPosAndSize(0,0,framebuffer->width,framebuffer->height);
+/*
+Serial.print("  updateRect ");
+Serial.print( rect->x );
+Serial.print(", ");
+Serial.print( rect->y );
+Serial.print("  ");
+Serial.print( rect->width );
+Serial.print(" x ");
+Serial.println( rect->height );
+*/
+		if (!rect->isEmpty()){
+			SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+
+			setDestinationArea( rect );
+			writeCommand(ILI9341_RAMWR);
+
+			// No scaling. 1:1 framebuffer to display
+			if (_px == pixelScale_1x1){
+				/*
+				uint16_t y = rect->y;
+				uint16_t x;
+				uint32_t i;
+
+				// Write out the data
+				while(y < rect->y2){
+					x = rect->x;
+					i = y * framebuffer->width + x;
+					while(x <= rect->x2){
+						writeData16( framebuffer->data.data16[ i++ ] );
+					}
+					y++;
+				}
+				// Write last line except last pixel
+				x = rect->x;
+				i = y * framebuffer->width + x;
+				while(x < rect->x2){
+					writeData16( framebuffer->data.data16[ i++ ] );
+				}
+				writeData16_last( framebuffer->data.data16[ i ] );
+				*/
+				uint16_t x = rect->x;
+				uint16_t y = rect->y;
+				uint32_t i = 0;
+				uint32_t t = rect->width * rect->height;
+
+				while (++i < t){
+					writeData16( framebuffer->data.data16[ framebuffer->index( x, y ) ] );
+					x++;
+					if (x > rect->x2){
+						x = rect->x;
+						y++;
+					}
+				}
+				writeData16_last( framebuffer->data.data16[ framebuffer->index( x, y ) ] );
+			}
+			else{
+				float x = rect->x;
+				float y = rect->y;
+				float d = 1.0/(float)_px;
+				uint32_t i = 0;
+				uint32_t t = rect->width * rect->height;
+
+				while (++i < t){
+					writeData16( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
+					x += d;
+					if (x > rect->x2){
+						x = rect->x;
+						y += d;
+					}
+				}
+				writeData16_last( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
+			}
+
+			SPI.endTransaction();
+		}
 	}
 	
 	/**
@@ -297,10 +444,10 @@ namespace mac{
 	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationArea( ClipRect* clipRect ){
 		writeCommand(ILI9341_CASET); // Column addr set
 		writeData16(clipRect->x);
-		writeData16(clipRect->x + clipRect->w - 1);
+		writeData16(clipRect->x2);
 		writeCommand(ILI9341_PASET); // Row addr set
 		writeData16(clipRect->y);
-		writeData16(clipRect->y + clipRect->h - 1);
+		writeData16(clipRect->y2);
 	}
 	__attribute__((always_inline)) inline void DisplayILI9341::resetDestinationArea( void ){
 		writeCommand(ILI9341_CASET); // Column addr set

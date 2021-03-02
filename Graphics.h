@@ -26,90 +26,246 @@
  * SOFTWARE.
  */	
  
+#pragma once
 #ifndef _MAC_GRAPHICSH_
 #define _MAC_GRAPHICSH_ 1
 
+#include "FrameBuffer.h"
 #include "Display.h"
 #include "GraphicsBitmapExtn.h"
 #include "GraphicsVectorExtn.h"
+#include "GraphicsTextExtn.h"
 
 /**
- * mac (or μac) stands for "Microprocessor Adventure Creator"
- * mac is a project that enables creating and playing adventure games on the
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
  **/
 namespace mac{
+
+	/**
+	 * Graphics extensions
+	 */
+	enum GraphicsExtensions {
+	    extension_bitmap 	= 1,
+	    extension_vector 	= 2,
+	    extension_text 		= 4
+	};
 	
 	/**
 	 * A device- and display- independent graphics library. All the methods in
-	 * this library work directly on an in-memory framebuffer.
+	 * this library work directly on an in-memory framebuffer. Drawing is (mostly) done using
+	 * standard 24-bit RGB (8-bits per channel) and 0.0 - 1.0 floating point alpha. The
+	 * library handles conversion to the display's pixel format.
 	 */
 	class Graphics {
 		
 		public:
 			/**
 			 * Constructor. Must pass in a display adapter for the hardware display being used.
-			 * @param	display			A Display instance for the hardware display being used
+			 * @param	display			A Display adapter instance for the hardware display being used
 			 **/
 			Graphics( Display* display );
+
+			/**
+			 * Constructor. Must pass in a display adapter for the hardware display being used.
+			 * Can optionally load extensions that are required. This may save some memory on
+			 * less capable hardware.
+			 * @usage new Graphics( display, extension_bitmap | extension_vector );
+			 * @param	display			A Display adapter instance for the hardware display being used
+			 * @param	extensionFlags 	The extensions to load (@see mac::GraphicsExtensions enum type)
+			 **/
+			Graphics( Display* display, int extensionFlags );
 			
 			/**
 			 * Destructor
 			 **/
 			~Graphics();
+
+			/**
+			 * The display instance for the hardware
+			 **/
+			Display* display;
+
+			/**
+			 * A reference to the frame buffer as a shortcut (actually display->framebuffer)
+			 **/
+			FrameBuffer* framebuffer;
 			
 			/**
 			 * Update the framebuffer to the display
-			 * @param	useBufferRect	If true, will update only the portion of the framebuffer that
-			 *							has changed since the last call to update.
 			 **/
-			void update( boolean useBufferRect = false );
+			void update();
+
+			/**
+			 * Clear the display to a solid color
+			 * @param color The color
+			 */
+			void clear(
+				color888 color
+			);
 			
 			/**
-			 * Fill the framebuffer with a color
-			 **/
-			void clear( color color );
-			
+			 * Blend a pixel to the display
+			 * @param x     Display X coordinate
+			 * @param y     Display Y coordinate
+			 * @param color The color
+			 * @param alpha The alpha (0.0 - 1.0)
+			 */
+			void pixel(
+				int16_t x,
+				int16_t y,
+				color888 color,
+				alpha alpha = 1
+			);
+
 			/**
-			 * Get a pixel
-			 **/
-			inline uint16_t pixel(
-				uint32_t x,
-				uint32_t y
-			){
-				return _framebuffer.buffer[_framebuffer.stride*y + x];
-			}
-			
+			 * get a pixel from the display
+			 * @param x     Display X coordinate
+			 * @param y     Display Y coordinate
+			 * @return		The pixel color
+			 */
+			color888 pixel(
+				int16_t x,
+				int16_t y
+			);
+
 			/**
-			 * Solid pixel
-			 **/
-			inline void pixel(
-				uint32_t x,
-				uint32_t y,
-				color color
-			){
-				_framebuffer.buffer[_framebuffer.stride*y + x] = color;
-			}
-			
+			 * Draw a horizontal line.
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param length 	Length of line
+			 * @param color 	Color of line
+			 * @param alpha 	Alpha of the line (0.0 - 1.0)
+			 */
+			void lineH(
+				int16_t x,
+				int16_t y,
+				int16_t length,
+				color888 color,
+				alpha alpha = 1
+			);
+
 			/**
-			 * Blend a pixel
-			 * See Common.h alphaBlendRGB565 for explanation
+			 * Draw a horizontal line with gradient
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param length 	Length of line
+			 * @param color0 	Left color
+			 * @param alpha0 	Left alpha (0.0 - 1.0)
+			 * @param color1 	Right color
+			 * @param alpha1 	Right alpha (0.0 - 1.0)
+			 */
+			void lineHG(
+				int16_t x,
+				int16_t y,
+				int16_t length,
+				color888 color0,
+				alpha alpha0,
+				color888 color1,
+				alpha alpha1
+			);
+
+			/**
+			 * Draw a vertical line.
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param length 	Length of line
+			 * @param color 	Color of line
+			 * @param alpha 	Alpha of the line (0.0 - 1.0)
+			 */
+			void lineV(
+				int16_t x,
+				int16_t y,
+				int16_t length,
+				color888 color,
+				alpha alpha = 1
+			);
+
+			/**
+			 * Draw a vertical line with gradient
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param length 	Length of line
+			 * @param color0 	Top color
+			 * @param alpha0 	Top alpha (0.0 - 1.0)
+			 * @param color1 	Bottom color
+			 * @param alpha1 	Bottom alpha (0.0 - 1.0)
+			 */
+			void lineVG(
+				int16_t x,
+				int16_t y,
+				int16_t length,
+				color888 color0,
+				alpha alpha0,
+				color888 color1,
+				alpha alpha1
+			);
+
+			/**
+			 * Draw a basic rectangle with alpha. If you require sub-pixel accuracy,
+			 * use the vector extension (graphics->vector->rectangle).
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param width  	The width of the rectangle
+			 * @param height 	The height of the rectangle
+			 * @param color 	Color of rectangle
+			 * @param alpha 	Alpha of the rectangle (0.0 - 1.0)
+			 */
+			void rectangle(
+				int16_t x,
+				int16_t y,
+				int16_t width,
+				int16_t height,
+				color888 color,
+				alpha alpha = 1
+			);
+
+			/**
+			 * Draw a basic rectangle with horizontal gradient.
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param width  	The width of the rectangle
+			 * @param height 	The height of the rectangle
+			 * @param color0 	Left color of rectangle
+			 * @param alpha0 	Left alpha of the rectangle (0.0 - 1.0)
+			 * @param color1 	Right color of rectangle
+			 * @param alpha1 	Right alpha of the rectangle (0.0 - 1.0)
 			 **/
-			inline void pixel(
-				uint32_t x,
-				uint32_t y,
-				color color,
-				alpha alpha
-			){
-				uint32_t fbo = _framebuffer.stride*y + x;
-				alpha = ( alpha + 4 ) >> 3; // Reduce to 0-31
-				uint32_t bg = ((uint32_t)_framebuffer.buffer[fbo] | ((uint32_t)_framebuffer.buffer[fbo] << 16)) & 0b00000111111000001111100000011111;
-				uint32_t fg = ((uint32_t)color | ((uint32_t)color << 16)) & 0b00000111111000001111100000011111;
-				uint32_t result = ((((fg - bg) * alpha) >> 5) + bg) & 0b00000111111000001111100000011111;
-				_framebuffer.buffer[fbo] = (uint16_t)((result >> 16) | result);
-			}
+			void rectangleHG(
+				int16_t x,
+				int16_t y,
+				int16_t width,
+				int16_t height,
+				color888 color0,
+				alpha alpha0,
+				color888 color1,
+				alpha alpha1
+			);
+
+			/**
+			 * Draw a basic rectangle with vertical gradient.
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param width  	The width of the rectangle
+			 * @param height 	The height of the rectangle
+			 * @param color0 	Top color of rectangle
+			 * @param alpha0 	Top alpha of the rectangle (0.0 - 1.0)
+			 * @param color1 	Bottom color of rectangle
+			 * @param alpha1 	Bottom alpha of the rectangle (0.0 - 1.0)
+			 **/
+			void rectangleVG(
+				int16_t x,
+				int16_t y,
+				int16_t width,
+				int16_t height,
+				color888 color0,
+				alpha alpha0,
+				color888 color1,
+				alpha alpha1
+			);
 			
 			/***
 			 *** EXTENSIONS
@@ -125,69 +281,55 @@ namespace mac{
 			 **/
 			GraphicsVectorExtn* vector;
 
+			/**
+			 * Text support
+			 **/
+			GraphicsTextExtn* text;
+
 		protected:
+
 			/**
-			 * The display instance for the hardware
+			 * Initialise graphics. Called from constructor(s).
+			 * @param	display			A Display instance for the hardware display being used
+			 * @param	extensionFlags 	The extensions to load (@see mac::GraphicsExtensions enum type)
 			 **/
-			Display* _display;
-			
+			void _init( Display* display, int extensionFlags );
+
 			/**
-			 * The framebuffer
-			 **/
-			BufferRect _framebuffer;
-			
-			/**
-			 * The area of the framebuffer that has changed since the last call to getBuffer.
-			 * The back and front BufferRects are swapped when getBuffer is called.
-			 * _bufferRectIndex is the index of the active BufferRect (the one that changes
-			 * when draw calls are made).
-			 **/
-			BufferRect* _bufferRect[2];
-			uint8_t _bufferRectIndex;
-			
-			/**
-			 * Grab the address of the buffer and swap the buffer rect so that it is preserved
-			 * during transfer to the display. This is done during update. All other drawing
-			 * commands that access the framebuffer should do so using _framebuffer directly.
-			 **/
-			uint16_t* _getBuffer( void );
-			
-			/**
-			 * Returns pointer to structure that defines the area of the framebuffer that has
-			 * changed since the last call to getBuffer.
-			 **/
-			BufferRect* _getBufferRect( void );
-			
-			/**
-			 * Reset the BufferRect back to default. The default has w and h of 0, and x and y at
-			 * their maximum values of framebuffer width and height respectively. Always check that
-			 * the w and h are > 0 before applying the rect.
-			 **/
-			void _resetBufferRect( uint8_t index );
-			
-			/**
-			 * Copy an area of the active buffer described by a BufferRect (the src) to the destination buffer.
-			 * @param	src		A BufferRect which describes the src
-			 * @param	dst		The destination buffer
-			 **/
-			void _copyArea( BufferRect* src, uint16_t* dst );
-			
-			/**
-			 * A span is two lines (one on the left and one on the right) that define a filled
-			 * area between them. The top and bottom of the span are either flat, or come together
-			 * at a point. The span is used as the basis of drawing primitives.
-			 * @param	spans	An array of connected spans to draw
-			 * @param	count	The number of spans in the array
-			 * @param	colorExpanded	Color in format 00000gggggg00000rrrrr000000bbbbb
-			 * @param	alphaReduced	Alpha in range 0-31
-			 **
-			void _span(
-				SpanF* spans,
-				uint32_t count,
-				uint32_t colorExpanded,
-				uint8_t alphaReduced
+			 * Internal method to draw H or V line in 16-bit pixel format
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param step		Framebuffer step to next pixel
+			 * @param length    Number of pixels
+			 * @param color 	Color of line
+			 * @param alpha 	Alpha of the line (0.0 - 1.0)
+			 */
+			void _line16(
+				uint16_t x,
+				uint16_t y,
+				uint16_t step,
+				uint16_t length,
+				color888 color,
+				alpha alpha = 1
 			);
-			*/
+
+			/**
+			 * Internal method to draw H or V line in 32-bit pixel format
+			 * @param x     	Start x coord
+			 * @param y     	Start y coord
+			 * @param step		Framebuffer step to next pixel
+			 * @param length    Number of pixels
+			 * @param color 	Color of line
+			 * @param alpha 	Alpha of the line (0.0 - 1.0)
+			 */
+			void _line32(
+				uint16_t x,
+				uint16_t y,
+				uint16_t step,
+				uint16_t length,
+				color888 color,
+				alpha alpha = 1
+			);
 			
 	};
 	

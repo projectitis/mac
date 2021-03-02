@@ -24,7 +24,12 @@ void setup() {
 	graphics->vector->fillStyle( 0xff9900, 0.8 );
 
 	// Draw a couple of overlapping triangles
-	graphics->vector->triangle( 60,20, 100,100,  60,150 );
+	graphics->vector->triangle( 100,20, 150,100,  103,150 );
+	graphics->vector->triangle( 50,80, 220,90,  130,200 );
+
+	// Add a line style, and draw another
+	graphics->vector->lineStyle( 0xffffff, 1 );
+	graphics->vector->triangle( 100,180, 300,190,  200,230 );
 
 	// Finish timing and output debugging into
 	Serial.print( micros()-s );

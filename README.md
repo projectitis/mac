@@ -2,13 +2,14 @@
 
 ![mac logo](/logo.png?raw=true "mac")
 
-μac, or mac, stands for "Microprocessor Adventure Creator". mac is a project that enables creating and playing adventure games on the Teensy microprocessor, but hopefully is generic enough to be ported to other microprocessor boards in the future. The various individual libraries that make up mac (such as display and drawing libraries) might also be useful in other projects.
+μac, or mac, stands for "Microprocessor App Creator". mac is a project that enables creating beautiful and useful apps on the Teensy microprocessor, but hopefully is generic enough to be ported to other microprocessor boards in the future. The various individual libraries that make up mac (such as display and drawing libraries) might also be useful in other projects.
 
 This project has a software component (the libraries) and a hardware component (a Teensy-based handheld). As well as the software, eventually the plans/schematics will be released to enable you to build your own Teensy-based handheld that will run mac.
 
 ## Current status
 
-**2018-04-24** Very much a work in progress. Only display components currently implemented.
+ - **2019-04-14** Many bitmap and vector features implemented. Working on GUI components.
+ - **2018-04-24** Very much a work in progress. Only display components currently implemented.
 
 ## Prerequisites
 
@@ -43,15 +44,7 @@ mac has lofty goals. The mac project has the following planned components:
 	 - Loading and playback - (90% - errors. Only very few mods work)
 	 - Loading and saving to SD card (0%)
 - GUI
-	- Windows, input and output components (0%)
-- Game creator
-	- Load, edit and save game maps and backgrounds (0%)
-	- Ability to create crunched, play-only game file (0%)
-- Game player
-	- Load and play games (0%)
-	- Ability to swap between edit and play (0%)
-	- Save progress to SD (0%)
-	- Wifi multi-player (0%)
+	- Windows, input and output components (5%)
 - Input
 	- Analogue joy (50%)
 	- Digital joy (50%)
@@ -63,6 +56,14 @@ mac has lofty goals. The mac project has the following planned components:
 	- Display (25%)
 	- Speakers and headphone (25%)
 	- Vibration (0%)
+- Game creator
+	- Load, edit and save game maps and backgrounds (0%)
+	- Ability to create crunched, play-only game file (0%)
+- Game player
+	- Load and play games (0%)
+	- Ability to swap between edit and play (0%)
+	- Save progress to SD (0%)
+	- Wifi multi-player (0%)
 - Other hardware
 	- PSP battery power supply (25%)
 	- CNC aluminium shell with wooden accents (0%)
@@ -83,8 +84,9 @@ Code from many authors has contributed to mac. This project would not be possibl
 
 #### Graphics and animation
 
-* **[Maxim "mcseem" Shemanarev](http://www.antigrain.com/mcseem/index.html)** - [Anti-grain geometry](http://www.antigrain.com/)
+* **Maxim "mcseem" Shemanarev** - [Anti-grain geometry](https://en.wikipedia.org/wiki/Anti-Grain_Geometry)
 * **[Warren Moore](wm@warrenmoore.net)** - [AHEasing](https://github.com/warrenm/AHEasing)
+* **[Rosetta Code](https://rosettacode.org/wiki/Rosetta_Code)** - [Wu's algorithm](https://rosettacode.org/wiki/Xiaolin_Wu%27s_line_algorithm)
 
 #### Audio
 
