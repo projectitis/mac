@@ -43,7 +43,7 @@ namespace mac{
 	
 	/**
 	 * A panel set
-	 * A panel set is sort of the equivalent of a window. It has a menu that allows the player
+	 * A panel set is sort of the equivalent of a window. It has a menu that allows the user
 	 * to select the panels that are in the set. Only the selected panel is active.
 	 */
 	class PanelSet: public Widget {

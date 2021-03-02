@@ -80,10 +80,10 @@ namespace mac{
 			Input* input;
 
 			/**
-			 * For better performance, limit the times that the GUI can update and
+			 * For better performance, limit the times that the GUI can update and 
 			 * render every second.
-			 * Note that update() should be called as often as possible, as this
-			 * is required for responsive inputs etc, but any graphical updates
+			 * Note that update() should be called as often as possible, as this 
+			 * is required for responsive inputs etc, but any graphical updates 
 			 * will be limited to a slower speed. 30fps is the default.
 			 * @param fps  		Set maximum update frequency in fps. 30 is default. Set to 0 for no limit.
 			 */

@@ -89,15 +89,6 @@ namespace mac{
 		if (!acronym) acronym = title;
 		this->acronym = (char*)malloc(sizeof(char) * strlen(acronym));
 		strcpy(this->acronym, acronym );
-		/*
-		this->title = title;
-		if (acronym) this->acronym = acronym;
-		else this->acronym = this->title; // XXX: First 3 chars
-		*/
-Serial.print("Title: ");
-Serial.println(this->title);
-Serial.print("Acronym: ");
-Serial.println(this->acronym);
 	}
 	
 } // namespace
