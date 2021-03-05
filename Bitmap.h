@@ -406,6 +406,13 @@ namespace mac{
 	bool pixelFormatHasAlpha( PixelFormat pixelFormat );
 
 	/**
+	 * Return the width, in bits, of a pixel stored in this format
+	 * @param  pixelFormat The pixel format to check
+	 * @return             The width in number of bits
+	 */
+	uint8_t pixelFormatBitWidth( PixelFormat pixelFormat );
+
+	/**
 	 * Return the width, in bytes, of a pixel stored in this format
 	 * @param  pixelFormat The pixel format to check
 	 * @return             The width in number of bytes

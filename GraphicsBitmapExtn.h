@@ -56,7 +56,7 @@ namespace mac{
 			 * @param	alpha	The alpha value (0.0-1.0)
 			 */
 			virtual void blit(
-				const Tilemap& tilemap,
+				const Tilemap* tilemap,
 				uint32_t index,
 				int16_t x,
 				int16_t y,
@@ -104,7 +104,7 @@ namespace mac{
 			 */
 			virtual void stamp(
 				color888 color,
-				const Tilemap& tilemap,
+				const Tilemap* tilemap,
 				uint32_t index,
 				int16_t x,
 				int16_t y,

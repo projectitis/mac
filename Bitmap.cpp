@@ -32,26 +32,35 @@ namespace mac{
 	}
 
 	/**
+	 * Return the width, in bits, of a pixel stored in this format
+	 * @param  pixelFormat The pixel format to check
+	 * @return             The width in number of bits
+	 */
+	uint8_t pixelFormatBitWidth( PixelFormat pixelFormat ){
+		switch (pixelFormat){
+			case mac::PF_565: return 16;
+			case mac::PF_4444: return 16;
+			case mac::PF_6666: return 24;
+			case mac::PF_8565: return 24;
+			case mac::PF_888: return 24;
+			case mac::PF_8888: return 32;
+			case mac::PF_GRAYSCALE8: return 8;
+			case mac::PF_GRAYSCALE4: return 4;
+			case mac::PF_GRAYSCALE2: return 2;
+			case mac::PF_MONO: return 1;
+			case mac::PF_INDEXED: return 8;
+			case mac::PF_UNKNOWN: return 0;
+			default: return 0;
+		}
+	}
+
+	/**
 	 * Return the width, in bytes, of a pixel stored in this format
 	 * @param  pixelFormat The pixel format to check
 	 * @return             The width in number of bytes
 	 */
 	uint8_t pixelFormatByteWidth( PixelFormat pixelFormat ){
-		switch (pixelFormat){
-			case mac::PF_565: return 2;
-			case mac::PF_4444: return 2;
-			case mac::PF_6666: return 3;
-			case mac::PF_8565: return 3;
-			case mac::PF_888: return 3;
-			case mac::PF_8888: return 4;
-			case mac::PF_GRAYSCALE8: return 1;
-			case mac::PF_GRAYSCALE4: return 0;
-			case mac::PF_GRAYSCALE2: return 0;
-			case mac::PF_MONO: return 0;
-			case mac::PF_INDEXED: return 1;
-			case mac::PF_UNKNOWN: return 0;
-			default: return 0;
-		}
+		return pixelFormatBitWidth( pixelFormat ) >> 3;
 	}
 	
 	/**

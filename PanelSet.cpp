@@ -154,6 +154,9 @@ namespace mac{
 			p = (Panel*)p->next();
 			i++;
 		}
+
+		// Icon
+		graphics->bitmap->blit( style->icons, 24, 12, 12, 1.0 );
 	}
 
 	/**

@@ -31,7 +31,7 @@ namespace mac{
 	 **/
 	GUI::GUI( Display* display, Style* style ) : PanelSet( style ){
 		// Graphics
-		this->graphics = new mac::Graphics( display, extension_text );
+		this->graphics = new mac::Graphics( display, extension_text | extension_bitmap );
 		_manageGraphics = true; // means we also destroy it
 		_init( style );
 	}

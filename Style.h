@@ -34,6 +34,7 @@
 #include "fonts/OpenSans11.h"
 #include "fonts/OpenSansExtraBold11.h"
 #include "resources/gui_controls.h"
+#include "resources/gui_icons.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -87,7 +88,7 @@ namespace mac{
 			 * Icon bitmaps
 			 */
 			const Tilemap* controls 				= &gui_controls;
-			//const Tilemap* icons 					= &gui_icons;
+			const Tilemap* icons 					= &gui_icons;
 	};
 	
 } // namespace

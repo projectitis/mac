@@ -6,6 +6,11 @@
 
 This project has a software component (the libraries) and a hardware component (a Teensy-based handheld). As well as the software, eventually the plans/schematics will be released to enable you to build your own Teensy-based handheld that will run mac.
 
+## DEVELOPER NOTES 2021-03-4
+## TODO next
+- GraphicsBitmap16.stamp functions to work correctly for non-alpha-channel images
+- Implement Icon class that includes support for rotating and combining icons/parts, and all the standard icons as enum
+
 ## Current status
 
  - **2019-04-14** Many bitmap and vector features implemented. Working on GUI components.

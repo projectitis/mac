@@ -67,6 +67,8 @@ namespace mac{
 		boolean childRendered = Widget::render( graphics, force );
 		// Render self
 		if (_dirty || childRendered || force){
+			
+			// Icon
 
 
 			_dirty = false;

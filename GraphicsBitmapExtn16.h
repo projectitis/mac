@@ -56,7 +56,7 @@ namespace mac{
 			 * @param	alpha	The alpha value (0.0-1.0)
 			 */
 			virtual void blit(
-				const Tilemap& tilemap,
+				const Tilemap* tilemap,
 				uint32_t index,
 				int16_t x,
 				int16_t y,
@@ -104,7 +104,7 @@ namespace mac{
 			 */
 			virtual void stamp(
 				color888 color,
-				const Tilemap& tilemap,
+				const Tilemap* tilemap,
 				uint32_t index,
 				int16_t x,
 				int16_t y,
@@ -150,9 +150,13 @@ namespace mac{
 			boolean _clip( int16_t& x, int16_t& y, uint16_t& sw, uint16_t& sh, uint32_t& si, uint32_t& di );
 
 			void _blitA( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di );
+			void _blitP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di );
 			void _blitT( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 tc );
+			void _blitTP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 tc );
 			void _stampA( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc );
+			void _stampP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc );
 			void _stampT( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc, color565 tc );
+			void _stampTP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc, color565 tc );
 	};
 	
 } // namespace
