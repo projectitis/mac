@@ -451,8 +451,31 @@ namespace mac{
 	 * @return       The clamped value in the range 0.0 - 1.0
 	 */
 	inline alpha alphaClamp( alpha a ){
-		return (a<0)?0:(a>1)?1:a;
+		return (a<0.0)?0.0:(a>1.0)?1.0:a;
 	}
+
+	/**
+	 * Color class that prepares several aspects for fast blending.
+	 */
+	typedef struct PreparedColorS {
+		color888 c;
+		color565 c565;
+		uint32_t cPre;
+		uint32_t cRB;
+		uint32_t cG;
+		alpha a;
+		uint8_t a5;
+		uint8_t a8;
+		PixelFormat pf;
+		PreparedColorS( color888 c, alpha a, PixelFormat pixelFormat );
+		void setAlpha( alpha a );
+		void setAlpha( uint8_t a );
+		void setColor( color888 c );
+		void setColor( uint8_t R, uint8_t G, uint8_t B );
+		void set( color888 c, alpha a );
+		void set( color888 c, uint8_t a );
+		void set( uint8_t R, uint8_t G, uint8_t B, uint8_t A );
+	} PreparedColor;
 
 	/**
 	 *  ######   #####  ######
@@ -581,6 +604,31 @@ namespace mac{
 		uint8_t c
 	){
 		return (c & 0b1)?RGB565_White:RGB565_Black;
+	}
+
+	/**
+	 * @brief Convert RGB565 color to grayscale in same format
+	 * 
+	 * @param c 			The color
+	 * @return color565 	The grayscale color
+	 */
+	inline color565 convert565to565gs(
+		color565 c
+	) {
+		uint8_t g = (((c>>11) & 0x1F) + ((c>>5) & 0x3F) + (c & 0x1F)) >> 2;
+		return (g << 11) + (g << 6) + g;
+	}
+
+	/**
+	 * @brief Convert RGB565 color to grayscale and return a single 5-bit channel value
+	 * 
+	 * @param c 			The color
+	 * @return uint8_t 		The grayscale channel color (0-31)
+	 */
+	inline uint8_t convert565to5gs(
+		color565 c
+	) {
+		return (((c>>11) & 0x1F) + ((c>>5) & 0x3F) + (c & 0x1F)) >> 2;
 	}
 
 	/**

@@ -87,8 +87,15 @@ namespace mac{
 			/**
 			 * Icon bitmaps
 			 */
-			const Tilemap* controls 				= &gui_controls;
-			const Tilemap* icons 					= &gui_icons;
+			const Tilemap* controls 				= &guiControls;
+			const Tilemap* icons 					= &guiIcons;
+
+			/**
+			 * Icon colors
+			 */
+			color888 iconColor						= 0xecf0f1;
+			color888 badgeTextColor 				= 0xecf0f1;
+			color888 badgeColor 					= 0xe94b35;
 	};
 	
 } // namespace

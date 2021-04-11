@@ -49,6 +49,16 @@
  *
  * XXX: DMA SUPPORT - NOT YET IMPLEMENTED
  * To compile with or without DMA, see the GRAPHICS_USE_DMA define in Display.h
+ * 
+ * XXX: LINE BUFFER SUPPORT - PLANNED, NOT YET IMPLEMENTED
+ * The mac graphics libraries are being rewritten to use a line (double) buffer instead of a frame buffer.
+ * This means that the memory requirements will be much lower. For example, a full framebuffer at 1x1 pixel
+ * scale requires 154k of RAM (at 16bpp) and a double-buffer would require 307k. A double line buffer requires
+ * 3.2k (1% of the size). 
+ * A line buffer for a 320x240 16bpp display is made up of:
+ * 		front buffer: 24bpp x 320 pixels + 16bpp x 320 pixels
+ * 		back buffer:  24bpp x 320 pixels + 16bpp x 320 pixels
+ * 
  */
 
 #pragma once

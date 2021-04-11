@@ -43,6 +43,18 @@
  * be useful in other projects.
  **/
 namespace mac{
+
+	/**
+	 * @brief Register of widget types
+	 */
+	enum class WidgetType {
+		base,
+		panelSet,
+		panel,
+		label,
+		icon,
+		guiIcon
+	};
 	
 	/**
 	 * The base class for all GUI widgets
@@ -92,7 +104,7 @@ namespace mac{
 			/**
 			 * The widget type. Set in construtor of each subclass
 			 */
-			uint32_t type;
+			WidgetType type;
 
 			/**
 			 * ID of the widget. Implementation specific.
@@ -126,6 +138,12 @@ namespace mac{
 			float w = 1;
 
 			/**
+			 * @brief Set the Visibility of the object
+			 * @param v 	The visibility
+			 */
+			void setVisible( boolean v );
+
+			/**
 			 * Add a display object to the top of the list
 			 */
 			void addChild( Widget* child );
@@ -157,6 +175,11 @@ namespace mac{
 			 * Return the first child
 			 */
 			Widget* firstChild();
+
+			/**
+			 * Return the last child
+			 */
+			Widget* lastChild();
 
 			/**
 			 * Return a child from the list by ID

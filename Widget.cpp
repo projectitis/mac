@@ -66,6 +66,11 @@ namespace mac{
 		this->_active = true;
 	}
 
+	void Widget::setVisible( boolean v ) {
+		this->_visible = v;
+		if (v) this->_dirty = true;
+	}
+
 	/**
 	 * Add a child to the list
 	 */
@@ -162,6 +167,20 @@ namespace mac{
 	}
 
 	/**
+	 * Return the first child
+	 */
+	Widget* Widget::lastChild(){
+		Widget* widget = _children;
+		Widget* nextWidget;
+		while (widget){
+			nextWidget = widget->next();
+			if (!nextWidget) return widget;
+			widget = nextWidget;
+		}
+		return 0;
+	}
+
+	/**
 	 * Return a child from the list by ID
 	 * @param 	id 		The ID of the widget
 	 */
@@ -249,7 +268,7 @@ namespace mac{
 	 * @return          Return true if current widget rendered (_dirty or forced)
 	 */
 	boolean Widget::render( Graphics* graphics, boolean force ){
-		if (!_children) return false;
+		if (!_visible || !_children) return false;
 		boolean childRendered = false;
 		Widget* widget = _children;
 		while (widget){

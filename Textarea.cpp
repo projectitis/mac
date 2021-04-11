@@ -56,7 +56,7 @@ namespace mac{
 		_lineHeight = 1.5;
 		_color = RGB565_White;
 		_alpha = 1;
-		_align = ALIGN_LEFT;
+		_align = TextAlign::left;
 		_poolNext = 0;
 	}
 	

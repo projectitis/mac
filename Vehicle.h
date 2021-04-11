@@ -1,5 +1,5 @@
 /**
- * Vector functions for "mac/μac"
+ * Vehicle functions for "mac/μac"
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  *

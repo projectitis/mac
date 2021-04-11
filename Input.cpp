@@ -130,7 +130,7 @@ namespace mac{
 				InputMap* im_prev = 0;
 				while (im){
 					InputMap* im_next = im->next;
-					if ((clickType==0) || (im->clickType==clickType)){
+					if (( clickType == ClickType::none ) || ( im->clickType == clickType )){
 						if (im_prev) im_prev->next = im->next;
 						delete im;
 					}
@@ -139,7 +139,7 @@ namespace mac{
 					}
 					im = im_next;
 				}
-				if (clickType==0){
+				if ( clickType == ClickType::none ){
 					delete ip;
 				}
 				break;
@@ -375,10 +375,10 @@ Serial.printf("  Click type %d\n", im->clickType);
 			}
 
 			// If we have triggered a ClickType, see if it is mapped (only if active)
-			if (buttonClickType && _active){
+			if ( ( buttonClickType != ClickType::none ) && _active){
 				InputMap* im = ip->mappings;
 				// If the click type is press or click_press, we also need to fire the 'up' events
-				boolean alsoUp = (buttonClickType==mac::ClickType::press) || (buttonClickType==mac::ClickType::click_press);
+				boolean alsoUp = ( buttonClickType == ClickType::press ) || ( buttonClickType == ClickType::click_press );
 				while (im){
 					// Trigger event for click type
 					if (im->clickType == buttonClickType){

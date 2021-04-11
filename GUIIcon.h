@@ -27,10 +27,12 @@
  */	
 
 #pragma once
-#ifndef _MAC_PANELH_
-#define _MAC_PANELH_ 1
+#ifndef _MAC_GUIICONH_
+#define _MAC_GUIICONH_ 1
 
-#include "Widget.h"
+#include "Icon.h"
+#include <map>
+#include <vector>
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -42,48 +44,33 @@
 namespace mac{
 	
 	/**
-	 * A panel
+	 * The GUI icon class for predefined GUI icons. Using this class requires a tilemap with a very specific layout.
+	 * For user-defined icons, @see Icon
 	 */
-	class Panel: public Widget {
+	class GUIIcon: public Icon {
 		
 		public:
+
 			/**
 			 * Constructor
 			 */
-			Panel( Style* aStyle );
+			GUIIcon( Style* aStyle );
 
 			/**
-			 * Memory pool of recycled widgets
+			 * Memory pool of recycled icons
 			 */
 			static Widget* pool;
 
 			/**
-			 * Create a new widget or take one from the pool
+			 * Create a new GUI icon or take one from the pool
 			 * @return The new or recycled widget
 			 */
-			static Panel* Create( Style* style );
+			static GUIIcon* Create( Style* style );
 
 			/**
 			 * Type identifier for this widget
 			 **/
-			static const WidgetType TYPE = WidgetType::panel;
-
-			/**
-			 * Reset the widget back to default settings
-			 */
-			void reset() override;
-
-			/**
-			 * The title and acronym
-			 */
-			char* title;
-			char* acronym;
-
-			/**
-			 * Update the display object.
-			 * @param	dt 			Time since last update in seconds
-			 */
-			void update( float dt ) override;
+			static const WidgetType TYPE = WidgetType::guiIcon;
 
 			/**
 			 * Render the display object
@@ -93,20 +80,12 @@ namespace mac{
 			 */
 			boolean render( Graphics* graphics, boolean force ) override;
 
-			/**
-			 * Set the title and acronym of the panel
-			 * @param  title   	The full title of the panel (max 32 chars)
-			 * @param  acronym 	The acronym to display when collapsed (max 3 chars)
-			 */
-			void setTitle( char* title, char* acronym );
-
 		protected:
 			
 			/**
 			 * Pool getter
 			 */
 			Widget** _getPool() override;
-
 	};
 	
 } // namespace

@@ -66,11 +66,10 @@ namespace mac{
 			/**
 			 * Type identifier for this widget
 			 **/
-			static const uint32_t TYPE = 2;
+			static const WidgetType TYPE = WidgetType::label;
 
 			/**
 			 * Return this widget to the pool
-			 * @param widgt [description]
 			 */
 			void recycle();
 
@@ -78,11 +77,6 @@ namespace mac{
 			 * Reset the widget back to default settings
 			 */
 			void reset();
-
-			/**
-			 * The title and acronym
-			 */
-			char* text;
 
 			/**
 			 * Update the display object.
@@ -99,12 +93,35 @@ namespace mac{
 			boolean render( Graphics* graphics, boolean force ) override;
 
 			/**
+			 * Set the font to use for the label
+			 * @param  f   	The font
+			 */
+			void setFont( packedbdf_t* f );
+
+			/**
 			 * Set the text of the label
 			 * @param  text   	The text for the label
 			 */
 			void setText( const char* text );
 
+			/**
+			 * @brief Set the Color of the label
+			 * @param c 	The color
+			 */
+			void setColor( color888 c );
+
+			/**
+			 * @brief Set the Alpha of the label
+			 * @param a 	The alpha
+			 */
+			void setAlpha( alpha a );
+
 		protected:
+
+			packedbdf_t* _font = 0;
+			char* _text = 0;
+			color888 _color = 0;
+			alpha _alpha = 1.0;
 
 			/**
 			 * Pool getter

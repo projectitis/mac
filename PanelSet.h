@@ -31,6 +31,8 @@
 #define _MAC_PANELSETH_ 1
 
 #include "Panel.h"
+#include "Label.h"
+#include "GUIIcon.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -68,7 +70,7 @@ namespace mac{
 			/**
 			 * Type identifier for this widget
 			 **/
-			static const uint32_t TYPE = 1;
+			static const WidgetType TYPE = WidgetType::panelSet;
 
 			/**
 			 * Update the display object.
@@ -115,6 +117,8 @@ namespace mac{
 			 * Internal
 			 **/
 			Panel* _activePanel;
+			GUIIcon* _mainIcon;
+			Label* _title;
 			boolean _menuOpen;
 			float _menuWidth;
 			void _drawArrowLeft( Graphics* graphics, int16_t y );

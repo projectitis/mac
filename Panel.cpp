@@ -20,7 +20,7 @@ namespace mac{
 	/**
 	 * Constructor
 	 */
-	Panel::Panel( Style* aStyle ){}
+	Panel::Panel( Style* aStyle ) : Widget( aStyle ){}
 
 	/**
 	 * Pool getter
@@ -63,20 +63,19 @@ namespace mac{
 	 * @return          Return true if current widget rendered (_dirty or forced)
 	 */
 	boolean Panel::render( Graphics* graphics, boolean force ){
-		// Render children
-		boolean childRendered = Widget::render( graphics, force );
+		// Exit early if not visible
+		if (!_visible) return false;
+
 		// Render self
-		if (_dirty || childRendered || force){
-			
-			// Icon
-
-
+		boolean selfRendered = false;
+		if (_dirty || force){
+	
 			_dirty = false;
-			return true;
+			selfRendered = true;
 		}
-		else{
-			return false;
-		}
+
+		// Render children
+		return Widget::render( graphics, force ) || selfRendered;
 	}
 
 	/**

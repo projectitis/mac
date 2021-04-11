@@ -20,9 +20,21 @@ namespace mac{
 	/**
 	 * Constructor
 	 */
-	PanelSet::PanelSet( Style* aStyle ){
+	PanelSet::PanelSet( Style* aStyle ) : Widget( aStyle ){
 		_activePanel = 0;
 		_menuOpen = false;
+
+		_title = Label::Create( aStyle );
+		addChild( _title );
+		_title->setFont( aStyle->labelFont );
+		_title->setColor( aStyle->labelColor );
+		_title->y = 16;
+
+		_mainIcon = GUIIcon::Create( aStyle );
+		addChild( _mainIcon );
+		_mainIcon->setIcon( (uint32_t)GUIIconType::chevronLeftCircle, RGB888_Teal );
+		_mainIcon->x = 14;
+		_mainIcon->y = 14;
 	}
 
 	/**
@@ -60,6 +72,7 @@ namespace mac{
 		// Render self
 		boolean selfRendered = false;
 		if (_dirty || force){
+Serial.println("PanelSet render");
 			if (_menuOpen) _menuWidth = 80.0;
 			else _menuWidth = 40.0;
 			_drawBackground( graphics );
@@ -69,9 +82,7 @@ namespace mac{
 			selfRendered = true;
 		}
 		// Render children
-		boolean childRendered = Widget::render( graphics, force );
-
-		return selfRendered || childRendered;
+		return Widget::render( graphics, force ) || selfRendered;
 	}
 
 	/**
@@ -87,7 +98,14 @@ namespace mac{
 		panel->messenger = this->messenger;
 		panel->tweens = this->tweens;
 		addChild(panel);
-		if (!_activePanel) _activePanel = panel;
+		if (!_activePanel) {
+			_activePanel = panel;
+			_title->setText( _activePanel->title );
+			panel->setVisible( true );
+		}
+		else{
+			panel->setVisible( false );
+		}
 		return panel;
 	}
 
@@ -119,20 +137,16 @@ namespace mac{
 	}
 
 	void PanelSet::_drawBackground( Graphics* graphics ){
+Serial.println("PanelSet::_drawBackground");
 		uint16_t w = (uint16_t)_menuWidth;
 		// Title area
 		graphics->rectangle( 0,0, w-2,40, style->screenColor );
 		graphics->lineV( w-2,0, 40, style->panelBorderColor[0] );
 		graphics->lineV( w-1,0, 40, style->panelHighlightColor[0] );
 		graphics->rectangle( w,0, graphics->display->width-w,40, style->panelBackgroundColor[0] );
+
 		// Title
-		graphics->text->setFont( style->labelFont );
-		graphics->text->setColor( style->featureColor[0] );
-		graphics->text->moveCursorTo( w+12,24 );
-		//graphics->text->print( (char*)F("Sprite") );
-		graphics->text->moveCursor( 6, 0 );
-		graphics->text->setColor( style->labelColor );
-		graphics->text->print( _activePanel->title );
+		_title->x = w + 12;
 
 		// Menu area
 		graphics->lineH( 0,40, w, style->panelBorderColor[0]);
@@ -143,20 +157,22 @@ namespace mac{
 		graphics->lineH( w,40, graphics->display->width-w, style->panelBorderColor[1]);
 		graphics->rectangle( w,41, graphics->display->width-w,graphics->display->height-41, style->panelBackgroundColor[1] );
 
-		Panel* p = (Panel*)firstChild();
+		graphics->text->setFont( style->labelFont );
+		Widget* child = lastChild();
+		Panel* p;
 		uint16_t i = 0;
-		while (p) {
-			if ( p == _activePanel ) graphics->text->setColor( style->labelColor );
-			else graphics->text->setColor( style->labelInactiveColor );
-			graphics->text->setTextArea( 12,56+(i*20), w-12,20, mac::ALIGN_LEFT );
-			if (_menuOpen) graphics->text->printTextArea( p->title );
-			else graphics->text->printTextArea( p->acronym ); // p->acronym 
-			p = (Panel*)p->next();
-			i++;
+		while (child) {
+			if (child->type == WidgetType::panel) {
+				p = (Panel*)child;
+				if ( p == _activePanel ) graphics->text->setColor( style->labelColor );
+				else graphics->text->setColor( style->labelInactiveColor );
+				graphics->text->setTextArea( 12,56+(i*20), w-12,20, TextAlign::left );
+				if (_menuOpen) graphics->text->printTextArea( p->title );
+				else graphics->text->printTextArea( p->acronym ); // p->acronym 
+				i++;
+			}
+			child = child->prev();
 		}
-
-		// Icon
-		graphics->bitmap->blit( style->icons, 24, 12, 12, 1.0 );
 	}
 
 	/**

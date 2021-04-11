@@ -112,7 +112,7 @@ namespace mac{
 			float 		_lineHeight;
 			color888 	_color;
 			alpha 		_alpha;
-			textAlign 	_align;
+			TextAlign 	_align;
 	};
 	
 } // namespace

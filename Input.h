@@ -41,7 +41,7 @@
  **/
 namespace mac{
 	
-	typedef enum {
+	enum class InputType {
 
 		/**
 		 * ONE BUTTON mode
@@ -148,9 +148,9 @@ namespace mac{
 		 */
 		joy2 = 8
 
-	} InputType;
+	};
 
-	typedef enum {
+	enum class ClickType {
 		none 			= 0,
 
 		// Normal digital button actions
@@ -173,17 +173,17 @@ namespace mac{
 		// Other analogue actions
 		release  		= 30  // For analogue inputs, this is a return to neutral
 
-	} ClickType;
+	};
 
-	typedef enum {
+	enum class PinType {
 		digital 		= 0,
 		analog			= 1, // Analogue, 0=off, >0 is on
 		analog_mid		= 2  // Analogue, middle=off, away from middle is on (+ve and -ve)
-	} PinType;
+	};
 
 	typedef uint8_t pin;
 
-	typedef enum {
+	enum class PinState {
 		psRest, 					// Resting state
 		psDown1DB,					// Button down, debounce period
 		psDown1,					// Down
@@ -196,7 +196,7 @@ namespace mac{
 		psPress2DB,					// Button up after second press, debounce period
 		psHold,						// Hold button down (first or second click)
 		psLastDB,					// Button up, debounce period. Rest after
-	} PinState;
+	};
 
 	/**
 	 * An input mapping

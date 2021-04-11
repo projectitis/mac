@@ -45,19 +45,17 @@ namespace mac{
 	/**
 	 * Text
 	 */
-	typedef enum textAlignE{
-		ALIGN_LEFT		= 0,
-		ALIGN_RIGHT		= 1,
-		ALIGN_CENTER	= 2
-	} textAlign;
-	
-
+	enum class TextAlign{
+		left,
+		right,
+		center
+	};
 
 	class TextArea: public ClipRect {
 		public:
 			int16_t cx;			// X position of cursor
 			int16_t cy;			// Y position of cursor
-			textAlign align;	// Horizontal text alignment
+			TextAlign align;	// Horizontal text alignment
 			float lineSpace;	// Line space for new lines. Default 1.5 
 			uint8_t tabWidth;	// Number of spaces for a tab. Default 8
 			/*
@@ -142,7 +140,7 @@ namespace mac{
 			 * @param h     Height of area
 			 * @param align Horizontal text align within area
 			 */
-			void setTextArea( int16_t x, int16_t y, uint16_t w, uint16_t h, textAlign align = ALIGN_LEFT );
+			void setTextArea( int16_t x, int16_t y, uint16_t w, uint16_t h, TextAlign align = TextAlign::left );
 
 			/**
 			 * Reset the cursor back to the origin of the current text area

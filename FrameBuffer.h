@@ -41,30 +41,6 @@
  * be useful in other projects.
  **/
 namespace mac{
-
-	/**
-	 * Color class that prepares several aspects for fast blending. Don't create
-	 * manually - use FrameBuffer::prepareColor factory method.
-	 */
-	typedef struct PreparedColorS {
-		color888 c;
-		color565 c565;
-		uint32_t cPre;
-		uint32_t cRB;
-		uint32_t cG;
-		alpha a;
-		uint8_t a5;
-		uint8_t a8;
-		PixelFormat pf;
-		PreparedColorS( color888 c, alpha a, PixelFormat pixelFormat );
-		void setAlpha( alpha a );
-		void setAlpha( uint8_t a );
-		void setColor( color888 c );
-		void setColor( uint8_t R, uint8_t G, uint8_t B );
-		void set( color888 c, alpha a );
-		void set( color888 c, uint8_t a );
-		void set( uint8_t R, uint8_t G, uint8_t B, uint8_t A );
-	} PreparedColor;
 	
 	/**
 	 * Framebuffer class that can handle different pixel formats (8, 16 and 32 bit pixels)

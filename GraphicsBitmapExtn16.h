@@ -54,13 +54,15 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void blit(
 				const Tilemap* tilemap,
 				uint32_t index,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -69,12 +71,14 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void blit(
 				Bitmap bitmap,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -84,13 +88,15 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void blit(
 				Bitmap bitmap,
 				ClipRect* rect,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -101,6 +107,7 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void stamp(
 				color888 color,
@@ -108,7 +115,30 @@ namespace mac{
 				uint32_t index,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
+			);
+
+			/**
+			 * Blit an area of a tile from the tilemap as a stamp
+			 * @param 	color 	The color of the stamp
+			 * @param 	tileMap A tilemap containing the tile data
+			 * @param 	index   The index of the tile in the map
+			 * @param 	rect 	The area of the tile to blit
+			 * @param	dx		The destination x coord within the framebuffer
+			 * @param	dy		The destination y coord within the framebuffer
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
+			 */
+			virtual void stamp(
+				color888 color,
+				const Tilemap* tilemap,
+				uint32_t index,
+				ClipRect* rect,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -118,13 +148,15 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void stamp(
 				color888 color,
 				Bitmap bitmap,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -135,6 +167,7 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void stamp(
 				color888 color,
@@ -142,21 +175,20 @@ namespace mac{
 				ClipRect* rect,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 		private:
 
-			boolean _clip( int16_t& x, int16_t& y, uint16_t& sw, uint16_t& sh, uint32_t& si, uint32_t& di );
+			boolean _clip( BitmapRotation r, int16_t& x, int16_t& y, uint16_t& sw, uint16_t& sh, uint32_t& si, uint32_t& di, int16_t& dp, int16_t& ds );
 
-			void _blitA( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di );
-			void _blitP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di );
-			void _blitT( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 tc );
-			void _blitTP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 tc );
-			void _stampA( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc );
-			void _stampP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc );
-			void _stampT( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc, color565 tc );
-			void _stampTP( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, color565 sc, color565 tc );
+			void _blitA( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, int16_t dp, int16_t ds );
+			void _blitT( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, int16_t dp, int16_t ds, color565 tc );
+			void _blitG( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, int16_t dp, int16_t ds, color565 tc );
+			void _stampA( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, int16_t dp, int16_t ds, color565 sc );
+			void _stampT( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, int16_t dp, int16_t ds, color565 sc, color565 tc );
+			void _stampG( uint8_t* data, access5565 getPixel, uint8_t pw, uint32_t si, uint16_t sw, uint16_t sh, uint16_t ss, alpha alpha, uint32_t di, int16_t dp, int16_t ds, color565 sc, color565 tc );
 	};
 	
 } // namespace

@@ -40,6 +40,16 @@
  * be useful in other projects.
  **/
 namespace mac{
+
+	/**
+	 * Pixel formats
+	 **/
+	enum class BitmapRotation{
+		none,
+		cw_90,
+		cw_180,
+		cw_270
+	};
 	
 	/**
 	 * Adds bitmap drawing functions to the Graphics library
@@ -54,13 +64,15 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void blit(
 				const Tilemap* tilemap,
 				uint32_t index,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -69,12 +81,14 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void blit(
 				Bitmap bitmap,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -84,13 +98,15 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void blit(
 				Bitmap bitmap,
 				ClipRect* rect,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -101,6 +117,7 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void stamp(
 				color888 color,
@@ -108,7 +125,30 @@ namespace mac{
 				uint32_t index,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
+			);
+
+			/**
+			 * Blit an area of a tile from the tilemap as a stamp
+			 * @param 	color 	The color of the stamp
+			 * @param 	tileMap A tilemap containing the tile data
+			 * @param 	index   The index of the tile in the map
+			 * @param 	rect 	The area of the tile to blit
+			 * @param	dx		The destination x coord within the framebuffer
+			 * @param	dy		The destination y coord within the framebuffer
+			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
+			 */
+			virtual void stamp(
+				color888 color,
+				const Tilemap* tilemap,
+				uint32_t index,
+				ClipRect* rect,
+				int16_t x,
+				int16_t y,
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -118,13 +158,15 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void stamp(
 				color888 color,
 				Bitmap bitmap,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 
 			/**
@@ -135,6 +177,7 @@ namespace mac{
 			 * @param	dx		The destination x coord within the framebuffer
 			 * @param	dy		The destination y coord within the framebuffer
 			 * @param	alpha	The alpha value (0.0-1.0)
+			 * @param	r		The rotation
 			 */
 			virtual void stamp(
 				color888 color,
@@ -142,7 +185,8 @@ namespace mac{
 				ClipRect* rect,
 				int16_t x,
 				int16_t y,
-				alpha alpha = 1
+				alpha alpha = 1,
+				BitmapRotation r = BitmapRotation::none
 			);
 			
 	};

@@ -20,12 +20,12 @@ namespace mac{
 	/**
 	 * Constructor
 	 */
-	Label::Label( Style* aStyle ){}
+	Label::Label( Style* aStyle ) : Widget( aStyle ){}
 
 	/**
 	 * Pool getter
 	 */
-	Widget** _getPool(){
+	Widget** Label::_getPool(){
 		return &Label::pool;
 	}
 
@@ -34,14 +34,17 @@ namespace mac{
 	 * @return The new or recycled widget
 	 */
 	Label* Label::Create( Style* aStyle ){
-		return (Label*)Widget::Create<Label>(aStyle);
+		return (Label*)Widget::Create<Label>( aStyle );
 	}
 
 	/**
 	 * Reset the widget back to default settings
 	 */
 	void Label::reset(){
-		this->text = 0;
+		this->_font = 0;
+		this->_text = 0;
+		this->_color = 0;
+		this->_alpha = 1.0;
 		Widget::reset();
 	}
 
@@ -59,7 +62,31 @@ namespace mac{
 	 * @return          Return true if current widget rendered (_dirty or forced)
 	 */
 	boolean Label::render( Graphics* graphics, boolean force ){
-		return false;
+		// Render self
+		boolean selfRendered = false;
+		if (_dirty || force){
+			if (!this->_font && style) this->_font = style->labelFont;
+			if (this->_font && this->_text) {
+				graphics->text->setFont( this->_font );
+				graphics->text->setColor( this->_color );
+				graphics->text->setAlpha( this->_alpha );
+				graphics->text->setTextArea( x, y, 100, 20 ); // XXX: Proper W and H		
+				graphics->text->printTextArea( this->_text );
+				selfRendered = true;
+			}
+			_dirty = false;
+		}
+		// Render children
+		return Widget::render( graphics, force ) || selfRendered;
+	}
+
+	/**
+	 * Set the font to use for the label
+	 * @param  f   	The font
+	 */
+	void Label::setFont( packedbdf_t* f ) {
+		this->_font = f;
+		_dirty = true;
 	}
 
 	/**
@@ -67,7 +94,25 @@ namespace mac{
 	 * @param  text   	The text for the label
 	 */
 	void Label::setText( const char* text ){
-		this->text = (char*)text;
+		this->_text = (char*)text;
+		_dirty = true;
+	}
+
+	/**
+	 * @brief Set the Color of the label
+	 * @param c 	The color
+	 */
+	void Label::setColor( color888 c ) {
+		this->_color = c;
+		_dirty = true;
+	}
+
+	/**
+	 * @brief Set the Alpha of the label
+	 * @param a 	The alpha
+	 */
+	void Label::setAlpha( alpha a ) {
+		this->_alpha = alphaClamp( a );
 		_dirty = true;
 	}
 	

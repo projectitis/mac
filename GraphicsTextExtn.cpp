@@ -39,7 +39,7 @@ namespace mac{
 			_fontalphamx = 31/((1<<_fontbpp)-1);
 			_fontdeltaoffset = 3 + _font->bits_width + _font->bits_height + _font->bits_xoffset + _font->bits_yoffset;
 			_fontspacewidth = _getCharWidth(32);
-Serial.printf("Font bpp = %d, ppb = %d, index = %d, mask = %d, amx = %f\n", _fontbpp,_fontppb,_fontbppindex,_fontbppmask,_fontalphamx);
+//Serial.printf("Font bpp = %d, ppb = %d, index = %d, mask = %d, amx = %f\n", _fontbpp,_fontppb,_fontbppindex,_fontbppmask,_fontalphamx);
 		}
 	}
 
@@ -55,7 +55,7 @@ Serial.printf("Font bpp = %d, ppb = %d, index = %d, mask = %d, amx = %f\n", _fon
 		_color->setAlpha( alpha );
 	}
 
-	void GraphicsTextExtn::setTextArea( int16_t x, int16_t y, uint16_t w, uint16_t h, textAlign align ){
+	void GraphicsTextExtn::setTextArea( int16_t x, int16_t y, uint16_t w, uint16_t h, TextAlign align ){
 		_textarea->setPosAndSize( x, y, w, h );
 		_textarea->align = align;
 		_textarea->lineSpace = 1.5;
@@ -73,7 +73,7 @@ Serial.printf("Font bpp = %d, ppb = %d, index = %d, mask = %d, amx = %f\n", _fon
 
 	void GraphicsTextExtn::resetTextArea(){
 		_textarea->setPosAndSize( 0, 0, _framebuffer->width, _framebuffer->height );
-		_textarea->align = ALIGN_LEFT;
+		_textarea->align = TextAlign::left;
 		resetTextAreaCursor();
 	}
 
@@ -111,9 +111,9 @@ Serial.printf("Font bpp = %d, ppb = %d, index = %d, mask = %d, amx = %f\n", _fon
 	void GraphicsTextExtn::printTextArea( const char* text ){
 		if (!_font) return;
 		if (_textarea->cy > _textarea->y2) return;
-Serial.printf("printTextArea %s\n", text);
-Serial.printf("  Area %d-%d,%d-%d\n", _textarea->x,_textarea->x2,_textarea->y,_textarea->y2);
-Serial.printf("  Clip %d-%d,%d-%d\n", _clip->x,_clip->x2,_clip->y,_clip->y2);
+//Serial.printf("printTextArea %s\n", text);
+//Serial.printf("  Area %d-%d,%d-%d\n", _textarea->x,_textarea->x2,_textarea->y,_textarea->y2);
+//Serial.printf("  Clip %d-%d,%d-%d\n", _clip->x,_clip->x2,_clip->y,_clip->y2);
 
 		char c;
 		char* p = (char*)text;
@@ -126,8 +126,8 @@ Serial.printf("  Clip %d-%d,%d-%d\n", _clip->x,_clip->x2,_clip->y,_clip->y2);
 			sw = _getSentence( p, rw, pw );
 //Serial.printf("  sentence width %d (to fit %d), num chars %d\n", sw, rw, (pw-p+1));
 			// Offset based on alignment
-			if (_textarea->align == ALIGN_RIGHT) _textarea->cx += rw-sw;
-			else if (_textarea->align == ALIGN_CENTER) _textarea->cx += ((rw-sw)>>1);
+			if (_textarea->align == TextAlign::right) _textarea->cx += rw-sw;
+			else if (_textarea->align == TextAlign::center) _textarea->cx += ((rw-sw)>>1);
 			// Print the sentence
 			while (p <= pw){
 				c = *p;
@@ -335,7 +335,7 @@ Serial.printf("  Clip %d-%d,%d-%d\n", _clip->x,_clip->x2,_clip->y,_clip->y2);
 			}
 
 		}
-Serial.println("");
+//Serial.println("");
 
 		return cx;
 	}
@@ -370,7 +370,7 @@ Serial.println("");
 		// Adjust alpha based on the number of alpha levels supported by the font (based on bpp)
 		// XXX: Combine _fontalphamx and _alpha ahead of time
 		alpha = (uint8_t)(alpha * _fontalphamx * _color->a);
-Serial.printf("%d ",alpha);
+//Serial.printf("%d ",alpha);
 		uint32_t i = _framebuffer->index(x,y);
 		_framebuffer->data.data16[i] = alphaBlendPrepared5565( _color->cPre, _framebuffer->data.data16[i], alpha );
 	}

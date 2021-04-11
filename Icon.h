@@ -27,8 +27,8 @@
  */	
 
 #pragma once
-#ifndef _MAC_PANELH_
-#define _MAC_PANELH_ 1
+#ifndef _MAC_ICONH_
+#define _MAC_ICONH_ 1
 
 #include "Widget.h"
 
@@ -42,42 +42,37 @@
 namespace mac{
 	
 	/**
-	 * A panel
+	 * An icon class
+	 * This class is for user-defined icons. For the standard GUI icons, @see GUIIcon
 	 */
-	class Panel: public Widget {
+	class Icon: public Widget {
 		
 		public:
 			/**
 			 * Constructor
 			 */
-			Panel( Style* aStyle );
+			Icon( Style* aStyle );
 
 			/**
-			 * Memory pool of recycled widgets
+			 * Memory pool of recycled icons
 			 */
 			static Widget* pool;
 
 			/**
-			 * Create a new widget or take one from the pool
+			 * Create a new icon or take one from the pool
 			 * @return The new or recycled widget
 			 */
-			static Panel* Create( Style* style );
+			static Icon* Create( Style* style );
 
 			/**
 			 * Type identifier for this widget
 			 **/
-			static const WidgetType TYPE = WidgetType::panel;
+			static const WidgetType TYPE = WidgetType::icon;
 
 			/**
 			 * Reset the widget back to default settings
 			 */
 			void reset() override;
-
-			/**
-			 * The title and acronym
-			 */
-			char* title;
-			char* acronym;
 
 			/**
 			 * Update the display object.
@@ -94,11 +89,57 @@ namespace mac{
 			boolean render( Graphics* graphics, boolean force ) override;
 
 			/**
-			 * Set the title and acronym of the panel
-			 * @param  title   	The full title of the panel (max 32 chars)
-			 * @param  acronym 	The acronym to display when collapsed (max 3 chars)
+			 * @brief Set icon index
+			 * 
+			 * @param tilemap	The tilemap that contains the icons
+			 * @param index 	The index of the icon in the tilemap
 			 */
-			void setTitle( char* title, char* acronym );
+			void setIcon( Tilemap* tilemap, uint32_t index );
+
+			/**
+			 * @brief Set icon index
+			 * 
+			 * @param tilemap	The tilemap that contains the icons
+			 * @param index 	The index of the icon in the tilemap
+			 * @param color 	The color of the icon
+			 */
+			void setIcon( Tilemap* tilemap, uint32_t index, color888 color );
+
+			/**
+			 * @brief Set icon index
+			 * 
+			 * @param index 	The index of the icon in the tilemap
+			 */
+			void setIcon( uint32_t index );
+
+			/**
+			 * @brief Set icon index and color
+			 * 
+			 * @param index 	The index of the icon in the tilemap
+			 * @param color 	The color of the icon
+			 */
+			void setIcon( uint32_t index, color888 color );
+
+			/**
+			 * Set a badge
+			 * @param  count   		The number in the badge (1-99). If 0, the badge will be hidden
+			 */
+			void setBadge( uint8_t count );
+
+			/**
+			 * Set a badge
+			 * @param  count   		The number in the badge (1-99). If 0, the badge will be hidden
+			 * @param  badgeColor 	The color of the badge background circle
+			 * @param  textColor 	The color of the badge text (count)
+			 */
+			void setBadge( uint8_t count, color888 badgeColor, color888 textColor );
+
+			/**
+			 * @brief Set icon color
+			 * 
+			 * @param color 	The color of the icon
+			 */
+			void setColor( color888 color );
 
 		protected:
 			
@@ -107,6 +148,21 @@ namespace mac{
 			 */
 			Widget** _getPool() override;
 
+			/**
+			 * Icon details
+			 */
+			const Tilemap* _iconTilemap = NULL;
+			uint32_t _iconIndex = 0;
+			uint8_t _badgeCount;
+			BitmapRotation _iconRotation = BitmapRotation::none;
+
+			/**
+			 * Colors and alpha
+			 */
+			color888 _iconColor = 0xffffff;
+			alpha _iconAlpha = 1.0;
+			color888 _badgeColor = 0xff9900;
+			color888 _textColor = 0xffffff;
 	};
 	
 } // namespace
