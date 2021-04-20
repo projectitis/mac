@@ -1,5 +1,5 @@
 /**
- * Graphics library for "mac/μac"
+ * GUI library for "mac/μac"
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  *
@@ -25,13 +25,15 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */	
- 
-#pragma once
-#ifndef _MAC_GRAPHICSEXTNH_
-#define _MAC_GRAPHICSEXTNH_ 1
 
-#include "Common.h"
-#include "FrameBuffer.h"
+#pragma once
+#ifndef _MAC_STAGEH_
+#define _MAC_STAGEH_ 1
+
+#include "DisplayObject.h"
+#include "Sprite.h"
+#include "Display.h"
+
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -41,29 +43,80 @@
  * be useful in other projects.
  **/
 namespace mac{
-	
-	/**
-	 * A base class for extending the Graphics object with additional features.
-	 */
-	class GraphicsExtension {
-		public:
 
-			virtual ~GraphicsExtension(){}
+	/**
+	 * The main stage object
+	 */
+	class Stage: public DisplayObject {
+		
+		public:
+			/**
+			 * Constructor
+			 */
+			Stage();
 
 			/**
-			 * Called by Graphics to initialise the extension
+			 * Memory pool of recycled objects
+			 */
+			static DisplayObject* pool;
+
+			/**
+			 * Create a new object or take one from the pool
+			 * @return The new or recycled object
+			 */
+			static Stage* Create();
+
+			/**
+			 * Type identifier for this object
 			 **/
-			void init( FrameBuffer* framebuffer ){
-				_framebuffer = framebuffer;
-			}
-			
+			static const DisplayObjectType TYPE = DisplayObjectType::stage;
+
+			/**
+			 * Reset the object back to default settings
+			 */
+			void reset() override;
+
+			/**
+			 * Update all objects on the stage. This will advance animations, messages etc but
+			 * will not update the objects to the display.
+			 * @param	dt 			Time since last update in seconds
+			 */
+			void update( float dt ) override;
+
+			/**
+			 * Render the objects to the display 
+			 */
+			void render( Display* display );
+
+			/**
+			 * Set the background color
+			 * @param bgColor The background color
+			 */
+			void backgroundColor( color888 bgColor );
+
+			/**
+			 * Get the background color
+			 * @return color The background color
+			 */
+			color888 backgroundColor();
+
 		protected:
 			
 			/**
-			 * The framebuffer to render to
-			 **/
-			FrameBuffer* _framebuffer;
-			
+			 * Pool getter
+			 */
+			DisplayObject** _getPool() override;
+
+			/**
+			 * Stage color
+			 */
+			color888 _backgroundColor = 0;
+
+			/**
+			 * Area of the display that is dirty
+			 */
+			ClipRect* _dirtyRect;
+
 	};
 	
 } // namespace

@@ -76,7 +76,7 @@ namespace mac{
 			 * Update the framebuffer to the display
 			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 			 **/
-			virtual void update(
+			void update(
 				boolean continuous = false
 			);
 			
@@ -85,7 +85,7 @@ namespace mac{
 			/**
 			 * Initialise the display. Called from the constructor.
 			 **/
-			virtual void init( void );
+			void init( void );
 
 			/**
 			 * I2C methods
@@ -110,6 +110,7 @@ namespace mac{
 			uint8_t _scl, _sda;
 			PixelScale _px;
 			int8_t _i2caddr;
+			float _ipx; // Inverse of px
 	};
 
 } // namespace

@@ -30,7 +30,8 @@
 #ifndef _MAC_APPH_
 #define _MAC_APPH_ 1
 
-#include "Graphics.h"
+#include "Display.h"
+#include "Stage.h"
 #include "Messenger.h"
 #include "Tween.h"
 #include "Input.h"
@@ -68,20 +69,19 @@ namespace mac{
 			App( Display* display );
 
 			/**
-			 * Constructor with graphics object.
-			 * @param	graphics		A Graphics instance to render to. Must be bound to a hardware display.
-			 **/
-			App( Graphics* graphics );
-
-			/**
 			 * Destructor
 			 **/
 			~App();
 
 			/**
-			 * The graphics object
-			 **/
-			Graphics* graphics;
+			 * The hardware display object
+			 */
+			Display* display;
+
+			/**
+			 * The stage for rendering graphics
+			 */
+			Stage* stage;
 
 			/**
 			 * Input

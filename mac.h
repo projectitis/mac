@@ -35,6 +35,7 @@
  * Include all mac headers
  */
 #include "App.h"
+#include "Stage.h"
 #include "DisplayILI9341.h"
 #include "DisplaySSD1306.h"
 

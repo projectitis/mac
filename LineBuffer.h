@@ -41,32 +41,52 @@
  * be useful in other projects.
  **/
 namespace mac{
+
+	/**
+	 * Holds the pixel data and state of the line buffer. There
+	 * are two of these - one for the sront and one for the back.
+	 */
+	typedef struct {
+
+		// The pixel data
+		union Data{
+			uint8_t* data8;
+			uint16_t* data16;
+			uint32_t* data32;
+		} pixels;
+
+		// The y coord of the linebuffer
+		uint16_t y;
+
+		// The start x coord (normally 0)
+		uint16_t x0;
+
+		// The end x coord (normally width-1)
+		uint16_t x1;
+
+	} LineBufferData;
 	
 	/**
-	 * Linebuffer class (single-line frame buffer) that handles different
-	 * pixel formats (8, 16 and 32 bit pixels)
+	 * LineBuffer class (single-line frame buffer) that handles different
+	 * pixel formats (8, 16 and 32 bit pixels). Double-buffered.
 	 */
-	class Linebuffer {
+	class LineBuffer {
 		
 		public:
 			/**
 			 * Constructor
 			 */
-			Linebuffer( PixelFormat pixelFormat, uint16_t w, uint16_t h );
+			LineBuffer( PixelFormat pixelFormat, uint16_t w );
 
 			/**
 			 * Destructor
 			 */
-			~Linebuffer();
+			~LineBuffer();
 
 			/**
 			 * Pointer to the pixel data
 			 */
-			union Data{
-				uint8_t* data8;
-				uint16_t* data16;
-				uint32_t* data32;
-			} data[2];
+			LineBufferData data[2];
 
 			/**
 			 * Index to the active (front) data buffer for reading and writing
@@ -108,7 +128,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void writePixel( uint8_t c, uint16_t x ){
-				data[frontIndex].data8[x] = c;
+				data[frontIndex].pixels.data8[x] = c;
 			}
 
 			/**
@@ -127,7 +147,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void readPixel( uint16_t x, uint8_t& c ){
-				c = data[frontIndex].data8[x];
+				c = data[frontIndex].pixels.data8[x];
 			}
 
 			/**
@@ -145,7 +165,7 @@ namespace mac{
 			 **/
 			inline void clear8( uint8_t c ){
 				uint16_t x = width;
-				while (x) data[frontIndex].data8[--x] = c;
+				while (x) data[frontIndex].pixels.data8[--x] = c;
 			}
 
 			/**
@@ -162,7 +182,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void writePixel( uint16_t c, uint16_t x ){
-				data[frontIndex].data16[x] = c;
+				data[frontIndex].pixels.data16[x] = c;
 			}
 
 			/**
@@ -172,7 +192,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void blendPixel( uint16_t c, uint8_t a, uint16_t x ){
-				data[frontIndex].data16[x] = alphaBlend5565( c, data[frontIndex].data16[x], a );
+				data[frontIndex].pixels.data16[x] = alphaBlend5565( c, data[frontIndex].pixels.data16[x], a );
 			}
 
 			/**
@@ -202,7 +222,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void readPixel( uint16_t x, uint16_t& c ){
-				c = data[frontIndex].data16[x];
+				c = data[frontIndex].pixels.data16[x];
 			}
 
 			/**
@@ -220,7 +240,7 @@ namespace mac{
 			 **/
 			inline void clear16( uint16_t c ){
 				uint16_t x = width;
-				while (x) data[frontIndex].data16[--x] = c;
+				while (x) data[frontIndex].pixels.data16[--x] = c;
 			}
 
 			/**
@@ -237,7 +257,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void writePixel( uint32_t c, uint16_t x ){
-				data[frontIndex].data32[x] = c;
+				data[frontIndex].pixels.data32[x] = c;
 			}
 
 			/**
@@ -247,7 +267,7 @@ namespace mac{
 			 * @param  x 	The index into the buffer
 			 */
 			inline void blendPixel( uint32_t c, uint8_t a, uint16_t x ){
-				data[frontIndex].data32[x] = alphaBlend8888( c, data[frontIndex].data32[x], a );
+				data[frontIndex].pixels.data32[x] = alphaBlend8888( c, data[frontIndex].pixels.data32[x], a );
 			}
 
 			/**
@@ -277,7 +297,7 @@ namespace mac{
 			 * @param  x 	The x coord into the buffer
 			 */
 			inline void readPixel( uint16_t x, uint32_t& c ){
-				c = data[frontIndex].data32[x];
+				c = data[frontIndex].pixels.data32[x];
 			}
 
 			/**
@@ -295,7 +315,7 @@ namespace mac{
 			 **/
 			inline void clear32( uint32_t c ){
 				uint16_t x = width;
-				while (x) data[frontIndex].data32[--x] = c;
+				while (x) data[frontIndex].pixels.data32[--x] = c;
 			}
 
 			/**
@@ -314,8 +334,8 @@ namespace mac{
 			inline void writePixelMono( uint8_t c, uint16_t x ){
 				uint8_t m = 128 >> (x & 0b11);		// Which bit (mask)
 				uint16_t b = x >> 3;				// Which byte
-				if (c) data[frontIndex].data8[b] |= m;
-				else data[frontIndex].data8[b] &= ~m;
+				if (c) data[frontIndex].pixels.data8[b] |= m;
+				else data[frontIndex].pixels.data8[b] &= ~m;
 			}
 
 			/**
@@ -330,7 +350,7 @@ namespace mac{
 				if (!c || (a<0.5f)) return;
 				uint8_t m = 128 >> (x & 0b11);		// Which bit (mask)
 				uint16_t b = x >> 3;				// Which byte
-				data[frontIndex].data8[b] |= m;
+				data[frontIndex].pixels.data8[b] |= m;
 			}
 
 			/**
@@ -362,7 +382,7 @@ namespace mac{
 			inline void readPixelMono( uint16_t x, uint8_t& c ){
 				uint8_t m = 128 >> (x & 0b11);		// Which bit (mask)
 				uint16_t b = x >> 3;				// Which byte
-				c = (data[frontIndex].data8[b] >> m) & 0b1;
+				c = (data[frontIndex].pixels.data8[b] >> m) & 0b1;
 			}
 
 			/**
@@ -381,7 +401,7 @@ namespace mac{
 			inline void clearMono( uint8_t c ){
 				uint16_t x = (uint32_t)((width+7)/8);
 				if ( c > 0 ) c = 255;
-				while (x) data[frontIndex].data8[--x] = c;
+				while (x) data[frontIndex].pixels.data8[--x] = c;
 			}
 
 			/**
@@ -431,6 +451,18 @@ namespace mac{
 			inline void flip() {
 				backIndex = frontIndex;
 				frontIndex ^= 1;
+				ready = 1;
+			}
+
+			/**
+			 * Flip the framebuffers between front and back, specifying properties of the next line
+			 */
+			inline void flip( uint16_t y, uint16_t x0, uint16_t x1 ) {
+				backIndex = frontIndex;
+				frontIndex ^= 1;
+				data[frontIndex].y = y;
+				data[frontIndex].x0 = x0;
+				data[frontIndex].x1 = x1 || ( width - 1 );
 				ready = 1;
 			}
 

@@ -32,6 +32,7 @@
 
 #include "Common.h"
 #include "FrameBuffer.h"
+#include "LineBuffer.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -66,27 +67,34 @@ namespace mac{
 	 **/
 	class Display {
 		public:
-			
+
+			/**
+			 * Destroy the Display object
+			 */
+			virtual ~Display( void ){}
+
 			/**
 			 * Initialise the display. usually called immediately after the constructor.
 			 **/
-			virtual void init( void );
+			virtual void init( void ) = 0;
 			
 			/**
 			 * Update the framebuffer to the display
 			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 			 **/
-			virtual void update(
-				boolean continuous = false
-			);
+			virtual void update( boolean continuous = false ) = 0;
+
+			/**
+			 * Update the linebuffer to the display
+			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
+			 **/
+			virtual void updateLine( boolean continuous = false ) = 0;
 
 			/**
 			 * Update an area of the framebuffer to the display
 			 * @param	rect		The portion of the buffer to refresh
 			 **/
-			virtual void updateRect(
-				ClipRect* rect
-			);
+			virtual void updateRect( ClipRect* rect ) = 0;
 			
 			/**
 			 * Width of the display in pixels
@@ -99,6 +107,11 @@ namespace mac{
 			int16_t height;
 
 			/**
+			 * Rect describing size of the display
+			 */
+			ClipRect rect;
+
+			/**
 			 * The pixel format of the display
 			 */
 			PixelFormat pixelFormat;
@@ -107,6 +120,11 @@ namespace mac{
 			 * The framebuffer
 			 **/
 			FrameBuffer* framebuffer;
+
+			/**
+			 * The framebuffer
+			 **/
+			LineBuffer* linebuffer;
 	};
 
 } // namespace

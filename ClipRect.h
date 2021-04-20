@@ -178,6 +178,13 @@ namespace mac{
 			boolean isEmpty();
 
 			/**
+			 * Check if any part of another rect overlaps this one
+			 * @param rect The other rect
+			 * @return boolean True if any part of the rects overlap
+			 */
+			boolean overlaps( ClipRect* rect );
+
+			/**
 			 * Clip this rect to another rect (union)
 			 * @param  rect  	The rect to clip to
 			 */

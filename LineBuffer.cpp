@@ -16,41 +16,41 @@
 namespace mac{
 
 	/**
-	 * ###
-	 * ### LINEBUFFER
-	 * ###
-	 */
-
-	/**
 	 * Constructor
 	 */
 	LineBuffer::LineBuffer( PixelFormat pixelFormat, uint16_t w ){
 		width = w;
 		switch (pixelFormat){
 			case PF_INDEXED: {
-				data[0].data8 = new uint8_t[width];
-				data[1].data8 = new uint8_t[width];
+				data[0].pixels.data8 = new uint8_t[width];
+				data[1].pixels.data8 = new uint8_t[width];
 				break; // XXX: Implement indexed color
 			}
 			case PF_565: {
-				data[0].data16 = new uint16_t[width];
-				data[1].data16 = new uint16_t[width];
+				data[0].pixels.data16 = new uint16_t[width];
+				data[1].pixels.data16 = new uint16_t[width];
 				break;
 			}
 			case PF_888:{
-				data[0].data32 = new uint32_t[width];
-				data[1].data32 = new uint32_t[width];
+				data[0].pixels.data32 = new uint32_t[width];
+				data[1].pixels.data32 = new uint32_t[width];
 				break;
 			}
 			case PF_MONO: {
-				data[0].data8 = new uint8_t[(uint32_t)((count+7)/8)];
-				data[1].data8 = new uint8_t[(uint32_t)((count+7)/8)];
+				data[0].pixels.data8 = new uint8_t[(uint32_t)((width+7)/8)];
+				data[1].pixels.data8 = new uint8_t[(uint32_t)((width+7)/8)];
 				break;
 			}
 			default: // XXX: Handle this error
 				break;
 		}
 		this->pixelFormat = pixelFormat;
+		data[0].y = 0;
+		data[0].x0 = 0;
+		data[0].x1 = width - 1;
+		data[1].y = 0;
+		data[1].x0 = 0;
+		data[1].x1 = width - 1;
 	}
 
 	/**
@@ -59,23 +59,23 @@ namespace mac{
 	LineBuffer::~LineBuffer(){
 		switch (pixelFormat){
 			case PF_INDEXED:{
-				delete[] data[0].data8;
-				delete[] data[1].data8;
+				delete[] data[0].pixels.data8;
+				delete[] data[1].pixels.data8;
 				break;
 			}
 			case PF_565: {
-				delete[] data[0].data16;
-				delete[] data[1].data16;
+				delete[] data[0].pixels.data16;
+				delete[] data[1].pixels.data16;
 				break;
 			}
 			case PF_888: {
-				delete[] data[0].data32;
-				delete[] data[1].data32;
+				delete[] data[0].pixels.data32;
+				delete[] data[1].pixels.data32;
 				break;
 			}
 			case PF_MONO: {
-				delete[] data[0].data8;
-				delete[] data[1].data8;
+				delete[] data[0].pixels.data8;
+				delete[] data[1].pixels.data8;
 				break;
 			}
 			default: 
@@ -118,13 +118,15 @@ namespace mac{
 	 * @param  x 	The X coordinate
 	 */
 	void LineBuffer::pixel( color888 c, int16_t x ){
+		if (x < 0) return;
+		if (x >= width ) return;
 		switch (pixelFormat){
 			case PF_565: {
-				writePixelClip( convert888to565( c ), x );
+				writePixel( convert888to565( c ), x );
 				break;
 			}
 			case PF_888: {
-				writePixelClip( c, x );
+				writePixel( c, x );
 				break;
 			}
 			case PF_INDEXED: {
@@ -132,7 +134,7 @@ namespace mac{
 				break;
 			}
 			case PF_MONO: {
-				writePixelMonoClip( c, x );
+				writePixelMono( c, x );
 				break;
 			}
 			default:
@@ -149,13 +151,15 @@ namespace mac{
 	 * @param  x 	The X coordinate
 	 */
 	void LineBuffer::blend( color888 c, alpha a, int16_t x ){
+		if (x < 0) return;
+		if (x >= width ) return;
 		switch (pixelFormat){
 			case PF_565: {
-				blendPixelClip( convert888to565( c ), alpha5bit(a), x );
+				blendPixel( convert888to565( c ), alpha5bit(a), x );
 				break;
 			}
 			case PF_888: {
-				blendPixelClip( c, alpha8bit(a), x );
+				blendPixel( c, alpha8bit(a), x );
 				break;
 			}
 			case PF_INDEXED: {
@@ -163,7 +167,7 @@ namespace mac{
 				break;
 			}
 			case PF_MONO: {
-				blendPixelMonoClip( c, alpha8bit(a), x );
+				blendPixelMono( c, alpha8bit(a), x );
 				break;
 			}
 			default:
@@ -176,19 +180,20 @@ namespace mac{
 	 * and uses the correct method. This method is slow. If you are reading a lot of
 	 * pixels, use the pixel-format specific method, or hit the framebuffer directly.
 	 * @param  x 	The X coordinate
-	 * @param  y 	The Y coordinate
 	 * @return 		The color (pixel) in RGB 888 format
 	 */
-	color888 LineBuffer::pixel( uint32_t x ){
+	color888 LineBuffer::pixel( int16_t x ){
+		if (x < 0) return 0;
+		if (x >= width ) return 0;
 		switch (pixelFormat){
 			case PF_565: {
 				color565 c;
-				readPixelClip( x, c );
+				readPixel( x, c );
 				return convert565to888( c );
 			}
 			case PF_888: {
 				color888 c;
-				readPixelClip( x, c );
+				readPixel( x, c );
 				return c;
 			}
 			case PF_INDEXED: {
@@ -197,7 +202,7 @@ namespace mac{
 			}
 			case PF_MONO: {
 				uint8_t c;
-				readPixelMonoClip( x, c );
+				readPixelMono( x, c );
 				return (c==0)?RGB888_Black:RGB888_White;
 			}
 			default:

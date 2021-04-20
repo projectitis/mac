@@ -176,6 +176,23 @@ namespace mac{
 	}
 
 	/**
+	 * Check if any part of another rect overlaps this one
+	 * @param rect The other rect
+	 * @return boolean True if any part of the rects overlap
+	 */
+	boolean ClipRect::overlaps( ClipRect* rect ){
+//Serial.println("ClipRect::overlaps");
+//Serial.printf("  This: %d,%d %dx%d\n", this->x,this->y,this->width,this->height);
+//Serial.printf("  Rect: %d,%d %dx%d\n", rect->x,rect->y,rect->width,rect->height);
+		if (isEmpty() || rect->isEmpty()) return false;
+		if (rect->x2 < x) return false;
+		if (rect->x > x2) return false;
+		if (rect->y2 < y) return false;
+		if (rect->y > y2) return false;
+		return true;
+	}
+
+	/**
 	 * Clip this rect to another rect (union)
 	 * @param  rect  	The rect to clip to
 	 */

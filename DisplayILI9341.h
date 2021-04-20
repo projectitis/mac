@@ -116,7 +116,7 @@ namespace mac{
 			 * Update the framebuffer to the display
 			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 			 **/
-			virtual void update(
+			void update(
 				boolean continuous = false
 			);
 
@@ -124,8 +124,16 @@ namespace mac{
 			 * Update an area of the framebuffer to the display
 			 * @param	rect		The portion of the buffer to refresh
 			 **/
-			virtual void updateRect(
+			void updateRect(
 				ClipRect* rect
+			);
+
+			/**
+			 * Update the linebuffer to the display
+			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
+			 **/
+			void updateLine(
+				boolean continuous = false
 			);
 			
 			/**
@@ -134,20 +142,23 @@ namespace mac{
 			 * setbacklight(0) after construction.
 			 * @param	state	0 = off, 1 = on
 			 **/
-			virtual void setBacklight( boolean state );
+			void setBacklight( boolean state );
 			
 		protected:
 			
 			/**
 			 * Initialise the display. Called from the constructor.
 			 **/
-			virtual void init( void );
+			void init( void );
 			
 			/**
 			 * Display controls
 			 **/
 			__attribute__((always_inline)) inline void setDestinationArea( ClipRect *clipRect );
 			__attribute__((always_inline)) inline void resetDestinationArea( void );
+
+			__attribute__((always_inline)) inline void setDestinationLine( LineBufferData *data );
+			__attribute__((always_inline)) inline void resetDestinationLine( void );
 			
 			void waitFifoNotFull( void );
 			void waitFifoEmpty( void );
@@ -173,6 +184,10 @@ namespace mac{
 			uint8_t _miso, _mosi, _sclk;
 			uint8_t _bklt;
 			PixelScale _px;
+			float _ipx; // Inverse of px
+			uint16_t _y;
+			uint16_t _x0;
+			uint16_t _x1;
 	};
 
 } // namespace

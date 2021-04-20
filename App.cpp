@@ -21,16 +21,6 @@ namespace mac{
 	App::App(){
 		this->_init();
 	}
-	
-	/**
-	 * Constructor with graphics object
-	 * @param	graphics		A Graphics instance to render to
-	 **/
-	App::App( Graphics* graphics ){
-		// Graphics
-		this->graphics = graphics;
-		this->_init();
-	}
 
 	/**
 	 * Constructor with display adapter object
@@ -38,7 +28,7 @@ namespace mac{
 	 **/
 	App::App( Display* display ){
 		// Graphics
-		this->graphics = new mac::Graphics( display );
+		this->display = display;
 		this->_init();
 	}
 
@@ -48,6 +38,7 @@ namespace mac{
 	void App::_init(){
 		this->lastMicros = micros();
 
+		this->stage = new Stage();
 		this->messenger = new Messenger();
 		this->tweens = new Tween();
 		this->input = new Input( this->messenger );
@@ -57,11 +48,12 @@ namespace mac{
 	 * Destructor
 	 **/
 	App::~App(){
-		if (this->graphics) delete this->graphics;
+		if (this->display) delete this->display;
 
 		delete this->input;
 		delete this->tweens;
 		delete this->messenger;
+		delete this->stage;
 	}
 
 	/**
@@ -98,8 +90,11 @@ namespace mac{
 			// Update tweens
 			tweens->update( renderDeltaSecs );
 
+			// Render the stage
+			stage->render( display );
+
 			// User render functions
-			messenger->sendMessage( Event::update_render );
+			messenger->sendMessage( Event::update_render ); 
 
 			renderDeltaMicros -= _renderDeltaMicrosMax;
 		}

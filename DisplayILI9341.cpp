@@ -122,6 +122,8 @@ namespace mac{
 		height   = 240;
 		pixelFormat = PF_565;
 		_px = px;
+		_ipx = 1.0/(float)_px;
+		rect.setSize( (uint16_t)(width * _ipx), (uint16_t)(height * _ipx) );
 		
 		init();
 	}
@@ -211,6 +213,12 @@ namespace mac{
 
 		// Create the framebuffer
 		framebuffer = new FrameBuffer( pixelFormat, (uint16_t)(width/_px+0.5), (uint16_t)(height/_px+0.5) );
+
+		// Create the linebuffer
+		linebuffer = new LineBuffer( pixelFormat, (uint16_t)(width/_px+0.5) );
+
+		// Reset draw area of display to first line
+		resetDestinationLine();
 	}
 
 	/**
@@ -218,7 +226,7 @@ namespace mac{
 	 */
 	DisplayILI9341::~DisplayILI9341( void ){
 		delete framebuffer;
-
+		delete linebuffer;
 		// XXX: Shut down display?
 	}
 
@@ -268,16 +276,15 @@ namespace mac{
 			else{
 				float x = 0;
 				float y = 0;
-				float d = 1.0/(float)_px;
 				uint32_t i = 0;
 				uint32_t t = width * height;
 
 				while (++i < t){
 					writeData16( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
-					x += d;
+					x += _ipx;
 					if (x >= framebuffer->width){
 						x = 0;
-						y += d;
+						y += _ipx;
 					}
 				}
 				writeData16_last( framebuffer->data.data16[ framebuffer->count-1 ] );
@@ -342,6 +349,50 @@ while (t < mv){
 		framebuffer->validate();
 	}
 
+	/**
+	 * Update the linebuffer to the display
+	 * @param	continuous	If true, will continuously refresh until stopRefresh is called
+	 **/
+	void DisplayILI9341::updateLine( boolean continuous ){
+
+		// Get reference to the back buffer
+		LineBufferData* data = &linebuffer->data[ linebuffer->backIndex ];
+
+		// Begin the transmission to hardware
+		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+		// Set the area of the display to write to (a single scan line)
+		setDestinationLine( data );
+		// Tell display we are about to send data
+		writeCommand(ILI9341_RAMWR);
+
+		// No pixel scaling (1:1). Send data sequentially as 16bit words
+		if (_px == pixelScale_1x1){
+			uint16_t x = linebuffer->data[ linebuffer->backIndex ].x1;
+			uint16_t i = linebuffer->data[ linebuffer->backIndex ].x0;
+
+			while (i < x){
+				writeData16( data->pixels.data16[ i ] );
+				i++;
+			}
+			writeData16_last( data->pixels.data16[ i ] );
+		}
+
+		// Pixel scaling. Send data sequentially as 16bit words, sending each pixel
+		// multiple times depending on the user-defined pixel scale.
+		else {
+			uint16_t i = 0; // Destination index
+			float si = linebuffer->data[ linebuffer->backIndex ].x0; // Source index
+			uint16_t c = (linebuffer->data[ linebuffer->backIndex ].x1 - linebuffer->data[ linebuffer->backIndex ].x0) * _px; // Pixel count
+			while (i++ < c){
+				writeData16( data->pixels.data16[ (uint16_t)si ] );
+				si += _ipx;
+			}
+			writeData16_last( data->pixels.data16[ (uint16_t)si ] );
+		}
+
+		SPI.endTransaction();
+	}
+
 	void DisplayILI9341::updateRect( ClipRect* rect ){
 		rect->clipPosAndSize(0,0,framebuffer->width,framebuffer->height);
 /*
@@ -402,16 +453,15 @@ Serial.println( rect->height );
 			else{
 				float x = rect->x;
 				float y = rect->y;
-				float d = 1.0/(float)_px;
 				uint32_t i = 0;
 				uint32_t t = rect->width * rect->height;
 
 				while (++i < t){
 					writeData16( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
-					x += d;
+					x += _ipx;
 					if (x > rect->x2){
 						x = rect->x;
-						y += d;
+						y += _ipx;
 					}
 				}
 				writeData16_last( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
@@ -456,6 +506,41 @@ Serial.println( rect->height );
 		writeCommand(ILI9341_PASET); // Row addr set
 		writeData16( 0 );
 		writeData16( height - 1 );
+	}
+
+	/**
+	 * @brief Reset the display to draw to the first row
+	 */
+	__attribute__((always_inline)) inline void DisplayILI9341::resetDestinationLine( void ){
+		_y = 0;
+		_x0 = 0;
+		_x1 = width - 1;
+		writeCommand(ILI9341_CASET); // Column addr set
+		writeData16( _x0 );
+		writeData16( _x1 );
+		writeCommand(ILI9341_PASET); // Row addr set
+		writeData16( _y );
+		writeData16( _y );
+	}
+
+	/**
+	 * @brief Set the display to draw to the area specified by the supplied data
+	 * @param	data		The properties of the line to draw to the display
+	 */
+	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationLine( LineBufferData* data ) {
+		if ( ( data->x0 != _x0 ) || ( data->x1 != _x1 ) ) {
+			_x0 = data->x0;
+			_x1 = data->x1;
+			writeCommand(ILI9341_CASET); // Column addr set
+			writeData16( _x0 * _px );
+			writeData16( _x1 * _px );
+		}
+		if ( data->y != _y ) {
+			_y = data->y;
+			writeCommand(ILI9341_PASET); // Row addr set
+			writeData16( _y * _px );
+			writeData16( _y * _px );
+		}
 	}
 	
 	void DisplayILI9341::waitFifoNotFull(void) {

@@ -78,6 +78,8 @@ namespace mac{
 		height   = 64;
 		_i2caddr = 0x3D;
 		pixelFormat = PF_MONO;
+		_ipx = 1.0/(float)_px;
+		rect.setSize( (uint16_t)(width * _ipx), (uint16_t)(height * _ipx) );
 		
 		init();
 	}
