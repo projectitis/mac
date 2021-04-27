@@ -41,7 +41,15 @@
  * be useful in other projects.
  **/
 namespace mac{
-	
+
+	/**
+	 * Blend modes supported by Sprite
+	 */
+	enum class BlendMode{
+		normal,
+		stamp
+	};
+
 	/**
 	 * A sprite
 	 */
@@ -82,20 +90,46 @@ namespace mac{
 			void update( float dt ) override;
 
 			/**
-			 * The tilemap that contains the sprite bitmap data
+			 * The tilemap that contains the sprite bitmap data.
+			 * Do not change directly. Use set() to change this.
 			 */
 			Tilemap* tilemap;
 
 			/**
-			 * The index of the tile within the tilemap
+			 * The index of the tile within the tilemap.
 			 */
-			uint16_t tileIndex;
+			uint16_t tileIndex; 
 
 			/**
-			 * Populate the rect with the bounds of this display object
-			 * @param inRect The rect to populate
+			 * Blend mode for sprite
 			 */
-			void rect( ClipRect* inRect ) override;
+			BlendMode blendMode = BlendMode::normal;
+
+			/**
+			 * Color (used for some blend modes)
+			 */
+			color888 color;
+
+			/**
+			 * Set the tilemap and the tileIndex that teh sprite uses.
+			 * @param tilemap 	The tilemap to use
+			 * @param tileIndex The index of teh active tile
+			 */
+			virtual void set( Tilemap* tilemap, uint16_t tileIndex = 0 );
+
+			/**
+			 * Set the position at which to read the next pixel
+			 * @param x The global x coordinate
+			 * @param y The global y coordinate
+			 */
+			virtual void readPosition( int16_t gx, int16_t gy );
+
+			/**
+			 * Read a pixel from the sprite and advance position
+			 * @param c (out) color
+			 * @param a (out) alpha
+			 */
+			virtual void readPixel( color888 &c, float &a );
 
 		protected:
 			
@@ -104,7 +138,15 @@ namespace mac{
 			 */
 			DisplayObject** _getPool() override;
 
-			
+			/**
+			 * Pixel accessor for correct tilemap pixel format
+			 */
+			access8888 _getPixelAs8888;
+
+			/**
+			 * Current offset into the pixel data
+			 */
+			int32_t _dataOffset;
 
 	};
 	

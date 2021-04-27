@@ -30,10 +30,12 @@
 #ifndef _MAC_STAGEH_
 #define _MAC_STAGEH_ 1
 
-#include "DisplayObject.h"
-#include "Sprite.h"
+#include "DisplayList.h"
 #include "Display.h"
 
+// Include all display object types
+#include "DisplayObject.h"
+#include "Sprite.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -51,9 +53,14 @@ namespace mac{
 		
 		public:
 			/**
-			 * Constructor
+			 * Construct a new Stage object
 			 */
 			Stage();
+
+			/**
+			 * Destroy the Stage objectD
+			 */
+			~Stage();
 
 			/**
 			 * Memory pool of recycled objects
@@ -116,6 +123,52 @@ namespace mac{
 			 * Area of the display that is dirty
 			 */
 			ClipRect* _dirtyRect;
+
+			/**
+			 * Area of the display that is clean (just written)
+			 */
+			ClipRect* _cleanRect;
+
+			/**
+			 * Temporary rect that describes are of display being updated
+			 */
+			ClipRect* _updateRect;
+
+			/**
+			 * Temporary rect to hold bounds of the display
+			 */
+			ClipRect* _displayRect;
+
+			/**
+			 * Increments as the display list is traversed. Used to calculate
+			 * relative depth of all children
+			 */
+			uint32_t _displayListDepth;
+
+			/**
+			 * Ordered list of all visible display objects in the order that they
+			 * are added to the render list.
+			 */
+			DisplayList* _displayList;
+
+			/**
+			 * Ordered list of visible display objects to be rendered
+			 * on the current scan line.
+			 */
+			DisplayList* _renderList;
+
+			/**
+			 * Step recursively through all children. Calculate the relative depth of
+			 * children, and insert into the display list.
+			 * @param children The children to add
+			 */
+			void _traverse( DisplayObject* child, float px, float py );
+
+			/**
+			 * Clear a DisplayList
+			 * @param list The list to clear
+			 */
+			void _clearList( DisplayList* list );
 
 	};
 	

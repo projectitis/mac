@@ -976,21 +976,27 @@ namespace mac{
 	 */
 
 	/**
-	 * The following functions get a pixel from the bitmap and convert to 32-bit ARGB value
+	 * The following functions get a pixel from the bitmap and convert to 32-bit ARGB value.
+	 * Use getAccessor8888 to select the correct function to use. The parameters are:
+	 * @param p Pointer to the pixel data
+	 * @param i Index, in pixels, into the pixel data
+	 * @param c (out) the color of the pixel in 8888 format
 	 */
-	void get565as8888( uint8_t* p, uint32_t& c );
-	void get4444as8888( uint8_t* p, uint32_t& c );
-	void get6666as8888( uint8_t* p, uint32_t& c );
-	void get8565as8888( uint8_t* p, uint32_t& c );
-	void get888as8888( uint8_t* p, uint32_t& c );
-	void get8888as8888( uint8_t* p, uint32_t& c );
-	void get8as8888( uint8_t* p, uint32_t& c );
-	void get1as8888( uint8_t* p, uint32_t& c );
+	void get565as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get4444as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get6666as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get8565as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get888as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get8888as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get8as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get4as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get2as8888( uint8_t* p, uint32_t i, uint32_t& c );
+	void get1as8888( uint8_t* p, uint32_t i, uint32_t& c );
 
 	/**
 	 * Use getAccessor8888 on a tilemap to choose the correct data access function.
 	 */
-	typedef void (*access8888)( uint8_t*, uint32_t& );
+	typedef void (*access8888)( uint8_t*, uint32_t, uint32_t& );
 	access8888 getAccessor8888( PixelFormat pixelFormat );
 
 	/*

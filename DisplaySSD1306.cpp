@@ -78,8 +78,17 @@ namespace mac{
 		height   = 64;
 		_i2caddr = 0x3D;
 		pixelFormat = PF_MONO;
-		_ipx = 1.0/(float)_px;
-		rect.setSize( (uint16_t)(width * _ipx), (uint16_t)(height * _ipx) );
+		rect.setSize( width >> _px, height >> _px );
+		region.set( &rect );
+
+		data[0].pixels = new uint32_t[ rect.width ];
+		data[0].y = 0;
+		data[0].x = 0;
+		data[0].x2 = rect.x2;
+		data[1].pixels = new uint32_t[ rect.width ];
+		data[1].y = 0;
+		data[1].x = 0;
+		data[1].x2 = rect.x2;
 		
 		init();
 	}
@@ -90,62 +99,68 @@ namespace mac{
 	void DisplaySSD1306::init( void ){
 		// Initialise I2C
 		Wire.begin( I2C_MASTER, 0, _scl, _sda, I2C_PULLUP_EXT, 400000 );
-
-		// Create the framebuffer
-		framebuffer = new FrameBuffer( pixelFormat, (uint16_t)(width/_px+0.5), (uint16_t)(height/_px+0.5) );
 	}
 
 	/**
 	 * Destructor
 	 */
 	DisplaySSD1306::~DisplaySSD1306( void ){
-		delete framebuffer;
+		delete data[0].pixels;
+		delete data[1].pixels;
 
 		// XXX: Shut down display? Shut down I2C?
-		
+	}
+
+	void DisplaySSD1306::reset(){
+		Display::reset();
+		setDestinationArea( &region );
 	}
 
 	/**
 	 * Update the framebuffer to the display
-	 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 	 **/
-	void DisplaySSD1306::update( boolean continuous ){
-		resetDestinationArea();
+	void DisplaySSD1306::flip(){
+		Display::flip();
 
-		// No scaling. 1:1 framebuffer to display
-		if (_px == pixelScale_1x1){
-			writeData( framebuffer->data.data8, (framebuffer->count+7)/8 );
+		// We can sett his line by line, or region on reset() (@see reset())
+		//setDestinationArea();
+
+		// Get reference to the backbuffer
+		LineBufferData* back = &data[ backIndex ];
+
+		// Write data
+		uint16_t i = back->x;
+		uint8_t c = 0;
+		while (i < back->x2){
+			//c = convertPixelsToMonoIn8PixelChunks(); Take _ps into account!
+			writeData( c );
+			i += 8;
 		}
 
-		// Pixel scaling
-		else{
-			// Not yet supported
-			
-		}
+		// Indicate that drawing has finished
+		ready = 0;
 	}
 
 	/**
-	 * Set drawing area to entire display
+	 * Set drawing area to a cliprect
 	 */
-	void DisplaySSD1306::resetDestinationArea(){
+	void DisplaySSD1306::setDestinationArea( ClipRect* rect ){
+		// Set drawing area
 		uint8_t commands[] = {
-		    SSD1306_PAGEADDR, 0, (uint8_t)(height-1),
-		    SSD1306_COLUMNADDR, 0, (uint8_t)(width-1)
+		    SSD1306_PAGEADDR, (uint8_t)(rect->y << _px), (uint8_t)( ((rect->y2 + 1) << _px) - 1 ),
+		    SSD1306_COLUMNADDR, (uint8_t)(rect->x << _px), (uint8_t)( ((rect->x2 + 1) << _px) - 1 )
 		};
 		writeCommand(commands, sizeof(commands));
 	}
 
 	/**
-	 * Set drawing area to cliprect
+	 * Set drawing area to a line
 	 */
-	void DisplaySSD1306::setDestinationArea( ClipRect* clipRect ){
-		// Ensure area is clipped to display
-		ClipRect* displayRect = new ClipRect(0,0,width,height);
-		displayRect->clip( clipRect );
+	void DisplaySSD1306::setDestinationLine( LineBufferData* data ){
 		// Set drawing area
 		uint8_t commands[] = {
-		    SSD1306_PAGEADDR, (uint8_t)displayRect->y, (uint8_t)displayRect->y2,
-		    SSD1306_COLUMNADDR, (uint8_t)displayRect->x, (uint8_t)displayRect->x2
+		    SSD1306_PAGEADDR, (uint8_t)(data->y << _px), (uint8_t)( ((data->y + 1) << _px) - 1 ),
+		    SSD1306_COLUMNADDR, (uint8_t)(data->x << _px), (uint8_t)( ((data->x2 + 1) << _px) - 1 )
 		};
 		writeCommand(commands, sizeof(commands));
 	}

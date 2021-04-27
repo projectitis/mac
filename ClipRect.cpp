@@ -19,12 +19,32 @@ namespace mac{
 	 * Constructor
 	 */
 	ClipRect::ClipRect(){
-		x = 0; y = 0;
-		x2 = -1; y2 = -1;
-		width = 0; height = 0;
+		clear();
 	}
 	ClipRect::ClipRect( int16_t px, int16_t py, int16_t w, int16_t h ){
 		setPosAndSize( px, py, w, h );
+	}
+
+	/**
+	 * Clear back to an empty rect
+	 */
+	void ClipRect::clear() {
+		x = 0; y = 0;
+		x2 = -1; y2 = -1;
+		width = 0; height = 0;
+	} 
+
+	/**
+	 * Set (copy) the size of the rect from the supplied rect
+	 * @param rect   	The rect to set from
+	 */
+	void ClipRect::set( ClipRect* rect ) {
+		x = rect->x;
+		y = rect->y;
+		x2 = rect->x2;
+		y2 = rect->y2;
+		width = rect->width;
+		height = rect->height;
 	}
 
 	/**
@@ -193,7 +213,7 @@ namespace mac{
 	}
 
 	/**
-	 * Clip this rect to another rect (union)
+	 * Clip this rect to another rect (intersection)
 	 * @param  rect  	The rect to clip to
 	 */
 	void ClipRect::clip( ClipRect* rect ){
@@ -212,14 +232,14 @@ namespace mac{
 	}
 
 	/**
-	 * Clip this rect to another rect (union)
+	 * Clip this rect to another rect (intersection)
 	 * @param  rect  	The rect to clip to
 	 */
 	void ClipRect::clipPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h ){
 		if (x < px) x = px;
 		if (x2 >= (px+w)) x2 = px + w - 1;
 		if (y < py) y = py;
-		if (y2 > (py+h)) y2 = py + h - 1;
+		if (y2 >= (py+h)) y2 = py + h - 1;
 		if (x>x2){
 			x2 = x - 1;
 		}
@@ -227,6 +247,43 @@ namespace mac{
 		if (y>y2){
 			y2 = y - 1;
 		}
+		height = y2 - y + 1;
+	}
+
+	/**
+	 * Expand this rect to also encompase the specified rect (union)
+	 * @param rect The rect to encompase
+	 */
+	void ClipRect::grow( ClipRect* rect ){
+		if (isEmpty()){
+			set( rect );
+			return;
+		}
+		if (x > rect->x) x = rect->x;
+		if (x2 < rect->x2) x2 = rect->x2;
+		if (y > rect->y) y = rect->y;
+		if (y2 < rect->y2) y2 = rect->y2;
+		width = x2 - x + 1;
+		height = y2 - y + 1;
+	}
+
+	/**
+	 * Expand this rect to also encompase a rectangular area specified by position and size (union)
+	 * @param  px  	X coord to clip
+	 * @param  py 	Y coord to clip
+	 * @param  w  	Width
+	 * @param  h 	Height
+	 */
+	void ClipRect::growPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h ) {
+		if (isEmpty()){
+			set( px, py, w, h );
+			return;
+		}
+		if (x > px) x = px;
+		if (x2 <= (px+w)) x2 = px + w - 1;
+		if (y > py) y = py;
+		if (y2 <= (py+h)) y2 = py + h - 1;
+		width = x2 - x + 1;
 		height = y2 - y + 1;
 	}
 	

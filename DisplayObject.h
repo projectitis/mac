@@ -122,10 +122,31 @@ namespace mac{
 			float y = 0;
 
 			/**
-			 * @brief Set the Visibility of the object
+			 * Position globally (calculated as the display list is updated)
+			 */
+			ClipRect* globalRect;
+
+			/**
+			 * Alpha of entire object
+			 */
+			float alpha = 1.0;
+
+			/**
+			 * Display depth
+			 */
+			uint32_t depth = 0;
+
+			/**
+			 * Set the Visibility of the object
 			 * @param v 	The visibility
 			 */
-			void setVisible( boolean v );
+			void visible( boolean v );
+
+			/**
+			 * Get the visibility of an object
+			 * @return boolean The visibility
+			 */
+			boolean visible();
 
 			/**
 			 * Add a display object to the top of the list
@@ -197,13 +218,28 @@ namespace mac{
 			DisplayObject* prev( void );
 
 			/**
-			 * Set the position of the object on the parent. This is based on w (fractional
-			 * width). For example, if w=0.5, the object will attempt to take up 50% of the
-			 * available width. 
+			 * Set the position of the object on the parent.
 			 * @param x           		The x coord
 			 * @param y           		The y coord
 			 */
 			virtual void position( float x, float y );
+
+			/**
+			 * Set the size of the object
+			 * @param w           		Width
+			 * @param h          		Height
+			 */
+			virtual void size( float w, float h );
+
+			/**
+			 * @return float The width
+			 */
+			virtual float width();
+
+			/**
+			 * @return float The height
+			 */
+			virtual float height();
 
 			/**
 			 * Update the display object.
@@ -213,15 +249,41 @@ namespace mac{
 			virtual void update( float dt );
 
 			/**
-			 * Set self and parent to dirty (recursive)
+			 * Set dirty
 			 */
 			void dirty();
 
 			/**
-			 * Populate the rect with the bounds of this display object
-			 * @param inRect The rect to populate
+			 * Check if object is dirty
 			 */
-			virtual void rect( ClipRect* inRect );
+			boolean isDirty();
+
+			/**
+			 * Stored position for the read
+			 */
+			int16_t rx;
+			int16_t ry;
+
+			/**
+			 * Set the position at which to read the next pixel
+			 * @param x The global x coordinate
+			 * @param y The global y coordinate
+			 */
+			virtual void readPosition( int16_t gx, int16_t gy ){
+				rx = max( 0, gx - globalRect->x );
+				ry = gy - globalRect->y; // ry should never be below 0... trust it?
+			}
+
+			/**
+			 * Read the pixel at the current position, and move position right by 1 pixel
+			 * @param c (out) Color (alpha ignored)
+			 * @param a (out) alpha 0.0 - 1.0
+			 */
+			virtual void readPixel( color888 &c, float &a ){
+				c = 0;
+				a = 1.0;
+				rx++;
+			}
 
 		protected:
 
@@ -269,28 +331,6 @@ namespace mac{
 			DisplayObject* _childrenTop = 0;
 			DisplayObject* _next = 0;
 			DisplayObject* _prev = 0;
-
-			/**
-			 * Display list order
-			 */
-			DisplayObject* _displayListNext = 0;
-			DisplayObject* _displayListPrev = 0;
-			uint32_t _depth = 0;
-
-			/**
-			 * Sort children into the display list (which is on the stage)
-			 * @param stage The stage
-			 * @return DisplayObject The next child (for chaining)
-			 */
-			DisplayObject* _sortDisplayList( DisplayObject* stage, ClipRect* displayRect );
-
-			static int8_t compare( DisplayObject* a, DisplayObject* b ){
-				if ( (int16_t)a->y < (int16_t)b->y ) return 1;	// Y is lower
-				if ( (int16_t)a->y > (int16_t)b->y ) return -1;	// y is higher
-				if ( (int16_t)a->x < (int16_t)b->x ) return 1;	// y is same, x is lower
-				if ( (int16_t)a->x > (int16_t)b->x ) return -1;	// y is same, x is higher
-				return 0;	// y and x are same
-			}
 
 	}; // class
 

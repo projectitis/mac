@@ -65,6 +65,11 @@
 #ifndef _MAC_DISPLAYILI9341H_
 #define _MAC_DISPLAYILI9341H_ 1
 
+/**
+ * Make use of DMA for framebuffer transfer to the display. 0 or 1
+ **/
+#define DISPLAY_ILI9341_DMA 0
+
 #include "Display.h"
 
 /**
@@ -113,28 +118,16 @@ namespace mac{
 			~DisplayILI9341( void );
 
 			/**
-			 * Update the framebuffer to the display
-			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
-			 **/
-			void update(
-				boolean continuous = false
-			);
+			 * Flip the front and back buffers, and trigger the drawing of the back buffer
+			 * to the display. Moves the front buffer to the next line.
+			 */
+			void flip();
 
 			/**
-			 * Update an area of the framebuffer to the display
-			 * @param	rect		The portion of the buffer to refresh
-			 **/
-			void updateRect(
-				ClipRect* rect
-			);
-
-			/**
-			 * Update the linebuffer to the display
-			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
-			 **/
-			void updateLine(
-				boolean continuous = false
-			);
+			 * Resets the region without changing it. This resets the line buffer to
+			 * start of the region. The backbuffer is not affected until the next flip.
+			 */
+			void reset();
 			
 			/**
 			 * Turn the backlight on or off. If the backlight pin is set, the backlight
@@ -154,11 +147,8 @@ namespace mac{
 			/**
 			 * Display controls
 			 **/
-			__attribute__((always_inline)) inline void setDestinationArea( ClipRect *clipRect );
-			__attribute__((always_inline)) inline void resetDestinationArea( void );
-
+			__attribute__((always_inline)) inline void setDestinationArea( ClipRect *rect );
 			__attribute__((always_inline)) inline void setDestinationLine( LineBufferData *data );
-			__attribute__((always_inline)) inline void resetDestinationLine( void );
 			
 			void waitFifoNotFull( void );
 			void waitFifoEmpty( void );
@@ -184,10 +174,6 @@ namespace mac{
 			uint8_t _miso, _mosi, _sclk;
 			uint8_t _bklt;
 			PixelScale _px;
-			float _ipx; // Inverse of px
-			uint16_t _y;
-			uint16_t _x0;
-			uint16_t _x1;
 	};
 
 } // namespace

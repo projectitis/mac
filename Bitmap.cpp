@@ -416,55 +416,65 @@ namespace mac{
 	/**
 	 * The following functions get a pixel from the bitmap and convert to 32-bit ARGB value
 	 */
-	void get565as8888( uint8_t* p, uint32_t& c ){
+	void get565as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i*2;
 		c = (255 << 24)
 			| ((p[0] & 0b11111000) << 16) |  ((p[0] & 0b11100000) << 11) // R
 			| ((p[0] & 0b111) << 13) | ((p[1] & 0b11100000) << 5) | ((p[0] & 0b11) << 2) // G
 			| ((p[1] & 0b11111) << 3) | ((p[1] & 0b11100) >> 2); // B
 	}
-	void get4444as8888( uint8_t* p, uint32_t& c ){
+	void get4444as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i*2;
 		c = ((p[0] & 0b11110000) << 24) | (p[0] << 20) | ((p[0] & 0b1111) << 16) | ((p[1] & 0b11110000) << 8) | (p[1] << 4) | (p[1] & 0b1111);
 	}
-	void get6666as8888( uint8_t* p, uint32_t& c ){
+	void get6666as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i*3;
 		c = ((p[0] & 0b11111100 ) << 24) | ((p[0] & 0b11000000) << 18) // A
 			| ((p[0] & 0b11) << 22) | ((p[0] & 0b11) << 16) | ((p[1] & 0b11110000) << 14) // R
 			| ((p[1] & 0b1111) << 12) | ((p[1] & 0b1100) << 6) | ((p[2] & 0b11000000) << 4) // G
 			| ((p[2] & 0b111111) << 2) | ((p[2] & 0b110000) >> 4); // B
 	}
-	void get8565as8888( uint8_t* p, uint32_t& c ){
+	void get8565as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i*3;
 		c = (p[0] << 24) // A
 			| ((p[1] & 0b11111000) << 16) | ((p[1] & 0b11100000) << 11) // R
 			| ((p[1] & 0b111) << 13) | ((p[1] & 0b110) << 7) | ((p[2] & 0b11100000) << 5) // G
 			| ((p[2] << 3) & 0b11111000) | ((p[2] >> 2) & 0b111); // B
 	}
-	void get888as8888( uint8_t* p, uint32_t& c ){
-		c = (255 << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+	void get888as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i*3;
+		c = (255 << 24) | (p[0] << 16) | (p[1] << 8) | p[2];
 	}
-	void get8888as8888( uint8_t* p, uint32_t& c ){
+	void get8888as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i*4;
 		c = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
 	}
-	void get8as8888( uint8_t* p, uint32_t& c ){
+	void get8as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += i;
 		c = (255 << 24) | (p[0] << 16) | (p[0] << 8) | p[0];
 	}
-	void get4as8888( uint8_t* p, uint32_t& c ){
-		// Hijack 'c' as nibble index (0-1 from left to right)
-		c = (( p[0] >> (1-c)*4 ) & 0b1111) * 17;
+	void get4as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += (i >> 1);
+		i = i - ((i >> 1) << 1); // rem 0 or 1
+		c = (( p[0] >> (1-i)*4 ) & 0b1111) * 17;
 		c = (255 << 24) | (c << 16) | (c << 8) | c;
 	}
-	void get2as8888( uint8_t* p, uint32_t& c ){
-		// Hijack 'c' as bit-pair index (0-3 from left to right)
-		c = (( p[0] >> (3-c)*2 ) & 0b11) * 85;
+	void get2as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += (i >> 2);
+		i = i - ((i >> 2) << 2); // rem 0-3
+		c = (( p[0] >> (3-i)*2 ) & 0b11) * 85;
 		c = (255 << 24) | (c << 16) | (c << 8) | c;
 	}
-	void get1as8888( uint8_t* p, uint32_t& c ){
-		// Hijack 'c' as bit index (0-7 from left to right)
-		c = ((p[0] >> (7-c)) & 0b1)?RGB888_White:RGB888_Black;
+	void get1as8888( uint8_t* p, uint32_t i, uint32_t& c ){
+		p += (i >> 3);
+		i = i - ((i >> 3) << 3); // rem 0-7
+		c = ((p[0] >> (7-i)) & 0b1)?RGB888_White:RGB888_Black;
 	}
 
 	/**
 	 * Use getAccessor8888 on a tilemap to choose the correct data access function.
 	 */
-	typedef void (*access8888)( uint8_t*, uint32_t& );
+	typedef void (*access8888)( uint8_t*, uint32_t, uint32_t& );
 	access8888 getAccessor8888( PixelFormat pixelFormat ){
 		switch (pixelFormat){
 			case mac::PF_565: return get565as8888;

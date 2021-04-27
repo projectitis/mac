@@ -122,8 +122,17 @@ namespace mac{
 		height   = 240;
 		pixelFormat = PF_565;
 		_px = px;
-		_ipx = 1.0/(float)_px;
-		rect.setSize( (uint16_t)(width * _ipx), (uint16_t)(height * _ipx) );
+		rect.setSize( width >> _px, height >> _px );
+		region.set( &rect );
+
+		data[0].pixels = new uint32_t[ rect.width ];
+		data[0].y = 0;
+		data[0].x = 0;
+		data[0].x2 = rect.x2;
+		data[1].pixels = new uint32_t[ rect.width ];
+		data[1].y = 0;
+		data[1].x = 0;
+		data[1].x2 = rect.x2;
 		
 		init();
 	}
@@ -210,265 +219,66 @@ namespace mac{
 			pinMode(_bklt, OUTPUT);
 			digitalWrite(_bklt, HIGH);
 		}
-
-		// Create the framebuffer
-		framebuffer = new FrameBuffer( pixelFormat, (uint16_t)(width/_px+0.5), (uint16_t)(height/_px+0.5) );
-
-		// Create the linebuffer
-		linebuffer = new LineBuffer( pixelFormat, (uint16_t)(width/_px+0.5) );
-
-		// Reset draw area of display to first line
-		resetDestinationLine();
 	}
 
 	/**
 	 * Destructor
 	 */
 	DisplayILI9341::~DisplayILI9341( void ){
-		delete framebuffer;
-		delete linebuffer;
+		delete data[0].pixels;
+		delete data[1].pixels;
 		// XXX: Shut down display?
 	}
 
-	/**
-	 * Update the framebuffer to the display
-	 * @param	continuous	If true, will continuously refresh until stopRefresh is called
-	 **/
-	void DisplayILI9341::update( boolean continuous ){
-		if (framebuffer->invalidated()){	
-			SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
-
-			// Full framebuffer
-			resetDestinationArea();
-			writeCommand(ILI9341_RAMWR);
-
-			// No scaling. 1:1 framebuffer to display
-			if (_px == pixelScale_1x1){
-				/*
-				// XXX: Break up into transactions?
-				uint16_t* buffer_end_p = &framebuffer->data.data16[framebuffer->count-1];
-				uint16_t* buffer_p = framebuffer->data.data16;
-
-				// Quick write out the data;
-				while (buffer_p < buffer_end_p) {
-					writeData16(*buffer_p++);
-				}
-				writeData16_last(*buffer_p);
-				*/
-				uint8_t mv = (framebuffer->height>>4) + 1;
-				uint8_t mh = (framebuffer->width>>4) + 1;
-				uint8_t v = 0; // vert
-				uint8_t h = 0; // horiz
-				ClipRect* rect = new ClipRect();
-				while (v < mv){
-					rect->y = v<<4;
-					h = 0;
-					while (h < mh){
-						rect->x = h<<4;
-						rect->setSize(16,16);
-						this->updateRect( rect );
-						h++;
-					}
-					v++;
-				}
-				delete rect;
-			}
-			else{
-				float x = 0;
-				float y = 0;
-				uint32_t i = 0;
-				uint32_t t = width * height;
-
-				while (++i < t){
-					writeData16( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
-					x += _ipx;
-					if (x >= framebuffer->width){
-						x = 0;
-						y += _ipx;
-					}
-				}
-				writeData16_last( framebuffer->data.data16[ framebuffer->count-1 ] );
-			}
-
-			SPI.endTransaction();
-		}
-		else{
-			// Step all dirty tiles line by line
-			uint8_t v = 0; // vert
-			uint8_t h = 0; // horiz
-			uint32_t m = 0; // mask
-			uint32_t b = 0; // buffer
-			uint8_t mv = (framebuffer->height>>4) + 1;
-			uint8_t mh = (framebuffer->width>>4) + 1;
-/*
-Serial.println("Invalidate buffer:");
-uint8_t t = 0;
-while (t < mv){
-	b = framebuffer->invalideBuffer(t);
-	Serial.println(b,BIN);
-	t++;
-}
-*/
-			uint8_t i = 0;
-			ClipRect* rect = new ClipRect();
-			while (v < mv){
-				// Something in line is invalidated
-				b = framebuffer->invalideBuffer(v);
-				if (b){
-					m = 1;
-					h = 0;
-					while (h < mh){
-						if (b & m){
-							// This bit is invalidated
-							if (!i){
-								rect->x = h<<4;
-								rect->y = v<<4;
-								rect->setHeight(16);
-							}
-							i++;
-						}
-						else if (i){
-							rect->setWidth(16*i);
-							this->updateRect( rect );
-							i = 0;
-						}
-						m = m << 1;
-						h++;
-					} // h
-					if (i){
-						rect->setWidth(16*i);
-						this->updateRect( rect );
-						i = 0;
-					} // i after h
-
-				} //b
-				v++;
-			} // v
-			delete rect;
-		}
-		framebuffer->validate();
+	void DisplayILI9341::reset() {
+		Display::reset();
 	}
 
 	/**
 	 * Update the linebuffer to the display
 	 * @param	continuous	If true, will continuously refresh until stopRefresh is called
 	 **/
-	void DisplayILI9341::updateLine( boolean continuous ){
+	void DisplayILI9341::flip() {
 
-		// Get reference to the back buffer
-		LineBufferData* data = &linebuffer->data[ linebuffer->backIndex ];
+		// Flip the buffers
+		Display::flip();
+
+// XXX: Use DMA to send data over SPI
+#if DISPLAY_ILI9341_DMA==0
+		// DMA is not being used. Immediately send the back buffer to the display
+		// as an SPI transaction
+
+		// Get reference to the back buffer (ignore uninitialized warning using pragma)
+#pragma GCC diagnostic ignored "-Wuninitialized"
+		LineBufferData* back = &data[ backIndex ];
+Serial.printf("Flip line %d\n", back->y);
 
 		// Begin the transmission to hardware
 		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+
 		// Set the area of the display to write to (a single scan line)
-		setDestinationLine( data );
+		setDestinationLine( back );
+
 		// Tell display we are about to send data
 		writeCommand(ILI9341_RAMWR);
 
-		// No pixel scaling (1:1). Send data sequentially as 16bit words
-		if (_px == pixelScale_1x1){
-			uint16_t x = linebuffer->data[ linebuffer->backIndex ].x1;
-			uint16_t i = linebuffer->data[ linebuffer->backIndex ].x0;
-
-			while (i < x){
-				writeData16( data->pixels.data16[ i ] );
-				i++;
-			}
-			writeData16_last( data->pixels.data16[ i ] );
+		uint16_t i = back->x;
+		uint16_t c = i + ((back->x2 - back->x + 1) << _px) - 1;
+		uint16_t l = 1 << _px;
+		while (l--) {
+			i = back->x;
+Serial.printf("  Draw from %d to %d\n", i, c);
+			while (i < (c + ((l>0)?1:0))) writeData16( convert888to565( back->pixels[ i++ >> _px ] ) );
 		}
+		writeData16_last( convert888to565( back->pixels[ i >> _px ] ) );
 
-		// Pixel scaling. Send data sequentially as 16bit words, sending each pixel
-		// multiple times depending on the user-defined pixel scale.
-		else {
-			uint16_t i = 0; // Destination index
-			float si = linebuffer->data[ linebuffer->backIndex ].x0; // Source index
-			uint16_t c = (linebuffer->data[ linebuffer->backIndex ].x1 - linebuffer->data[ linebuffer->backIndex ].x0) * _px; // Pixel count
-			while (i++ < c){
-				writeData16( data->pixels.data16[ (uint16_t)si ] );
-				si += _ipx;
-			}
-			writeData16_last( data->pixels.data16[ (uint16_t)si ] );
-		}
-
+		// Done with complete transaction
 		SPI.endTransaction();
-	}
 
-	void DisplayILI9341::updateRect( ClipRect* rect ){
-		rect->clipPosAndSize(0,0,framebuffer->width,framebuffer->height);
-/*
-Serial.print("  updateRect ");
-Serial.print( rect->x );
-Serial.print(", ");
-Serial.print( rect->y );
-Serial.print("  ");
-Serial.print( rect->width );
-Serial.print(" x ");
-Serial.println( rect->height );
-*/
-		if (!rect->isEmpty()){
-			SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+#endif // DISPLAY_USE_DMA
 
-			setDestinationArea( rect );
-			writeCommand(ILI9341_RAMWR);
-
-			// No scaling. 1:1 framebuffer to display
-			if (_px == pixelScale_1x1){
-				/*
-				uint16_t y = rect->y;
-				uint16_t x;
-				uint32_t i;
-
-				// Write out the data
-				while(y < rect->y2){
-					x = rect->x;
-					i = y * framebuffer->width + x;
-					while(x <= rect->x2){
-						writeData16( framebuffer->data.data16[ i++ ] );
-					}
-					y++;
-				}
-				// Write last line except last pixel
-				x = rect->x;
-				i = y * framebuffer->width + x;
-				while(x < rect->x2){
-					writeData16( framebuffer->data.data16[ i++ ] );
-				}
-				writeData16_last( framebuffer->data.data16[ i ] );
-				*/
-				uint16_t x = rect->x;
-				uint16_t y = rect->y;
-				uint32_t i = 0;
-				uint32_t t = rect->width * rect->height;
-
-				while (++i < t){
-					writeData16( framebuffer->data.data16[ framebuffer->index( x, y ) ] );
-					x++;
-					if (x > rect->x2){
-						x = rect->x;
-						y++;
-					}
-				}
-				writeData16_last( framebuffer->data.data16[ framebuffer->index( x, y ) ] );
-			}
-			else{
-				float x = rect->x;
-				float y = rect->y;
-				uint32_t i = 0;
-				uint32_t t = rect->width * rect->height;
-
-				while (++i < t){
-					writeData16( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
-					x += _ipx;
-					if (x > rect->x2){
-						x = rect->x;
-						y += _ipx;
-					}
-				}
-				writeData16_last( framebuffer->data.data16[ framebuffer->index( (int16_t)x, (int16_t)y ) ] );
-			}
-
-			SPI.endTransaction();
-		}
+		// Indicate that drawing has finished
+		ready = 0;
 	}
 	
 	/**
@@ -480,47 +290,25 @@ Serial.println( rect->height );
 	void DisplayILI9341::setBacklight( boolean state ){
 		if (_bklt==255) return;
 		
-		if (state){
-			digitalWrite(_bklt, HIGH);
-		}
-		else{
-			digitalWrite(_bklt, LOW);
-		}
+		digitalWrite( _bklt, state?HIGH:LOW );
 	}
 	
 	/**
 	 * Sets the destination drawing area on the display
+	 * @param	rect		The properties of the region of the display to draw to (scaled)
 	 **/
-	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationArea( ClipRect* clipRect ){
-		writeCommand(ILI9341_CASET); // Column addr set
-		writeData16(clipRect->x);
-		writeData16(clipRect->x2);
-		writeCommand(ILI9341_PASET); // Row addr set
-		writeData16(clipRect->y);
-		writeData16(clipRect->y2);
-	}
-	__attribute__((always_inline)) inline void DisplayILI9341::resetDestinationArea( void ){
-		writeCommand(ILI9341_CASET); // Column addr set
-		writeData16( 0 );
-		writeData16( width - 1 );
-		writeCommand(ILI9341_PASET); // Row addr set
-		writeData16( 0 );
-		writeData16( height - 1 );
-	}
+	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationArea( ClipRect* rect ){
+Serial.println("DisplayILI9341::setDestinationArea");
+Serial.printf("  x: %d to %d\n", rect->x << _px, ((rect->x2 + 1) << _px) - 1 );
+Serial.printf("  y: %d to %d\n", rect->y << _px, ((rect->y2 + 1) << _px) - 1 );
 
-	/**
-	 * @brief Reset the display to draw to the first row
-	 */
-	__attribute__((always_inline)) inline void DisplayILI9341::resetDestinationLine( void ){
-		_y = 0;
-		_x0 = 0;
-		_x1 = width - 1;
 		writeCommand(ILI9341_CASET); // Column addr set
-		writeData16( _x0 );
-		writeData16( _x1 );
+		writeData16( rect->x << _px );
+		writeData16( ((rect->x2 + 1) << _px) - 1 );
+
 		writeCommand(ILI9341_PASET); // Row addr set
-		writeData16( _y );
-		writeData16( _y );
+		writeData16( rect->y << _px );
+		writeData16( ((rect->y2 + 1) << _px) - 1 );
 	}
 
 	/**
@@ -528,19 +316,17 @@ Serial.println( rect->height );
 	 * @param	data		The properties of the line to draw to the display
 	 */
 	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationLine( LineBufferData* data ) {
-		if ( ( data->x0 != _x0 ) || ( data->x1 != _x1 ) ) {
-			_x0 = data->x0;
-			_x1 = data->x1;
-			writeCommand(ILI9341_CASET); // Column addr set
-			writeData16( _x0 * _px );
-			writeData16( _x1 * _px );
-		}
-		if ( data->y != _y ) {
-			_y = data->y;
-			writeCommand(ILI9341_PASET); // Row addr set
-			writeData16( _y * _px );
-			writeData16( _y * _px );
-		}
+Serial.println("DisplayILI9341::setDestinationLine");
+Serial.printf("  x: %d to %d\n", data->x << _px, ((data->x2 + 1) << _px) - 1 );
+Serial.printf("  y: %d to %d\n", data->y << _px, ((data->y + 1) << _px) - 1 );
+
+		writeCommand(ILI9341_CASET); // Column addr set
+		writeData16( data->x << _px );
+		writeData16( ((data->x2 + 1) << _px) - 1 );
+
+		writeCommand(ILI9341_PASET); // Row addr set
+		writeData16( data->y << _px );
+		writeData16( ((data->y + 1) << _px) - 1 );
 	}
 	
 	void DisplayILI9341::waitFifoNotFull(void) {

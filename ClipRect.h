@@ -61,25 +61,25 @@ namespace mac{
 			 * X coordinate of top-left corner.
 			 * Use setters to set so that x2 and width are adjusted appropriately.
 			 */
-			uint16_t x;
+			int16_t x;
 
 			/**
 			 * Y coordinate of top-left corner.
 			 * Use setters to set so that y2 and height are adjusted appropriately.
 			 */
-			uint16_t y;
+			int16_t y;
 
 			/**
 			 * X coordinate of bottom-right corner.
 			 * Use setters to set so that width is adjusted appropriately.
 			 */
-			uint16_t x2;
+			int16_t x2;
 
 			/**
 			 * Y coordinate of bottom-right corner.
 			 * Use setters to set so that height is adjusted appropriately.
 			 */
-			uint16_t y2;
+			int16_t y2;
 
 			/**
 			 * Width of rect. If 0, rect is invalid.
@@ -92,6 +92,17 @@ namespace mac{
 			 * Use setters to set so that y2 is adjusted appropriately.
 			 */
 			uint16_t height;
+
+			/**
+			 * Clear back to an empty rect
+			 */
+			void clear();
+
+			/**
+			 * Set (copy) the size of the rect from the supplied rect
+			 * @param rect   	The rect to set from
+			 */
+			void set( ClipRect* rect );
 
 			/**
 			 * Set the top-left and bottom-right corners of rect.
@@ -185,19 +196,34 @@ namespace mac{
 			boolean overlaps( ClipRect* rect );
 
 			/**
-			 * Clip this rect to another rect (union)
+			 * Clip this rect to another rect (intersection)
 			 * @param  rect  	The rect to clip to
 			 */
 			void clip( ClipRect* rect );
 
 			/**
-			 * Clip this rect to a rectangular area specified by position and size
+			 * Clip this rect to a rectangular area specified by position and size (intersection)
 			 * @param  px  	X coord to clip
 			 * @param  py 	Y coord to clip
 			 * @param  w  	Width
 			 * @param  h 	Height
 			 */
 			void clipPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h );
+
+			/**
+			 * Expand this rect to also encompase the specified rect (union)
+			 * @param rect The rect to encompase
+			 */
+			void grow( ClipRect* rect );
+
+			/**
+			 * Expand this rect to also encompase a rectangular area specified by position and size (union)
+			 * @param  px  	X coord to clip
+			 * @param  py 	Y coord to clip
+			 * @param  w  	Width
+			 * @param  h 	Height
+			 */
+			void growPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h );
 
 	};
 	

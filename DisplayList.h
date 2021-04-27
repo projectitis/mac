@@ -27,10 +27,11 @@
  */	
 
 #pragma once
-#ifndef _MAC_PANELH_
-#define _MAC_PANELH_ 1
+#ifndef _MAC_DISPLAYLISTH_
+#define _MAC_DISPLAYLISTH_ 1
 
-#include "Widget.h"
+#include "LinkedList.h"
+#include "DisplayObject.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -40,73 +41,60 @@
  * be useful in other projects.
  **/
 namespace mac{
+
+	/**
+	 * The compare function type
+	 */
+	typedef int (*displayObjectCompareFunc)( DisplayObject*, DisplayObject* );
 	
 	/**
-	 * A panel
+	 * Display list that stores a list of display objects in render order.
 	 */
-	class Panel: public Widget {
+	class DisplayList: public LinkedList {
 		
 		public:
+
 			/**
-			 * Constructor
+			 * Construct a new Display List object
+			 * @param object The DisplayObject to attach
 			 */
-			Panel( Style* aStyle );
+			DisplayList( DisplayObject* object );
 
 			/**
-			 * Memory pool of recycled widgets
+			 * The display object at this position
 			 */
-			static Widget* pool;
-
-			/**
-			 * Create a new widget or take one from the pool
-			 * @return The new or recycled widget
-			 */
-			static Panel* Create( Style* style );
-
-			/**
-			 * Type identifier for this widget
-			 **/
-			static const WidgetType TYPE = WidgetType::panel;
-
-			/**
-			 * Reset the widget back to default settings
-			 */
-			void reset() override;
-
-			/**
-			 * The title and acronym
-			 */
-			char* title;
-			char* acronym;
-
-			/**
-			 * Update the display object.
-			 * @param	dt 			Time since last update in seconds
-			 */
-			void update( float dt ) override;
-
-			/**
-			 * Render the display object
-			 * @param 	graphics 	The graphics object to use for rendering
-			 * @param 	force		If true, will force render even if widget is not dirty
-			 * @return          Return true if current widget rendered (_dirty or forced)
-			 */
-			boolean render( Graphics* graphics, boolean force ) override;
-
-			/**
-			 * Set the title and acronym of the panel
-			 * @param  title   	The full title of the panel (max 32 chars)
-			 * @param  acronym 	The acronym to display when collapsed (max 3 chars)
-			 */
-			void setTitle( char* title, char* acronym );
-
-		protected:
+			DisplayObject* object;
 			
 			/**
-			 * Pool getter
+			 * Inserts an object into the list into sorted order by depth
+			 * Assumes object is visible and on the display.
+			 * @param object The object to insert
 			 */
-			Widget** _getPool() override;
+			void insertByDepth( DisplayObject* object );
 
+			/**
+			 * Inserts an object into the list into sorted order by position.
+			 * Assumes object is visible and on the display.
+			 * @param object The object to insert
+			 */
+			void insertByPosition( DisplayObject* object );
+
+			/**
+			 * Remove a display object from the list
+			 * @param object The display object to remove
+			 * @return The removed node
+			 */
+			DisplayList* remove( DisplayObject* object );
+
+		protected:
+
+			/**
+			 * The internal function that inserts the object into the list using the
+			 * specified compare function for sorting.
+			 * @param object The object to insert
+			 * @param compare The compare function
+			 */
+			void _insert( DisplayObject* object, displayObjectCompareFunc compare );
 	};
 	
 } // namespace

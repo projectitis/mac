@@ -28,6 +28,22 @@ namespace mac{
 	LinkedList* LinkedList::prev(){
 		return _prev;
 	}
+
+	/**
+	 * Set the next item. Don't use this unless you know what you are doing. The
+	 * normal way to insert items in the list is to call add, before or after.
+	 */
+	void LinkedList::next( LinkedList* item ) {
+		_next = item;
+	}
+
+	/**
+	 * Set the prev item. Don't use this unless you know what you are doing. The
+	 * normal way to insert items in the list is to call add, before or after.
+	 */
+	void LinkedList::prev( LinkedList* item ) {
+		_prev = item;
+	}
 	
 	/**
 	 * Add an item to the end of the linked list. Item can be a single item or
@@ -69,7 +85,7 @@ namespace mac{
 
 	/**
 	 * Remove the current item from the list
-	 * @return	Pointer to the next item in the list
+	 * @return	The removed item
 	 */
 	LinkedList* LinkedList::remove(){
 		if (_prev){
@@ -78,12 +94,12 @@ namespace mac{
 		if (_next){
 			_next->_prev = _prev;
 		}
-		return _next;
+		return this;
 	}
 
 	/**
 	 * Remove the specified item from the list
-	 * @return	Pointer to the next item in the list
+	 * @return	The removed item, or null if not found
 	 */
 	LinkedList* LinkedList::remove( LinkedList* item ){
 		if (this == item) return remove();

@@ -51,9 +51,21 @@ namespace mac{
 			LinkedList* next();
 
 			/**
+			 * Set the next item. Don't use this unless you know what you are doing. The
+			 * normal way to insert items in the list is to call add, before or after.
+			 */
+			void next( LinkedList* item );
+
+			/**
 			 * Return the previous item
 			 */
 			LinkedList* prev();
+
+			/**
+			 * Set the prev item. Don't use this unless you know what you are doing. The
+			 * normal way to insert items in the list is to call add, before or after.
+			 */
+			void prev( LinkedList* item );
 
 			/**
 			 * Add an item to the end of the linked list

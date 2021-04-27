@@ -18,13 +18,16 @@ namespace mac{
 	/**
 	 * Constructor
 	 */
-	DisplayObject::DisplayObject(){}
+	DisplayObject::DisplayObject(){
+		globalRect = new ClipRect();
+	}
 
 	/**
 	 * Destructor
 	 **/
 	DisplayObject::~DisplayObject(){
 		reset();
+		delete globalRect;
 	}
 
 	/**
@@ -60,19 +63,20 @@ namespace mac{
 		_dirty = true;
 		_visible = true;
 		_active = true;
+		globalRect->clear();
 	}
 
-	void DisplayObject::setVisible( boolean v ) {
+	void DisplayObject::visible( boolean v ) {
 		_visible = v;
 		if (v) dirty();
 	}
 
 	/**
-	 * Populate the rect with the bounds of this display object
-	 * @param inRect The rect to populate
+	 * Get the visibility of an object
+	 * @return boolean The visibility
 	 */
-	void DisplayObject::rect( ClipRect* inRect ){
-		inRect->setPosAndSize( (int16_t)x, (int16_t)y, (int16_t)_w, (int16_t)_h );
+	boolean DisplayObject::visible(){
+		return _visible;
 	}
 
 	/**
@@ -279,100 +283,41 @@ namespace mac{
 	}
 
 	/**
+	 * Set the size of the object
+	 * @param w           		Width
+	 * @param h          		Height
+	 */
+	void DisplayObject::size( float w, float h ) {
+		_w = w;
+		_h = h;
+	}
+
+	/**
+	 * @return float The width
+	 */
+	float DisplayObject::width() {
+		return _w;
+	}
+
+	/**
+	 * @return float The height
+	 */
+	float DisplayObject::height() {
+		return _h;
+	}
+
+	/**
 	 * Set self and parent to dirty (recursive)
 	 */
 	void DisplayObject::dirty() {
 		_dirty = true;
-		//if (_parent) _parent->dirty();
 	}
 
 	/**
-	 * Sort children into the display list (which is on the stage)
-	 * @param stage The stage
-	 * @return DisplayObject The next child (for chaining)
+	 * Check if object is dirty
 	 */
-	DisplayObject* DisplayObject::_sortDisplayList( DisplayObject* stage, ClipRect* displayRect ) {
-//Serial.println("DisplayObject::_sortDisplayList");
-		// Step through children and sort onto display list
-		DisplayObject* child = _children;
-		ClipRect* childRect = new ClipRect();
-		while (child) {
-//Serial.printf("  Child %d\n", child->id);
-
-			// Sort onto display list
-			if (child->_visible) {
-
-				// Skip if not within display area
-				child->rect( childRect );
-				if (!childRect->overlaps( displayRect )){
-					child = child->_next;
-					continue;
-				}
-
-				// Set depth
-				child->_depth = ++stage->_depth;
-
-				// Insertion sort
-				child->_displayListNext = 0;
-				child->_displayListPrev = 0;
-				// If child is the first item, place it at the start
-				if (!stage->_displayListNext) {
-//Serial.println("    First in display list");
-					stage->_displayListNext = child;
-				}
-				// Otherwise find insertion point
-				else {
-					// Step along the chain until the next child is smaller
-					DisplayObject* obj = stage->_displayListNext;
-					while (obj) {
-//Serial.printf("    Compare to display list: %d\n", obj->id);
-						// If the child is higher than current node, insert before node
-						if ( DisplayObject::compare( child, obj ) > 0 ) {
-//Serial.println("        Higher");
-							// All except the first node, link child to prev
-							if (obj->_displayListPrev){
-								obj->_displayListPrev->_displayListNext = child;
-								child->_displayListPrev = obj->_displayListPrev;
-							}
-							else {
-								stage->_displayListNext = child;
-							}
-							// Link child to next
-							obj->_displayListPrev = child;
-							child->_displayListNext = obj;
-							// Done
-							break;
-						}
-						// If child wasn't inserted, place it at the end
-						if (!obj->_displayListNext) {
-//Serial.println("        Lower, reached end");
-							obj->_displayListNext = child;
-							child->_displayListPrev = obj;
-							break;
-						}
-						obj = obj->_displayListNext;
-					}
-				}
-			} // visible
-
-			// Update dirty region. Note - this happens even if the child is
-			// not visible. It may be dirty because it's just become hidden, so the
-			// display needs to be updated to reflect this.
-			if (child->_dirty) {
-				// XXX: DisplayObject needs a clipRect
-				//_dirtyRect.add( child->rect );
-			}
-
-			// Now recurse children of the this child
-			child->_sortDisplayList( stage, displayRect );
-
-			// Move to next sibling
-			child = child->_next;
-		}
-		delete childRect;
-
-		// Return next sibling
-		return _next;
+	boolean DisplayObject::isDirty() {
+		return _dirty;
 	}
 	
 } // namespace

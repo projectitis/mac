@@ -73,12 +73,16 @@ namespace mac{
 			~DisplaySSD1306( void );
 
 			/**
-			 * Update the framebuffer to the display
-			 * @param	continuous	If true, will continuously refresh until stopRefresh is called
-			 **/
-			void update(
-				boolean continuous = false
-			);
+			 * Flip the front and back buffers, and trigger the drawing of the back buffer
+			 * to the display. Moves the front buffer to the next line.
+			 */
+			void flip();
+
+			/**
+			 * Resets the region without changing it. This resets the line buffer to
+			 * start of the region. The backbuffer is not affected until the next flip.
+			 */
+			void reset();
 			
 		protected:
 			
@@ -98,11 +102,12 @@ namespace mac{
 
   			__attribute__((always_inline)) inline void writeData( uint8_t c );
   			__attribute__((always_inline)) inline void writeData( uint8_t *c, uint32_t n );
+			
   			/**
   			 * Internal display methods
   			 */
-  			__attribute__((always_inline)) inline void setDestinationArea( ClipRect *clipRect );
-			__attribute__((always_inline)) inline void resetDestinationArea( void );
+			__attribute__((always_inline)) inline void setDestinationArea( ClipRect *rect );
+			__attribute__((always_inline)) inline void setDestinationLine( LineBufferData *data );
 			
 			/**
 			 * Properties
@@ -110,7 +115,6 @@ namespace mac{
 			uint8_t _scl, _sda;
 			PixelScale _px;
 			int8_t _i2caddr;
-			float _ipx; // Inverse of px
 	};
 
 } // namespace
