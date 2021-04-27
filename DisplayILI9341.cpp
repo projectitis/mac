@@ -251,7 +251,6 @@ namespace mac{
 		// Get reference to the back buffer (ignore uninitialized warning using pragma)
 #pragma GCC diagnostic ignored "-Wuninitialized"
 		LineBufferData* back = &data[ backIndex ];
-Serial.printf("Flip line %d\n", back->y);
 
 		// Begin the transmission to hardware
 		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
@@ -267,7 +266,6 @@ Serial.printf("Flip line %d\n", back->y);
 		uint16_t l = 1 << _px;
 		while (l--) {
 			i = back->x;
-Serial.printf("  Draw from %d to %d\n", i, c);
 			while (i < (c + ((l>0)?1:0))) writeData16( convert888to565( back->pixels[ i++ >> _px ] ) );
 		}
 		writeData16_last( convert888to565( back->pixels[ i >> _px ] ) );
@@ -298,10 +296,6 @@ Serial.printf("  Draw from %d to %d\n", i, c);
 	 * @param	rect		The properties of the region of the display to draw to (scaled)
 	 **/
 	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationArea( ClipRect* rect ){
-Serial.println("DisplayILI9341::setDestinationArea");
-Serial.printf("  x: %d to %d\n", rect->x << _px, ((rect->x2 + 1) << _px) - 1 );
-Serial.printf("  y: %d to %d\n", rect->y << _px, ((rect->y2 + 1) << _px) - 1 );
-
 		writeCommand(ILI9341_CASET); // Column addr set
 		writeData16( rect->x << _px );
 		writeData16( ((rect->x2 + 1) << _px) - 1 );
@@ -316,10 +310,6 @@ Serial.printf("  y: %d to %d\n", rect->y << _px, ((rect->y2 + 1) << _px) - 1 );
 	 * @param	data		The properties of the line to draw to the display
 	 */
 	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationLine( LineBufferData* data ) {
-Serial.println("DisplayILI9341::setDestinationLine");
-Serial.printf("  x: %d to %d\n", data->x << _px, ((data->x2 + 1) << _px) - 1 );
-Serial.printf("  y: %d to %d\n", data->y << _px, ((data->y + 1) << _px) - 1 );
-
 		writeCommand(ILI9341_CASET); // Column addr set
 		writeData16( data->x << _px );
 		writeData16( ((data->x2 + 1) << _px) - 1 );

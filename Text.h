@@ -27,11 +27,12 @@
  */	
 
 #pragma once
-#ifndef _MAC_SPRITEH_
-#define _MAC_SPRITEH_ 1
+#ifndef _MAC_TEXTH_
+#define _MAC_TEXTH_ 1
 
 #include "DisplayObject.h"
 #include "Bitmap.h"
+#include "PackedBDF.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -43,34 +44,20 @@
 namespace mac{
 
 	/**
-	 * Blend modes supported by Sprite
+	 * Text alignment
 	 */
-	enum class BlendMode{
-		normal,
-		stamp
+	enum class TextAlign{
+		left,
+		right,
+		center
 	};
 
 	/**
-	 * Transformations supported by Sprite
+	 * A text area
 	 */
-	enum class Transform{
-		normal,
-		flipH,
-		flipV,
-		flipHV,
-		rotate180
-	};
-
-	/**
-	 * A sprite
-	 */
-	class Sprite: public DisplayObject {
+	class Text: public DisplayObject {
 		
 		public:
-			/**
-			 * Constructor
-			 */
-			//Sprite();
 
 			/**
 			 * Memory pool of recycled objects
@@ -81,13 +68,13 @@ namespace mac{
 			 * Create a new object or take one from the pool
 			 * @return The new or recycled object
 			 */
-			static Sprite* Create();
-			static Sprite* Create( Tilemap* tilemap, uint16_t tileIndex = 0 );
+			static Text* Create();
+			static Text* Create( packedbdf_t* font );
 
 			/**
 			 * Type identifier for this object
 			 **/
-			static const DisplayObjectType TYPE = DisplayObjectType::sprite;
+			static const DisplayObjectType TYPE = DisplayObjectType::text;
 
 			/**
 			 * Reset the object back to default settings
@@ -95,43 +82,34 @@ namespace mac{
 			void reset() override;
 
 			/**
-			 * Update the display object.
-			 * @param	dt 			Time since last update in seconds
+			 * @brief Set the font that this text uses
+			 * @param font 	The font to use
 			 */
-			void update( float dt ) override;
+			void font( packedbdf_t* font );
 
 			/**
-			 * The tilemap that contains the sprite bitmap data.
-			 * Do not change directly. Use set() to change this.
+			 * @brief Set the text color
+			 * @param c The text color
 			 */
-			Tilemap* tilemap;
+			void color( color888 c );
 
 			/**
-			 * The index of the tile within the tilemap.
+			 * @brief Set the line height of the text
+			 * @param lh 	The line height. Usually between 1 - 1.5
 			 */
-			uint16_t tileIndex; 
+			void lineHeight( float lh );
 
 			/**
-			 * transform for sprite
+			 * @brief Set the text alignment
+			 * @param align The alignment
 			 */
-			Transform transform = Transform::normal;
+			void align( TextAlign a );
 
 			/**
-			 * Blend mode for sprite
+			 * @brief Set the text string
+			 * @param t The text string
 			 */
-			BlendMode blendMode = BlendMode::normal;
-
-			/**
-			 * Color (used for some blend modes)
-			 */
-			color888 color;
-
-			/**
-			 * Set the tilemap and the tileIndex that teh sprite uses.
-			 * @param tilemap 	The tilemap to use
-			 * @param tileIndex The index of teh active tile
-			 */
-			virtual void set( Tilemap* tilemap, uint16_t tileIndex = 0 );
+			void text( char* t );
 
 			/**
 			 * Set the position at which to read the next pixel
@@ -154,20 +132,57 @@ namespace mac{
 			 */
 			DisplayObject** _getPool() override;
 
-			/**
-			 * Pixel accessor for correct tilemap pixel format
-			 */
-			access8888 _getPixelAs8888;
+			char* _text;
+			packedbdf_t* _font;
+			color888 _color;
+			float _lineHeight = 1.25f;
+			TextAlign _align = TextAlign::left;
+
+			uint8_t _fontbpp = 1;
+			uint8_t _fontbppindex = 0;
+			uint8_t _fontbppmask = 1;
+			uint8_t _fontppb = 8;
+			float _fontalphamx = 1;
+			uint32_t _fontdeltaoffset = 0;
+			uint32_t _fontspacewidth = 0;
 
 			/**
-			 * Current offset into the pixel data
+			 * Text cursor position for non-text area drawing
 			 */
-			int32_t _dataOffset;
+			int32_t _ci = 0;	// Current character index
+			uint32_t _cb = 0;	// Current character bit (0 to char width)
+			uint32_t _cw = 0;	// Current character width
+			int32_t _cx = 0;	// Current character left
+			int32_t _cy = 0;	// Current character top
+			int32_t _cy2 = 0;	// Current character bottom
+			uint32_t _cdo = 0;	// Current character data offset
+
+			uint32_t _bitoffset = 0;
+			const uint8_t *_data;
 
 			/**
-			 * Current setp with each drawn pixel
+			 * Methods to prepare for drawing a font character
 			 */
-			int32_t _dataStep;
+			void _prepareCharAt( int16_t x );
+			void _prepareChar();
+			void _nextChar();
+
+			/**
+			 * Methods to read bits within packed data
+			 */
+			uint32_t _fetchbit( const uint8_t *p, uint32_t index );
+			uint32_t _fetchbits_unsigned( const uint8_t *p, uint32_t index, uint32_t required );
+			int32_t _fetchbits_signed( const uint8_t *p, uint32_t index, uint32_t required );
+			uint32_t _fetchpixel( const uint8_t *p, uint32_t index, uint32_t x );
+
+			/**
+			 * Methods to get text metrics
+			 */
+			int32_t _getTextWidth();
+			int32_t _getWordWidth( char* c, char* &cw );
+			int32_t _getCharWidth( uint16_t c );
+			int32_t _getSentence( char* c, uint32_t w, char* &cw );
+			char* _ignoreWhitespace( char* p );
 
 	};
 	

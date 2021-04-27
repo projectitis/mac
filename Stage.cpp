@@ -89,15 +89,14 @@ _cleanRect->set( &(display->rect) );
 		_displayListDepth = 0;
 		_displayList = new DisplayList( this );
 		if (_children) _traverse( _children, 0, 0 );
-
+/*
 // Debug display list
 Serial.println("DisplayList");
-DisplayList* node = _displayList;
 while (node) {
 	Serial.printf("  ID:%d at y=%d, x=%d (%dx%d) with d=%d\n", node->object->id, int16_t(node->object->y), int16_t(node->object->x), int16_t(node->object->width()), int16_t(node->object->height()), node->object->depth );
 	node = (DisplayList*)(node->next());
 }
-
+*/
 		// Calculate the updated area of ths display
 		_updateRect->set( _dirtyRect );
 		_updateRect->grow( _cleanRect );
@@ -107,8 +106,8 @@ while (node) {
 		if (_displayListDepth==0){}
 		if (_dirtyRect->isEmpty()){}
 
-		Serial.println("Update area");
-		Serial.printf("  %d,%d %dx%d\n", _updateRect->x,_updateRect->y, _updateRect->width,_updateRect->height );
+Serial.println("Update area");
+Serial.printf("  %d,%d %dx%d\n", _updateRect->x,_updateRect->y, _updateRect->width,_updateRect->height );
 
 		// Initialise the display to draw only the dirty area
 		display->set( _updateRect );
@@ -127,22 +126,21 @@ Serial.printf("\nStart line y=%d\n", y);
 				_renderList->insertByDepth( head->object );
 				head = (DisplayList*)head->next();
 			}
-
+/*
 Serial.println("RenderList\n");
 node = _renderList;
 while (node) {
 	Serial.printf("  ID:%d at y=%d, x=%d (%dx%d) with d=%d\n", node->object->id, int16_t(node->object->y), int16_t(node->object->x), int16_t(node->object->width()), int16_t(node->object->height()), node->object->depth );
 	node = (DisplayList*)node->next();
 }
-
+*/
 			// For this line, remove the display objects that are complete, and set the
 			// start read position for those that aren't. Skip the first one because it's
 			// the stage.
-			node = (DisplayList*)_renderList->next();
+			DisplayList* node = (DisplayList*)_renderList->next();
 			while (node) {
 				// Todo precalculate BR corner (x2 and y2) 
 				if ( y > node->object->globalRect->y2 ){
-Serial.printf("About to remove object ID %d\n", node->object->id);
 					next = (DisplayList*)node->next();
 					delete ((LinkedList*)node)->remove();
 					node = next;
@@ -153,7 +151,6 @@ Serial.printf("About to remove object ID %d\n", node->object->id);
 				}
 			}
 
-Serial.printf("Step pixels in line from %d to %d\n", _updateRect->x, _updateRect->x2);
 			// Step pixels in this line
 			for ( uint16_t x = _updateRect->x; x <= _updateRect->x2; x++ ) {
 				
@@ -173,7 +170,6 @@ Serial.printf("Step pixels in line from %d to %d\n", _updateRect->x, _updateRect
 			}
 
 			// Flip the buffer (auto-advances to next line)
-Serial.println("Flip buffer");
 			display->flip();
 		}
 		_clearList( _renderList );
@@ -238,6 +234,7 @@ Serial.println("Flip buffer");
 
 			// Calculate screen dirty area
 			if (child->isDirty()) _dirtyRect->grow( child->globalRect );
+			// TODO: Child to store old rect, so when dirty, dirty rect includes the old rect!
 
 			// Recurse
 			if (child->hasChildren()) _traverse( child->firstChild(), child->globalRect->x, child->globalRect->y );

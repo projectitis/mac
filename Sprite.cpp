@@ -82,10 +82,29 @@ namespace mac{
 	 * @param y The global y coordinate
 	 */
 	void Sprite::readPosition( int16_t gx, int16_t gy ){
-Serial.printf("Sprite::readPosition %d %d", gx, gy);
 		DisplayObject::readPosition( gx, gy );
-		_dataOffset = (tileIndex * tilemap->tileHeight + ry) * tilemap->tileWidth + rx;
-Serial.printf(" with offset %d\n", _dataOffset);
+		switch (transform) {
+			case Transform::flipH: {
+				_dataOffset = (tileIndex * tilemap->tileHeight + ry + 1) * tilemap->tileWidth - rx - 1;
+				_dataStep = -1;
+				break;
+			}
+			case Transform::flipV: {
+				_dataOffset = ((tileIndex + 1) * tilemap->tileHeight - ry - 1) * tilemap->tileWidth + rx;
+				_dataStep = 1;
+				break;
+			}
+			case Transform::flipHV:
+			case Transform::rotate180: {
+				_dataOffset = ((tileIndex + 1) * tilemap->tileHeight - ry) * tilemap->tileWidth - rx - 1;
+				_dataStep = -1;
+				break;
+			}
+			default: {
+				_dataOffset = (tileIndex * tilemap->tileHeight + ry) * tilemap->tileWidth + rx;
+				_dataStep = 1;
+			}
+		}
 	}
 
 	/**
@@ -95,7 +114,7 @@ Serial.printf(" with offset %d\n", _dataOffset);
 	 */
 	void Sprite::readPixel( color888 &c, float &a ) {
 		_getPixelAs8888( (uint8_t*)tilemap->data, _dataOffset, c );
-		_dataOffset++;
+		_dataOffset += _dataStep;
 		switch (blendMode) {
 			case BlendMode::stamp: {
 				a = (c & 255) / 255.0;

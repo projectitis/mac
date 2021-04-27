@@ -49,6 +49,7 @@ namespace mac{
 		displayObject,
 		stage,
 		sprite,
+		text,
 	};
 	
 	/**

@@ -36,6 +36,7 @@
 // Include all display object types
 #include "DisplayObject.h"
 #include "Sprite.h"
+#include "Text.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
