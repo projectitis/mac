@@ -159,6 +159,13 @@ namespace mac{
 			 * @param h 	Height of rect
 			 **/
 			void setPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h );
+
+			/**
+			 * Move the rect by the specified amount
+			 * @param x The amount to move in the X direction
+			 * @param y The amount to move in the Y direction
+			 */
+			void translate( int16_t x, int16_t y );
 			
 			/**
 			 * Return true if the clip rect contains the specified point

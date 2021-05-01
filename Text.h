@@ -33,6 +33,7 @@
 #include "DisplayObject.h"
 #include "Bitmap.h"
 #include "PackedBDF.h"
+#include "ClipRect.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -58,6 +59,16 @@ namespace mac{
 	class Text: public DisplayObject {
 		
 		public:
+
+			/**
+			 * @brief Construct a new Text object
+			 */
+			Text();
+
+			/**
+			 * @brief Destroy the Text object
+			 */
+			~Text();
 
 			/**
 			 * Memory pool of recycled objects
@@ -132,14 +143,13 @@ namespace mac{
 			 */
 			DisplayObject** _getPool() override;
 
-			char* _text;
-			packedbdf_t* _font;
-			color888 _color;
+			char* _text = 0;
+			packedbdf_t* _font = 0;
+			color888 _color = 0;
 			float _lineHeight = 1.25f;
 			TextAlign _align = TextAlign::left;
 
 			uint8_t _fontbpp = 1;
-			uint8_t _fontbppindex = 0;
 			uint8_t _fontbppmask = 1;
 			uint8_t _fontppb = 8;
 			float _fontalphamx = 1;
@@ -149,16 +159,14 @@ namespace mac{
 			/**
 			 * Text cursor position for non-text area drawing
 			 */
-			int32_t _ci = 0;	// Current character index
-			uint32_t _cb = 0;	// Current character bit (0 to char width)
-			uint32_t _cw = 0;	// Current character width
-			int32_t _cx = 0;	// Current character left
-			int32_t _cy = 0;	// Current character top
-			int32_t _cy2 = 0;	// Current character bottom
-			uint32_t _cdo = 0;	// Current character data offset
+			int32_t _charIndex = 0;		// Current character index
+			uint32_t _pixelOffset = 0;	// Current character bit (0 to char width)
+			uint32_t _charWidth = 0;	// Current character width
+			ClipRect* _glyphBounds;		// Bounds of glyph
+			int32_t _nextCharX = 0;		// Next character X in string
 
-			uint32_t _bitoffset = 0;
-			const uint8_t *_data;
+			uint32_t _bitoffset = 0;	// Offset intp glyph data
+			const uint8_t *_data;		// Glyph data
 
 			/**
 			 * Methods to prepare for drawing a font character
@@ -173,7 +181,7 @@ namespace mac{
 			uint32_t _fetchbit( const uint8_t *p, uint32_t index );
 			uint32_t _fetchbits_unsigned( const uint8_t *p, uint32_t index, uint32_t required );
 			int32_t _fetchbits_signed( const uint8_t *p, uint32_t index, uint32_t required );
-			uint32_t _fetchpixel( const uint8_t *p, uint32_t index, uint32_t x );
+			uint32_t _fetchpixel();
 
 			/**
 			 * Methods to get text metrics

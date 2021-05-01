@@ -17,6 +17,14 @@ namespace mac{
 
 	DisplayObject* Text::pool = 0;
 
+	Text::Text() {
+		_glyphBounds = new ClipRect();
+	}
+
+	Text::~Text() {
+		delete _glyphBounds;
+	}
+
 	/**
 	 * Pool getter
 	 */
@@ -50,19 +58,26 @@ namespace mac{
 	 * @param font 	The font to use
 	 */
 	void Text::font( packedbdf_t* font ) {
-		if (_font == font) return;
+Serial.printf("Text::font %d (v%d)\n", font, font->version );
+		//if (_font == font) return;
 		
 		_font = font;
-		_fontbpp = 1;
+		// Anti-aliased (multi-bit pixels)
 		if (_font->version==23){
 			_fontbpp = (_font->reserved & 0b000011)+1;
-			_fontbppindex = (_fontbpp >> 2)+1;
-			_fontbppmask = (1 << (_fontbppindex+1))-1;
 			_fontppb = 8/_fontbpp;
-			_fontalphamx = 31.0/((1<<_fontbpp)-1);
-			_fontdeltaoffset = 3 + _font->bits_width + _font->bits_height + _font->bits_xoffset + _font->bits_yoffset;
-			_fontspacewidth = _getCharWidth(32);
+			_fontalphamx = 1.0/((1<<_fontbpp)-1);
 		}
+		// Aliased (single-bit pixels)
+		else {
+			_fontbpp = 1;
+			_fontppb = 8;
+			_fontalphamx = 1.0;
+		}
+		_fontbppmask = (1 << _fontbpp) - 1;
+Serial.printf("  _fontbpp:%d _fontppb:%d _fontbppmask:%d\n", _fontbpp, _fontppb,  _fontbppmask );
+		_fontdeltaoffset = 3 + _font->bits_width + _font->bits_height + _font->bits_xoffset + _font->bits_yoffset;
+		_fontspacewidth = _getCharWidth(32);
 
 		dirty();
 	}
@@ -104,7 +119,7 @@ namespace mac{
 	void Text::text( char* t ) {
 		_text = t;
 		dirty();
-		size( _getTextWidth(), _font->cap_height );
+		size( _getTextWidth(), _font->line_space );
 	}
 
 	/**
@@ -115,9 +130,6 @@ namespace mac{
 	void Text::readPosition( int16_t gx, int16_t gy ){
 		DisplayObject::readPosition( gx, gy );
 		_prepareCharAt( gx );
-		if (_ci >= 0) {
-			_cdo = max( 0, (ry - _cy) * _cw) + _cb;
-		}
 	}
 
 	/**
@@ -127,27 +139,23 @@ namespace mac{
 	 */
 	void Text::readPixel( color888 &c, float &a ) {
 		a = 0;
-		if (_ci >= 0) {
-			// If we are above the letter, skip
-			if (ry >= _cy) {
-				// If we are below the letter, skip
-				if (ry < _cy2) {
-					// If we are before the letter, skip
-					if (rx >= _cx) {
-						// Read pixel
-						uint8_t pv = _fetchpixel(_data, _bitoffset, _cdo);
-						pv = (uint8_t)(pv * _fontalphamx);
-						a = pv/31.0;
-						c = _color;
-						_cdo++;
->>>Fix this cdo thing. Eitehr that is wrong, or the bitoffset into the data is wrong?
-						_bitoffset += _fontbpp;
-					}
-				}
+		c = _color;
+		if (_charIndex >= 0) {
+			// If we are above or below the letter, skip
+			if (_glyphBounds->contains( rx, ry )) {
+				uint8_t pv = _fetchpixel();
+				a = (float)pv * _fontalphamx;
+				_bitoffset += _fontbpp;
+			}
+			else {
+Serial.print(".");
 			}
 			// Advance x
-			_cb++;
-			if (_cb >= _cw) _nextChar();
+			rx++;
+			if (rx >= _nextCharX) _nextChar();
+		}
+		else {
+			rx++;
 		}
 	}
 
@@ -184,14 +192,19 @@ namespace mac{
 		return (int32_t)val;
 	}
 
-	uint32_t Text::_fetchpixel(const uint8_t *p, uint32_t index, uint32_t x){
+	uint32_t Text::_fetchpixel(){
 		// The byte
-		uint8_t b = p[index >> 3];
+		uint32_t bt = _bitoffset >> 3;
+		uint8_t b = _data[bt];
+
 		// Shift to LSB position
-		uint8_t s = ((_fontppb-(x % _fontppb)-1)*_fontbpp);
+		uint8_t s = 8 - (_bitoffset - (bt << 3)) - _fontbpp;
+
+		//((_fontppb-(x % _fontppb)-1)*_fontbpp);
 //Serial.printf("[%d>>%d (%d)] ",b,s,x);
 		b = b >> s;
 		// Mask and return
+Serial.printf("_fetchpixel %d [%d] (%d.%d) = %d\n", _bitoffset, _data[bt], bt, s, (b & _fontbppmask));
 		return b & _fontbppmask;
 	}
 
@@ -202,37 +215,41 @@ namespace mac{
 	 * @return uint32_t The index into the string. -1 means char not found
 	 */
 	void Text::_prepareCharAt( int16_t x ){
-Serial.printf("Text::_prepareCharAt %d\n  ", x);
-		int32_t w = 0;
+Serial.printf("_prepareCharAt %d\n", x);
 		char b;
-		_ci = 0;
-		_cb = 0;
+		_charIndex = 0;
+		_pixelOffset = 0;
+		_charWidth = 0;
+		_nextCharX = 0;
 		while(true){
-			b = _text[_ci];
+			b = _text[_charIndex];
 			if (b=='\0'){
-				_cb = 0;
-				_ci = -1;
+				_pixelOffset = 0;
+				_charIndex = -1;
 				break; // End of string
 			}
-			_cb = x - w;
-			w += _getCharWidth( b );
-			if (w > x) break;
-			_ci++;
+			_pixelOffset = x;
+			x -= _getCharWidth( b );
+			if (x < 0) break;
+			_charIndex++;
 		}
-		if (_ci >= 0) _prepareChar();
+		if (_charIndex >= 0){
+			_prepareChar();
+			_glyphBounds->setPos( _glyphBounds->x - _pixelOffset, _glyphBounds->y );
+		}
 	}
 
 	/**
 	 * @brief Move along to the next char
 	 */
 	void Text::_nextChar() {
-		_ci++;
-		_cb = 0;
-		if (_text[_ci]=='\0'){
-			_ci = -1;
+		_charIndex++;
+		_pixelOffset = 0;
+		if (_text[_charIndex]=='\0'){
+			_charIndex = -1;
 			return;
 		}
-		if (_ci >= 0) _prepareChar();
+		if (_charIndex >= 0) _prepareChar();
 	}
 
 	/**
@@ -240,8 +257,8 @@ Serial.printf("Text::_prepareCharAt %d\n  ", x);
 	 * @param i The index into the string
 	 */
 	void Text::_prepareChar() {
-		char c = _text[_ci];
-Serial.printf("_prepareChar %c\n", c);
+		char c = _text[_charIndex];
+Serial.printf("\n_prepareChar %c %d", c, c);
 
 		// Check character is supported by the _font
 		if ((c >= _font->index1_first) && (c <= _font->index1_last)) {
@@ -253,12 +270,12 @@ Serial.printf("_prepareChar %c\n", c);
 			_bitoffset *= _font->bits_index;
 		}
 		else if (_font->unicode) {
-Serial.println("    WARNING: Unsupported unicode character");
+Serial.println(". WARNING: Unsupported unicode character");
 			_nextChar();
 			return;
 		}
 		else {
-Serial.println("    WARNING: Unsupported character");
+Serial.println(". WARNING: Unsupported character");
 			_nextChar();
 			return;
 		}
@@ -266,12 +283,10 @@ Serial.println("    WARNING: Unsupported character");
 		// Char data
 		uint32_t goffset = _fetchbits_unsigned( _font->index, _bitoffset, _font->bits_index );
 		_data = _font->data + goffset;
+//Serial.printf(" go=%d",goffset);
 
 		uint32_t encoding = _fetchbits_unsigned(_data, 0, 3);
-		if (encoding != 0) {
-			_nextChar();
-			return;
-		}
+		if (encoding != 0) return _nextChar();
 
 		int16_t width = _fetchbits_unsigned(_data, 3, _font->bits_width);
 		_bitoffset = _font->bits_width + 3;
@@ -282,19 +297,57 @@ Serial.println("    WARNING: Unsupported character");
 		_bitoffset += _font->bits_xoffset;
 		int32_t yoffset = _fetchbits_signed(_data, _bitoffset, _font->bits_yoffset);
 		_bitoffset += _font->bits_yoffset;
+//Serial.printf(" o(%d,%d %dx%d)", xoffset, yoffset, width, height);
 
-		_cw = _fetchbits_unsigned(_data, _bitoffset, _font->bits_delta);
+		_glyphBounds->setPosAndSize( _nextCharX + xoffset, _font->cap_height - height - yoffset, width, height );
+Serial.printf(" b(%d,%d %dx%d)", _glyphBounds->x, _glyphBounds->y, _glyphBounds->width, _glyphBounds->height);
+
+		_charWidth = _fetchbits_unsigned(_data, _bitoffset, _font->bits_delta);
 		_bitoffset += _font->bits_delta;
+		_nextCharX += _charWidth;
+//Serial.printf(" w=%d",_charWidth);
+//Serial.printf(" ch=%d",_font->cap_height);
 
-		// horizontal start
-		_cx = xoffset;
+		// Number of lines into the glyph (_pixelOffset is number of pixels into the line)
+		int32_t lineOffset = max( 0, ry - _glyphBounds->y );
 
-		// vertically, the top and/or bottom can be clipped
-		_cy = _font->cap_height - height - yoffset;
-		_cy2 = _cy + height;
+		// Anti-aliased (multi-bit pixel) fonts
+		// All pixels are sequential. No duplicate line support
+		if (_fontbpp>1){
+			_bitoffset = ((_bitoffset + 7) & (-8)); // Round to byte boundary
+			_bitoffset += (lineOffset * _glyphBounds->width + _pixelOffset) * _fontbpp;
+		}
+		// For aliased fonts
+		// First bit of every line indicates if the line is duplicated
+		// 0: Next line is not duplicated. Following bits are pixels
+		// 1: Next line is duplicated. Read next 3 bits and add 2 for number of lines
+		else {
+			lineOffset++;
+			uint8_t linesDuplicated = 0;
+			while (lineOffset--) {
 
-		// For antialiased fonts, bitoffset is rounded to byte boundary
-		if (_fontbpp>1) _bitoffset = ((_bitoffset + 7) & (-8));
+				// Skip duplicated lines
+				if (linesDuplicated){
+					if (--linesDuplicated==0){
+						_bitoffset += _glyphBounds->width;
+					}
+					else {
+						continue;
+					}
+				}
+
+				// If first bit in line is 1, line is duplicated
+				if (_fetchbit( _data, _bitoffset++)){
+					linesDuplicated = _fetchbits_unsigned( _data, _bitoffset, 3 ) + 2;
+					_bitoffset += 3;
+				}
+				else {			
+					linesDuplicated = 1;
+				}
+			}
+			_bitoffset += _pixelOffset;
+		}
+Serial.println();
 	}
 
 	/**
@@ -353,6 +406,7 @@ Serial.println("    WARNING: Unsupported character");
 			w += _getCharWidth( b );
 			c++;
 		}
+Serial.println(w);
 		return w;
 	}
 
@@ -371,6 +425,7 @@ Serial.println("    WARNING: Unsupported character");
 			w += _getCharWidth( b );
 			i++;
 		}
+Serial.printf("_getTextWidth %d\n",w);
 		return w;
 	}
 

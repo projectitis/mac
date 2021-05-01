@@ -158,6 +158,15 @@ namespace mac{
 		width = w; height = h;
 		x2 = x + width - 1; y2 = y + height - 1;
 	}
+
+	/**
+	 * Move the rect by the specified amount
+	 * @param x The amount to move in the X direction
+	 * @param y The amount to move in the Y direction
+	 */
+	void ClipRect::translate( int16_t x, int16_t y ) {
+		setPos( this->x + x, this->y + y );
+	}
 	
 	/**
 	 * Return true if the clip rect contains the specified point
@@ -166,7 +175,7 @@ namespace mac{
 	 * @return   True if point within rect
 	 */
 	boolean ClipRect::contains( int16_t px, int16_t py ){
-		return ((px>=x) && (px<= x2) && (py >= y) && (py <= y2));
+		return ((px >= x) && (px <= x2) && (py >= y) && (py <= y2));
 	}
 
 	/**
@@ -175,7 +184,7 @@ namespace mac{
 	 * @return   True if point within rect
 	 */
 	boolean ClipRect::containsX( int16_t px ){
-		return ((px>=x) && (px<= x2));
+		return ((px >= x) && (px <= x2));
 	}
 
 	/**
