@@ -50,13 +50,15 @@ namespace mac{
 		stage,
 		sprite,
 		text,
+		shape,
+		box,
 	};
 	
 	/**
 	 * The base class for all display objects (@see Stage)
 	 */
 	class DisplayObject: public Listener {
-		
+		friend class Stage;
 		public:
 			/**
 			 * Constructor
@@ -117,15 +119,22 @@ namespace mac{
 			Tween* tweens;
 
 			/**
-			 * Position
+			 * @brief Rect describing the bounds in global space (relative to stage)
+			 * This is calculated automatically from the origin and the local bounds during the rendering
+			 * sweep.
 			 */
-			float x = 0;
-			float y = 0;
+			ClipRect* globalBounds;
 
 			/**
-			 * Position globally (calculated as the display list is updated)
+			 * @brief Rect describing the part of this object being rendered in the current cycle, in local space
+			 * This is calculated when beginRender is called
 			 */
-			ClipRect* globalRect;
+			ClipRect* renderBounds;
+
+			/**
+			 * @brief Rect describing the last dirty area in global space (relative to stage)
+			 */
+			ClipRect* cleanBounds;
 
 			/**
 			 * Alpha of entire object
@@ -219,23 +228,65 @@ namespace mac{
 			DisplayObject* prev( void );
 
 			/**
-			 * Set the position of the object on the parent.
-			 * @param x           		The x coord
-			 * @param y           		The y coord
+			 * @brief Set the origin x coordinate within the object
+			 * @param value The origin x coordinate
 			 */
-			virtual void position( float x, float y );
+			virtual void originX( float value );
 
 			/**
-			 * Set the size of the object
-			 * @param w           		Width
-			 * @param h          		Height
+			 * @return float The origin x coordinate
 			 */
-			virtual void size( float w, float h );
+			virtual float originX();
+
+			/**
+			 * @brief Set the origin y coordinate within the object
+			 * @param value The origin y coordinate
+			 */
+			virtual void originY( float value );
+
+			/**
+			 * @return float The origin y coordinate
+			 */
+			virtual float originY();
+
+			/**
+			 * @brief Set the x coordinate
+			 * @param value The new width
+			 */
+			virtual void x( float value );
+
+			/**
+			 * @return float The x coordinate
+			 */
+			virtual float x();
+
+			/**
+			 * @brief Set the y coordinate
+			 * @param value The new width
+			 */
+			virtual void y( float value );
+
+			/**
+			 * @return float The y coordinate
+			 */
+			virtual float y();
+
+			/**
+			 * @brief Set the width
+			 * @param value The new width
+			 */
+			virtual void width( float value );
 
 			/**
 			 * @return float The width
 			 */
 			virtual float width();
+
+			/**
+			 * @brief Set the height
+			 * @param value The new height
+			 */
+			virtual void height( float value );
 
 			/**
 			 * @return float The height
@@ -250,6 +301,30 @@ namespace mac{
 			virtual void update( float dt );
 
 			/**
+			 * @brief Set the global position of the display object
+			 * 
+			 * @param x The global X position
+			 * @param y The global Y position
+			 */
+			virtual void globalPos( float x, float y );
+
+			/**
+			 * @brief Convert a global X coordinate to a local coord
+			 * 
+			 * @param x The global X coordinate
+			 * @return float The local X coordinate
+			 */
+			float globalToLocalX( float x );
+
+			/**
+			 * @brief Convert a global Y coordinate to a local coord
+			 * 
+			 * @param x The global Y coordinate
+			 * @return float The local Y coordinate
+			 */
+			float globalToLocalY( float y );
+
+			/**
 			 * Set dirty
 			 */
 			void dirty();
@@ -260,31 +335,80 @@ namespace mac{
 			boolean isDirty();
 
 			/**
-			 * Stored position for the read
+			 * @brief Begin the render sweep for the current frame
+			 * The render sweep for each frame is:
+			 * 		beginRender
+			 * 			prepareLine y
+			 * 				readPixel|readMaskPixel|skipPixel x ... x2
+			 *			...
+			 * 			preparLine y2
+			 * 				readPixel|readMaskPixel|skipPixel x ... x2
+			 * 		endRender
+			 * @param updateArea The area of the display being updated
 			 */
-			int16_t rx;
-			int16_t ry;
+			virtual void beginRender( ClipRect* updateArea );
 
 			/**
-			 * Set the position at which to read the next pixel
-			 * @param x The global x coordinate
-			 * @param y The global y coordinate
+			 * @Brief Initialise the next line to be read for rendering
+			 * 
+			 * Identified the y coordinate in local space at which the next line of pixels
+			 * will be read (@see readPixel). In the same sweep, ry will always be 1 greater
+			 * than ry on the last call to prepareLine
+			 * 
+			 * @param ry The current Y position (line) in local coordinates
 			 */
-			virtual void readPosition( int16_t gx, int16_t gy ){
-				rx = max( 0, gx - globalRect->x );
-				ry = gy - globalRect->y; // ry should never be below 0... trust it?
+			virtual void beginLine( int16_t ry ){}
+
+			/**
+			 * @brief Calculate the pixel to be rendered at the current position
+			 * 
+			 * The coordinates, rx and ry, are in local coordinates. rx will always be n + 1
+			 * higher than rx the previous call to calcPixel, calcMaskPixel or skipPixel for
+			 * a given line (prepareLine is called at the start of a line). ry will be
+			 * identical.
+			 * 
+			 * The renderer expects the  results of calcPixel to be in _rc (the color, 24bit RGB)
+			 * and _ra (alpha 0.0 - 1.0).
+			 * 
+			 * @param rx The current X position in local coordinates
+			 * @param ry The current Y position in local coordinates
+			 */
+			virtual void calcPixel( int16_t rx, int16_t ry ){
+				_rc = 0;
+				_ra = 0.0;
 			}
 
 			/**
-			 * Read the pixel at the current position, and move position right by 1 pixel
-			 * @param c (out) Color (alpha ignored)
-			 * @param a (out) alpha 0.0 - 1.0
+			 * @brief Calculate the pixel to be rendered at the current position as a mask
+			 * Any display object can be used as a mask. In this case calcMaskPixel is called instead of
+			 * calcPixel. The function only needs to calculate alpha, as the color value is ignored
+			 * when used as a mask. Although it is possible to simply call calcPixel, an implementaton
+			 * may be able to be done more efficiently if it is known that only alpha will be used.
+			 * 
+			 * @param rx The current X position in local coordinates
+			 * @param ry The current Y position in local coordinates
 			 */
-			virtual void readPixel( color888 &c, float &a ){
-				c = 0;
-				a = 1.0;
-				rx++;
+			virtual void calcMaskPixel( int16_t rx, int16_t ry ){
+				_rc = 0;
+				_ra = 1.0;
 			}
+
+			/**
+			 * @brief Skip the pixel at the current position
+			 * If the object is not being drawn (for example, it is masked by a higher object) then
+			 * skipPixel will be called instead of calcPixel. Some implementations may require some
+			 * processing, even if the pixel is not being rendered.
+			 * 
+			 * @param rx The current X position in local coordinates
+			 * @param ry The current Y position in local coordinates
+			 */
+			virtual void skipPixel( int16_t rx, int16_t ry ){}
+
+			/**
+			 * @brief End the render sweep for the current frame
+			 * @see beginRender
+			 */
+			virtual void endRender(){}
 
 		protected:
 
@@ -319,10 +443,32 @@ namespace mac{
 			boolean _animate = false;
 
 			/**
-			 * Size
+			 * X offset of origin
 			 */
-			float _w = 0;
-			float _h = 0;
+			float _ox = 0;
+
+			/**
+			 * Y offset of origin
+			 */
+			float _oy = 0;
+
+			/**
+			 * @brief Rect describing the bounds in local space
+			 * 
+			 * The width and height must contain the pixels completely. The x and y values are the
+			 * position of the object (relative to the parent).
+			 */
+			ClipRect* _localBounds;
+
+			/**
+			 * @brief The color from the previous call to readPixel
+			 */
+			color888 _rc;
+
+			/**
+			 * @brief The alpha from the previous call to readPixel or readMaskPixel
+			 */
+			float _ra;
 
 			/**
 			 * List of children

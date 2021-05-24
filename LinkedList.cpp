@@ -3,7 +3,7 @@
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  **/
- 
+
 #include "LinkedList.h"
 
 /**
@@ -62,11 +62,8 @@ namespace mac{
 	 */
 	void LinkedList::before( LinkedList* item ){
 		item->_next = this;
-		item->_prev = 0;
-		if (_prev){
-			_prev->_next = item;
-			item->_prev = _prev;
-		}
+		item->_prev = _prev;
+		if (_prev) _prev->_next = item;
 		_prev = item;
 	}
 
@@ -75,17 +72,14 @@ namespace mac{
 	 */
 	void LinkedList::after( LinkedList* item ){
 		item->_prev = this;
-		item->_next = 0;
-		if (_next){
-			_next->_prev = item;
-			item->_next = _next;
-		}
+		item->_next = _next;		
+		if (_next) _next->_prev = item;
 		_next = item;
 	}
 
 	/**
 	 * Remove the current item from the list
-	 * @return	The removed item
+	 * @return	The removed item (this)
 	 */
 	LinkedList* LinkedList::remove(){
 		if (_prev){

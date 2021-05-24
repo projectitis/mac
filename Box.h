@@ -27,10 +27,10 @@
  */	
 
 #pragma once
-#ifndef _MAC_LAMPH_
-#define _MAC_LAMPH_ 1
+#ifndef _MAC_RECTANGLEH_
+#define _MAC_RECTANGLEH_ 1
 
-#include "Widget.h"
+#include "DisplayObject.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -40,68 +40,63 @@
  * be useful in other projects.
  **/
 namespace mac{
-	
+
 	/**
-	 * A lamp or LED to indicate status
+	 * A rectangle
 	 */
-	class Lamp: public Widget {
+	class Box: public DisplayObject {
 		
 		public:
 			/**
-			 * Constructor
+			 * Memory pool of recycled objects
 			 */
-			Lamp( Style* aStyle );
-			
-			/**
-			 * Memory pool of recycled widgets
-			 */
-			static Widget* pool;
+			static DisplayObject* pool;
 
 			/**
-			 * Create a new widget or take one from the pool
-			 * @return The new or recycled widget
+			 * Create a new object or take one from the pool
+			 * @return The new or recycled object
 			 */
-			static Lamp* Create( Style* style );
+			static Box* Create();
+			static Box* Create( int16_t x, int16_t y, int16_t w, int16_t h );
+			static Box* Create( ClipRect* rect );
 
 			/**
-			 * Type identifier for this widget
+			 * Type identifier for this object
 			 **/
-			static const uint32_t TYPE = 3;
+			static const DisplayObjectType TYPE = DisplayObjectType::box;
 
 			/**
-			 * Return this widget to the pool
-			 * @param widgt [description]
-			 */
-			void recycle();
-
-			/**
-			 * Reset the widget back to default settings
+			 * Reset the object back to default settings
 			 */
 			void reset();
 
 			/**
-			 * Update the display object.
-			 * @param	dt 			Time since last update in seconds
-			 * @param	graphics 	The graphics object to use for rendering
-			 * @param  	style 		The style object that holds graphical styles for GUI
+			 * @brief Provide the points that define the shape
+			 * If the first and last points are different, the are automatically joined
+			 * 
+			 * @param points An array of points
+			 * @param len The number of points
 			 */
-			void update( float dt, Graphics* graphics, Style* style ) override;
+			void set( int16_t x, int16_t y, int16_t w, int16_t h );
 
 			/**
-			 * Render the display object.
-			 * @param 	graphics 	The graphics object to use for rendering
-			 * @param  	style 		The style object that holds graphical styles for GUI
-			 * @param  	force 		If true, will render even if not dirty (force redraw)
-	 		 * @return          Return true if current widget rendered (_dirty or forced)
+			 * Color
 			 */
-			boolean render( Graphics* graphics, Style* style, boolean force ) override;
+			color888 color;
+
+			/**
+			 * Read a pixel from the sprite and advance position
+			 * @param rx The x position in local coordinates
+			 * @param ry The y position in local coordinates
+			 */
+			void calcPixel( int16_t rx, int16_t ry );
 
 		protected:
-
+			
 			/**
 			 * Pool getter
 			 */
-			Widget** _getPool() override;
+			DisplayObject** _getPool() override;
 
 	};
 	

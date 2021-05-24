@@ -1,5 +1,5 @@
 /**
- * Vehicle functions for "mac/μac"
+ * Vector functions for "mac/μac"
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  *
@@ -25,84 +25,41 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-/**
- * Vector2D physics functions
- **/
  
 #pragma once
-#ifndef _MAC_VEHICLE_H
-#define _MAC_VEHICLE_H 1
-
-#include "Vector2D.h"
+#ifndef _MAC_POINT_H
+#define _MAC_POINT_H 1
 
 namespace mac{
-
+	
 	/**
-	 * Vector2D float class
+	 * Point float class
 	 */
-	class Vehicle {
+	class Point {
 		
 		public:
 
 			/**
-			 * Maximum (and minium) steering angle in degrees
+			 * @brief Construct a new Point object
+			 * 
+			 * @param x The x coordinate
+			 * @param y The y coordinate
 			 */
-			float maxSteer = 25;
+			Point( float x, float y ) {
+				this->x = x;
+				this->y = y;
+			}
 
 			/**
-			 * Constructor
-			 */
-			Vehicle();
-			Vehicle( float x, float y );
-
-			/**
-			 * Vehicle position x
+			 * Vector X
 			 */
 			float x;
 
 			/**
-			 * Vehicle position y
+			 * Vector y
 			 */
 			float y;
 
-			/**
-			 * Current vehicle bearing
-			 */
-			Vector2F* bearing;
-
-			/**
-			 * Friction
-			 */
-			float f = 0;
-
-			/**
-			 * Steering angle
-			 */
-			float s = 0;
-
-			/**
-			 * Update the car position and stats
-			 */
-			void update( float dt );
-
-			/**
-			 * Set the speed (magnitude) portion of the bearing
-			 * @param s The speed in pps
-			 */
-			void setSpeed( float s );
-
-			/**
-			 * Set the vehicle heading in degrees
-			 * @param a Heading in degrees
-			 */
-			void setHeading( float a );
-
-			/**
-			 * Set steering wheel angle
-			 * @param s Steering angle in degrees
-			 */
-			void steer( float s );
 	};
 
 

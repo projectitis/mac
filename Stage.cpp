@@ -21,9 +21,7 @@ namespace mac{
 	 * Construct a new Stage object
 	 */
 	Stage::Stage() {
-		_dirtyRect = new ClipRect();
-		_cleanRect = new ClipRect();
-		_updateRect = new ClipRect();
+		_dirtyBounds = new ClipRect();
 		id = 0;
 	}
 
@@ -31,9 +29,7 @@ namespace mac{
 	 * Destroy the Stage object
 	 */
 	Stage::~Stage() {
-		delete _dirtyRect;
-		delete _cleanRect;
-		delete _updateRect;
+		delete _dirtyBounds;
 	}
 
 	/**
@@ -72,110 +68,130 @@ namespace mac{
 	 * Render all display objects
 	 */
 	void Stage::render( Display* display ){
-		// If no children, exit early
-		// XXX: Still needs to render all scanlines and draw background color
-Serial.println("Stage::render");
+//Serial.println("Stage::render");
 		
 		// Set stage to match display
-		size( display->rect.width, display->rect.height );
-_cleanRect->set( &(display->rect) );
+		_localBounds->setSize( display->rect.width, display->rect.height );
 
 		// Build display list. At the same time, determine the area of the display that is dirty
 		// The display list is a list of all visible display objects (both with 'visibility' flag
 		// set to true, and at least partially visible on the display) ordered from top to bottom
 		// and left to right.
-		_dirtyRect->clear();
-		_displayRect = &display->rect;
+		if (_dirty) _dirtyBounds->set( &display->rect );
+		else _dirtyBounds->clear();
 		_displayListDepth = 0;
-		_displayList = new DisplayList( this );
-		if (_children) _traverse( _children, 0, 0 );
-/*
-// Debug display list
-Serial.println("DisplayList");
-while (node) {
-	Serial.printf("  ID:%d at y=%d, x=%d (%dx%d) with d=%d\n", node->object->id, int16_t(node->object->y), int16_t(node->object->x), int16_t(node->object->width()), int16_t(node->object->height()), node->object->depth );
-	node = (DisplayList*)(node->next());
-}
-*/
+		_displayList = DisplayList::Create( this );
+		if (_children) _traverse( display, _children, 0, 0 );
+
 		// Calculate the updated area of ths display
-		_updateRect->set( _dirtyRect );
-		_updateRect->grow( _cleanRect );
-		_updateRect->clip( _displayRect );
+		renderBounds->set( _dirtyBounds );
+		renderBounds->clip( &display->rect );
 
 		// TODO: Handle this. For now do nothing
 		if (_displayListDepth==0){}
-		if (_dirtyRect->isEmpty()){}
+		if (renderBounds->isEmpty()){
+			_recycleList( _renderList );
+			_recycleList( _displayList );
+			_dirty = false;
+			return;
+		}
 
-Serial.println("Update area");
-Serial.printf("  %d,%d %dx%d\n", _updateRect->x,_updateRect->y, _updateRect->width,_updateRect->height );
+/* Debug display list and render bounds
+Serial.println("DisplayList");
+DisplayList* debugNode = _displayList->next();
+while (debugNode) {
+	Serial.printf(
+		"  ID %d: %d,%d %dx%d (d=%d) (n=%d)\n",
+		debugNode->object->id,
+		debugNode->object->globalBounds->x,
+		debugNode->object->globalBounds->y,
+		debugNode->object->globalBounds->width,
+		debugNode->object->globalBounds->height,
+		debugNode->object->depth,
+		debugNode->next()?debugNode->next()->object->id:0
+	);
+	debugNode = debugNode->next();
+} 
+Serial.println("Render bounds");
+Serial.printf("  %d,%d %dx%d\n", renderBounds->x,renderBounds->y, renderBounds->width,renderBounds->height );
+*/
 
 		// Initialise the display to draw only the dirty area
-		display->set( _updateRect );
+		display->set( renderBounds );
 
-		DisplayList* head = (DisplayList*)_displayList->next();
+		DisplayList* head = _displayList->next();
 		DisplayList* next;
-		color888 c;
-		float a;
-		_renderList = new DisplayList( this );
-		for ( uint16_t y = _updateRect->y; y <= _updateRect->y2; y++ ) {
+		_renderList = DisplayList::Create( this );
+		for ( uint16_t y = renderBounds->y; y <= renderBounds->y2; y++ ) {
 
-Serial.printf("\nStart line y=%d\n", y);
+//Serial.printf("\nStart line y=%d\n", y);
 
 			// For this line, grab the active display objects and add to the render list
-			while ( head && ( head->object->y <= y ) ) {
+			// in reverse order (stage at the end)
+			while ( head && ( head->object->globalBounds->y <= y ) ) {
 				_renderList->insertByDepth( head->object );
-				head = (DisplayList*)head->next();
+				head->object->beginRender( renderBounds );
+				head = head->next();
 			}
-/*
+/* Debug render list
 Serial.println("RenderList\n");
-node = _renderList;
-while (node) {
-	Serial.printf("  ID:%d at y=%d, x=%d (%dx%d) with d=%d\n", node->object->id, int16_t(node->object->y), int16_t(node->object->x), int16_t(node->object->width()), int16_t(node->object->height()), node->object->depth );
-	node = (DisplayList*)node->next();
-}
-*/
+DisplayList* list = _renderList;
+while (list) {
+	Serial.printf("  ID:%d at y=%d, x=%d (%dx%d) with d=%d\n", list->object->id, int16_t(list->object->y()), int16_t(list->object->x()), int16_t(list->object->width()), int16_t(list->object->height()), list->object->depth );
+	list = list->next();
+} */
+
 			// For this line, remove the display objects that are complete, and set the
 			// start read position for those that aren't. Skip the first one because it's
 			// the stage.
-			DisplayList* node = (DisplayList*)_renderList->next();
+			DisplayList* node = _renderList->next();
 			while (node) {
 				// Todo precalculate BR corner (x2 and y2) 
-				if ( y > node->object->globalRect->y2 ){
-					next = (DisplayList*)node->next();
-					delete ((LinkedList*)node)->remove();
+				if ( y > node->object->globalBounds->y2 ){
+					node->object->endRender();
+					next = node->next();
+					node->remove()->recycle();
 					node = next;
 				}
 				else {
-					node->object->readPosition( _updateRect->x, y );
-					node = (DisplayList*)node->next();
+					node->object->beginLine( node->object->globalToLocalY( y ) );
+					node = node->next();
 				}
 			}
 
 			// Step pixels in this line
-			for ( uint16_t x = _updateRect->x; x <= _updateRect->x2; x++ ) {
+			for ( uint16_t x = renderBounds->x; x <= renderBounds->x2; x++ ) {
 				
+				// Debug the render bounds
+				if (debug && ((y == renderBounds->y) || (y == renderBounds->y2) || (x == renderBounds->x) || (x == renderBounds->x2))) {
+					display->pixel( this->debugColor, x );
+					continue;
+				}
+
 				// Base color
 				display->pixel( this->_backgroundColor, x );
 
-				// Now step through active display objects and composite pixel to line buffer
-				node = (DisplayList*)_renderList->next();
+				// Step through the objects in the display buffer
+				node = _renderList->next();
 				while (node) {
-					if ( node->object->globalRect->containsX(x) ){
-						node->object->readPixel( c, a );
-						a = alphaClamp( a * node->object->alpha );
-						if (a > 0) display->blend( c, a, x );
+					if ( node->object->globalBounds->containsX( x ) ){
+						node->object->calcPixel( node->object->globalToLocalX( x ), node->object->globalToLocalY( y ) );
+						node->object->_ra *= node->object->alpha;
+						if (node->object->_ra == 1.0) display->pixel( node->object->_rc, x );
+						else if (node->object->_ra > 0) display->blend( node->object->_rc, alphaClamp( node->object->_ra * node->object->alpha ), x );
 					}
-					node = (DisplayList*)node->next();
+					node = node->next();
 				}
 			}
 
 			// Flip the buffer (auto-advances to next line)
 			display->flip();
 		}
-		_clearList( _renderList );
-		_clearList( _displayList );
-
-		_cleanRect->set( _dirtyRect );
+		_recycleList( _renderList );
+		_renderList = 0;
+		_recycleList( _displayList );
+		_displayList = 0;
+		_dirty = false;
 	}
 
 	/**
@@ -201,43 +217,43 @@ while (node) {
 	 * @param px The global x coordinate of the parent
 	 * @param py The global y coordinate of the parent
 	 */
-	void Stage::_traverse( DisplayObject* child, float px, float py ) {
+	void Stage::_traverse( Display* display, DisplayObject* child, float px, float py ) {
 		// Step all children
 		while (child) {
 
-			// Visible?
-			if (!child->visible() || (child->alpha <= 0)) {
-				// TODO: If dirty, still need to include in rect?
+			// If not visible and not dirty, skip to next child
+			if ((!child->visible() || (child->alpha <= 0)) && !child->isDirty()) {
 				child = child->next();
 				continue;
 			}
 
 			// Set global position and sizing
-			child->globalRect->setPosAndSize(
-				px + child->x,
-				py + child->y,
-				child->width() + 0.5,
-				child->height() + 0.5
-			);
+			child->globalPos( px, py );
 
-			// On the display?
-			if (!child->globalRect->overlaps( _displayRect )){
-				child = child->next();
-				continue;
+			// If child is dirty, include it's old position
+			if (child->isDirty() && !child->cleanBounds->isEmpty()) {
+				_dirtyBounds->grow( child->cleanBounds );
 			}
 
-			// Calculate depth
-			child->depth = ++_displayListDepth;
+			// Check if on the display
+			if (child->globalBounds->overlaps( &display->rect )){		
 
-			// Add to display list
-			_displayList->insertByPosition( child );
+				// Calculate depth
+				child->depth = ++_displayListDepth;
 
-			// Calculate screen dirty area
-			if (child->isDirty()) _dirtyRect->grow( child->globalRect );
-			// TODO: Child to store old rect, so when dirty, dirty rect includes the old rect!
+				// Add to display list
+				_displayList->insertByPosition( child );
+
+				// Add current position to screen dirty area
+				if (child->isDirty()) {
+					_dirtyBounds->grow( child->globalBounds );
+					child->cleanBounds->set( child->globalBounds );
+				}
+
+			}
 
 			// Recurse
-			if (child->hasChildren()) _traverse( child->firstChild(), child->globalRect->x, child->globalRect->y );
+			if (child->hasChildren()) _traverse( display, child->firstChild(), child->globalBounds->x - child->_ox, child->globalBounds->y - child->_oy );
 
 			// Next sibling
 			child = child->next();
@@ -246,13 +262,14 @@ while (node) {
 
 	/**
 	 * Clear a DisplayList
-	 * @param list The list to clear
+	 * @param list The list to recycle
 	 */
-	void Stage::_clearList( DisplayList* list ) {
+	void Stage::_recycleList( DisplayList* list ) {
 		DisplayList* next = list;
-		while (next) {
-			next = (DisplayList*)list->next();
-			delete list;
+		while (list) {
+			next = list->next();
+			list->recycle();
+			list = next;
 		}
 	}
 	

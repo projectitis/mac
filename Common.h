@@ -30,6 +30,22 @@
 #ifndef _MAC_COMMONH_
 #define _MAC_COMMONH_ 1
 
+/**
+ * XXX: Implement this flag
+ * Mac makes extensive use of object pooling to recycle objects instead of
+ * creating new ones. This results in better performance, and less heap
+ * fragmentation, but does require more RAM. On low RAM systems, or for
+ * situations where you are using 1000s of simultanious objects you may need
+ * to switch this off to use less RAM.
+ */
+#define MAC_OBJECT_REUSE 1
+
+/**
+ * XXX: Implement this flag
+ * Use DMA for memory operations where possible
+ */
+#define MAC_USE_DMA 1
+
 #include <Arduino.h>
 #include "ClipRect.h"
 #include "Bitmap.h"

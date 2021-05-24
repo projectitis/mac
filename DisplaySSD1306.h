@@ -106,7 +106,7 @@ namespace mac{
   			/**
   			 * Internal display methods
   			 */
-			__attribute__((always_inline)) inline void setDestinationArea( ClipRect *rect );
+			__attribute__((always_inline)) inline void setDestinationArea( ClipRect* rect );
 			__attribute__((always_inline)) inline void setDestinationLine( LineBufferData *data );
 			
 			/**

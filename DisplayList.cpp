@@ -16,15 +16,20 @@
 namespace mac{
 
 	/**
+	 * @brief Declare and instantiate pool
+	 */
+	DisplayList* DisplayList::pool = 0;
+
+	/**
 	 * Compare two display objects by position
 	 * @param a First display object
 	 * @param b Second display object
 	 * @return int8_t >0 if a is first, <0 if b is first, 0 if equal 
 	 */
 	int compareDisplayObjectByPosition( DisplayObject* a, DisplayObject* b ){
-		if ( (int)a->globalRect->y < (int)b->globalRect->y ) return 1;	// Y is lower
-		if ( (int)a->globalRect->y > (int)b->globalRect->y ) return -1;	// y is higher
-		return (int)b->globalRect->x - (int)a->globalRect->x;
+		if ( (int)a->globalBounds->y < (int)b->globalBounds->y ) return 1;	// Y is lower
+		if ( (int)a->globalBounds->y > (int)b->globalBounds->y ) return -1;	// y is higher
+		return (int)b->globalBounds->x - (int)a->globalBounds->x;
 	}
 
 	/**
@@ -38,11 +43,28 @@ namespace mac{
 	}
 
 	/**
-	 * Construct a new Display List:: Display List object
-	 * @param object The DisplayObject to attach
+	 * Return this object to the pool
 	 */
-	DisplayList::DisplayList( DisplayObject* object ) {
-		this->object = object;
+	void DisplayList::recycle(){
+#ifdef MAC_OBJECT_REUSE
+		// Reset
+		object = 0;
+		_next = 0;
+		_prev = 0;
+
+		// Add back to pool
+		this->_poolNext = DisplayList::pool;
+		DisplayList::pool = this;
+#else
+		delete this;
+#endif
+	}
+
+	/**
+	 * Return the next item
+	 */
+	DisplayList* DisplayList::next(){
+		return (DisplayList*)LinkedList::next();
 	}
 
 	/**
@@ -83,33 +105,39 @@ namespace mac{
 	}
 
 	/**
+	 * Remove the current node from teh display list
+	 * @return The removed node (self)
+	 */
+	DisplayList* DisplayList::remove() {
+		return (DisplayList*)LinkedList::remove();
+	}
+
+	/**
 	 * The internal function that inserts the object into the list using the
 	 * specified compare function for sorting.
 	 * @param object The object to insert
 	 * @param compare The compare function
 	 */
-	void DisplayList::_insert( DisplayObject* object, displayObjectCompareFunc compare ) {
-		
+	void DisplayList::_insert( DisplayObject* object, displayObjectCompareFunc compare ) {	
 		DisplayList* item;
 
 		// If no next item, add as next item
 		if (!_next){
-			item = new DisplayList( object );
-			after( item );
+			item = DisplayList::Create( object );
+			after( item );		
 			return;
 		}
 
 		// See where to insert
-		int d = compare( object, ((DisplayList*)next())->object );
+		int d = compare( object, next()->object );
 		// If lower, move down the list
 		if (d < 0) {
-			((DisplayList*)next())->_insert( object, compare );
+			next()->_insert( object, compare );
 			return;
 		}
 		// If higher than next item, insert before next item (after this one)
 		else {
-			// Insert before this item
-			item = new DisplayList( object );
+			item = DisplayList::Create( object );
 			after( item );
 			return;
 		}

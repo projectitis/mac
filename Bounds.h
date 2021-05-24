@@ -42,7 +42,7 @@
 namespace mac{
 	
 	/**
-	 * A clipping rectangle class
+	 * A bounded rectangle class (float)
 	 */
 	class ClipRect {
 		
@@ -50,16 +50,12 @@ namespace mac{
 			/**
 			 * Constructor
 			 */
-			ClipRect() {
-				clear();
-			}
+			ClipRect();
 
 			/**
 			 * Constructor
 			 */
-			ClipRect( int16_t px, int16_t py, int16_t w, int16_t h ) {
-				setPosAndSize( px, py, w, h );
-			}
+			ClipRect( int16_t px, int16_t py, int16_t w, int16_t h );
 
 			/**
 			 * X coordinate of top-left corner.
@@ -89,35 +85,24 @@ namespace mac{
 			 * Width of rect. If 0, rect is invalid.
 			 * Use setters to set so that x2 is adjusted appropriately.
 			 */
-			int16_t width;
+			uint16_t width;
 
 			/**
 			 * Height of rect. If 0, rect is invalid.
 			 * Use setters to set so that y2 is adjusted appropriately.
 			 */
-			int16_t height;
+			uint16_t height;
 
 			/**
 			 * Clear back to an empty rect
 			 */
-			void clear() {
-				x = 0; y = 0;
-				x2 = -1; y2 = -1;
-				width = 0; height = 0;
-			}
+			void clear();
 
 			/**
 			 * Set (copy) the size of the rect from the supplied rect
 			 * @param rect   	The rect to set from
 			 */
-			void set( ClipRect* rect ) {
-				x = rect->x;
-				y = rect->y;
-				x2 = rect->x2;
-				y2 = rect->y2;
-				width = rect->width;
-				height = rect->height;
-			}
+			void set( ClipRect* rect );
 
 			/**
 			 * Set the top-left and bottom-right corners of rect.
@@ -127,56 +112,19 @@ namespace mac{
 			 * @param px2	X coordinate of bottom-right corner
 			 * @param py2  	Y coordinate of bottom-right corner
 			 */
-			void set( int16_t px, int16_t py, int16_t px2, int16_t py2 ) {
-				if (px2<px){
-					x = px2;
-					x2 = px;
-				}
-				else{
-					x = px;
-					x2 = px2;
-				}
-				if (py2<py){
-					y = py2;
-					y2 = py;
-				}
-				else{
-					y = py;
-					y2 = py2;
-				}
-				width = x2 - x + 1;
-				height = y2 - y + 1;
-			}
+			void set( int16_t px, int16_t py, int16_t px2, int16_t py2 );
 
 			/**
 			 * Set width of rect
 			 * @param w The width
 			 */
-			void setWidth( int16_t w ) {
-				if (w<0){
-					x += w;
-					width = -w;
-				}
-				else{
-					width = w;
-				}
-				x2 = x + width - 1;
-			}
+			void setWidth( uint16_t w );
 
 			/**
 			 * Set height of rect
 			 * @param h The height
 			 */
-			void setHeight( int16_t h ) {
-				if (h<0){
-					y += h;
-					height = -h;
-				}
-				else{
-					height = h;
-				}
-				y2 = y + height - 1;
-			}
+			void setHeight( uint16_t h );
 
 			/**
 			 * Set the top-left corner of rect.
@@ -184,12 +132,7 @@ namespace mac{
 			 * @param px   	X coordinate of top-left corner 
 			 * @param py 	Y coordinate of top-left corner
 			 **/
-			void setPos( int16_t px, int16_t py ) {
-				x = px;
-				y = py;
-				x2 = x + width - 1;
-				y2 = y + height - 1;
-			}
+			void setPos( int16_t px, int16_t py );
 
 			/**
 			 * Set the bottom-right corner of rect.
@@ -197,14 +140,7 @@ namespace mac{
 			 * @param px   	X coordinate of bottom-right corner 
 			 * @param py 	Y coordinate of bottom-right corner
 			 **/
-			void setPos2( int16_t px, int16_t py ) {
-				x2 = px;
-				y2 = py;
-				if (x2>x) x2 = x - 1;
-				if (y2>y) y2 = y - 1;
-				width = x2 - x + 1;
-				height = y2 - y + 1;
-			}
+			void setPos2( int16_t px, int16_t py );
 
 			/**
 			 * Set the width and height of the rect
@@ -212,10 +148,7 @@ namespace mac{
 			 * @param w   	Width of rect
 			 * @param h 	Height of rect
 			 **/
-			void setSize( int16_t w, int16_t h ) {
-				setWidth( w );
-				setHeight( h );
-			}
+			void setSize( int16_t w, int16_t h );
 
 			/**
 			 * Set the top-left corner and width and height of the rect
@@ -225,28 +158,14 @@ namespace mac{
 			 * @param w   	Width of rect
 			 * @param h 	Height of rect
 			 **/
-			void setPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h ) {
-				if (w<0){
-					px += w;
-					w = -w;
-				}
-				if (h<0){
-					py += h;
-					h = -h;
-				}
-				x = px; y = py;
-				width = w; height = h;
-				x2 = x + width - 1; y2 = y + height - 1;
-			}
+			void setPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h );
 
 			/**
 			 * Move the rect by the specified amount
 			 * @param x The amount to move in the X direction
 			 * @param y The amount to move in the Y direction
 			 */
-			void translate( int16_t x, int16_t y ) {
-				setPos( this->x + x, this->y + y );
-			}
+			void translate( int16_t x, int16_t y );
 			
 			/**
 			 * Return true if the clip rect contains the specified point
@@ -254,68 +173,40 @@ namespace mac{
 			 * @param  py 	Y coord to test
 			 * @return   True if point within rect
 			 */
-			boolean contains( int16_t px, int16_t py ) {
-				return ((px >= x) && (px <= x2) && (py >= y) && (py <= y2));
-			}
+			boolean contains( int16_t px, int16_t py );
 
 			/**
 			 * Return true if the clip rect contains the specified X coord
 			 * @param  px  	X coord to test
 			 * @return   True if point within rect
 			 */
-			boolean containsX( int16_t px ) {
-				return ((px >= x) && (px <= x2));
-			}
+			boolean containsX( int16_t px );
 
 			/**
 			 * Return true if the clip rect contains the specified Y coord
 			 * @param  px  	Y coord to test
 			 * @return   True if point within rect
 			 */
-			boolean containsY( int16_t py ) {
-				return ((py >= y) && (py <= y2));
-			}
+			boolean containsY( int16_t py );
 
 			/**
 			 * Check if the clip rect is empty (has a 0 width or height)
 			 * @return True if the rect is empty
 			 */
-			boolean isEmpty() {
-				return (width==0) || (height==0);
-			}
+			boolean isEmpty();
 
 			/**
 			 * Check if any part of another rect overlaps this one
 			 * @param rect The other rect
 			 * @return boolean True if any part of the rects overlap
 			 */
-			boolean overlaps( ClipRect* rect ) {
-				if (isEmpty() || rect->isEmpty()) return false;
-				if (rect->x2 < x) return false;
-				if (rect->x > x2) return false;
-				if (rect->y2 < y) return false;
-				if (rect->y > y2) return false;
-				return true;
-			}
+			boolean overlaps( ClipRect* rect );
 
 			/**
 			 * Clip this rect to another rect (intersection)
 			 * @param  rect  	The rect to clip to
 			 */
-			void clip( ClipRect* rect ) {
-				if (x < rect->x) x = rect->x;
-				if (x2 > rect->x2) x2 = rect->x2;
-				if (y < rect->y) y = rect->y;
-				if (y2 > rect->y2) y2 = rect->y2;
-				if (x>x2){
-					x2 = x - 1;
-				}
-				width = x2 - x + 1;
-				if (y>y2){
-					y2 = y - 1;
-				}
-				height = y2 - y + 1;
-			}
+			void clip( ClipRect* rect );
 
 			/**
 			 * Clip this rect to a rectangular area specified by position and size (intersection)
@@ -324,45 +215,13 @@ namespace mac{
 			 * @param  w  	Width
 			 * @param  h 	Height
 			 */
-			void clipPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h ) {
-				if ( w < 0 ) {
-					w = -w;
-					px -= w;
-				}
-				if ( h < 0 ) {
-					h = -h;
-					py -= h;
-				}
-				if (x < px) x = px;
-				if (x2 >= (px+w)) x2 = px + w - 1;
-				if (y < py) y = py;
-				if (y2 >= (py+h)) y2 = py + h - 1;
-				if (x>x2){
-					x2 = x - 1;
-				}
-				width = x2 - x + 1;
-				if (y>y2){
-					y2 = y - 1;
-				}
-				height = y2 - y + 1;
-			}
+			void clipPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h );
 
 			/**
 			 * Expand this rect to also encompase the specified rect (union)
 			 * @param rect The rect to encompase
 			 */
-			void grow( ClipRect* rect ) {
-				if (isEmpty()){
-					set( rect );
-					return;
-				}
-				if (x > rect->x) x = rect->x;
-				if (x2 < rect->x2) x2 = rect->x2;
-				if (y > rect->y) y = rect->y;
-				if (y2 < rect->y2) y2 = rect->y2;
-				width = x2 - x + 1;
-				height = y2 - y + 1;
-			}
+			void grow( ClipRect* rect );
 
 			/**
 			 * Expand this rect to also encompase a rectangular area specified by position and size (union)
@@ -371,37 +230,16 @@ namespace mac{
 			 * @param  w  	Width
 			 * @param  h 	Height
 			 */
-			void growPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h ) {
-				if (isEmpty()){
-					set( px, py, w, h );
-					return;
-				}
-				if ( w < 0 ) {
-					w = -w;
-					px -= w;
-				}
-				if ( h < 0 ) {
-					h = -h;
-					py -= h;
-				}
-				if (x > px) x = px;
-				if (x2 <= (px+w)) x2 = (px + w) - 1;
-				if (y > py) y = py;
-				if (y2 <= (py+h)) y2 = (py + h) - 1;
-				width = x2 - x + 1;
-				height = y2 - y + 1;
-			}
+			void growPosAndSize( int16_t px, int16_t py, int16_t w, int16_t h );
 
 			/**
 			 * @brief Create a clone of this rect
 			 * 
 			 * @return ClipRect* A clone of this object
 			 */
-			ClipRect* clone() {
-				return new ClipRect( this->x, this->y, this->width, this->height );
-			}
+			ClipRect* clone();
 
-	}; // class
+	};
 	
 } // namespace
 

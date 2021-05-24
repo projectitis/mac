@@ -32,8 +32,9 @@
 
 #include "DisplayObject.h"
 #include "Bitmap.h"
-#include "PackedBDF.h"
+#include "Font.h"
 #include "ClipRect.h"
+#include "GlyphInfo.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -51,6 +52,15 @@ namespace mac{
 		left,
 		right,
 		center
+	};
+
+	/**
+	 * Text wrap
+	 */
+	enum class TextWrap{
+		word,
+		character,
+		none
 	};
 
 	/**
@@ -105,16 +115,22 @@ namespace mac{
 			void color( color888 c );
 
 			/**
-			 * @brief Set the line height of the text
-			 * @param lh 	The line height. Usually between 1 - 1.5
+			 * @brief Set line spacing of the text
+			 * @param lh 	The line spacing. Usually between 1 - 1.5
 			 */
-			void lineHeight( float lh );
+			void lineSpacing( float lh );
 
 			/**
 			 * @brief Set the text alignment
-			 * @param align The alignment
+			 * @param a The alignment
 			 */
 			void align( TextAlign a );
+
+			/**
+			 * @brief Set the text wrap type
+			 * @param w The wrap type
+			 */
+			void wrap( TextWrap w );
 
 			/**
 			 * @brief Set the text string
@@ -123,18 +139,76 @@ namespace mac{
 			void text( char* t );
 
 			/**
-			 * Set the position at which to read the next pixel
-			 * @param x The global x coordinate
-			 * @param y The global y coordinate
+			 * @brief Set the width
+			 * This sets the width of the text area. A string will wrap at or before the text area
+			 * depending on the wrap setting. If the width is set to 0, the width is calculated
+			 * automatically based on the maximum width of the text string.
+			 * @param value The new width
 			 */
-			virtual void readPosition( int16_t gx, int16_t gy );
+			void width( float value );
+
+			/**
+			 * @return float The width
+			 */
+			float width();
+
+			/**
+			 * @brief Set the height
+			 * This sets the height of the text area. If the height is set to 0, the height is calculated
+			 * automatically based on the maximum height of the text string (with wrapping).
+			 * @param value The new height
+			 */
+			void height( float value );
+
+			/**
+			 * @return float The height
+			 */
+			float height();
+
+			/**
+			 * @brief Set the tab width in number of spaces
+			 * @param spaces The number of spaces for a tab
+			 */
+			void tabWidth( uint8_t spaces );
+
+			/**
+			 * @brief Get the tab width in number of spaces
+			 * @return uint8_t The number of spaces for a tab
+			 */
+			uint8_t tabWidth();
+
+			/**
+			 * @brief Set the global position of the display object
+			 * 
+			 * @param x The global X position
+			 * @param y The global Y position
+			 */
+			virtual void globalPos( float x, float y );
+
+			/**
+			 * @brief Begin the render sweep for the current frame
+			 * @param updateArea The area of the display being updated
+			 */
+			virtual void beginRender( ClipRect* updateArea );
+
+			/**
+			 * Prepare to render the next line
+			 * @param ry The y position in local coordinates
+			 */
+			virtual void beginLine( int16_t ry );
 
 			/**
 			 * Read a pixel from the sprite and advance position
-			 * @param c (out) color
-			 * @param a (out) alpha
+			 * @param rx The x position in local coordinates
+			 * @param ry The y position in local coordinates
 			 */
-			virtual void readPixel( color888 &c, float &a );
+			virtual void calcPixel( int16_t rx, int16_t ry );
+
+			/**
+			 * @brief End the render cycle for the current frame
+			 * @see beginRender
+			 */
+			virtual void endRender();
 
 		protected:
 			
@@ -143,54 +217,47 @@ namespace mac{
 			 */
 			DisplayObject** _getPool() override;
 
-			char* _text = 0;
-			packedbdf_t* _font = 0;
-			color888 _color = 0;
-			float _lineHeight = 1.25f;
-			TextAlign _align = TextAlign::left;
+			char* _text = 0;				// The text string
+			Font* _font = 0;				// The font to use
+			color888 _color = 0;			// The color of the text
 
-			uint8_t _fontbpp = 1;
-			uint8_t _fontbppmask = 1;
-			uint8_t _fontppb = 8;
-			float _fontalphamx = 1;
-			uint32_t _fontdeltaoffset = 0;
-			uint32_t _fontspacewidth = 0;
+			boolean _needsCalc = false;		// Need to recaculate text area metrics
+			boolean _endOfText = false;		// Have reached the end of the text string
 
-			/**
-			 * Text cursor position for non-text area drawing
-			 */
-			int32_t _charIndex = 0;		// Current character index
-			uint32_t _pixelOffset = 0;	// Current character bit (0 to char width)
-			uint32_t _charWidth = 0;	// Current character width
-			ClipRect* _glyphBounds;		// Bounds of glyph
-			int32_t _nextCharX = 0;		// Next character X in string
+			float _lineSpacing = 1.25f;		// Spacing from one line of text to the next, based on font line height
+			int16_t _lineHeight = 0;		// Linme height in pixels calculated from font size and lineSpacing
+			TextAlign _align = TextAlign::left;	// Horizontal text alignment
+			TextWrap _wrap = TextWrap::word;	// Type of wrapping
+			boolean _autoWidth = true;		// Text area width set automatically cased on text
+			boolean _autoHeight = true;		// Text area height set automatically based on text
+			uint8_t _tabWidth = 4;			// number of spaces in tab
 
-			uint32_t _bitoffset = 0;	// Offset intp glyph data
-			const uint8_t *_data;		// Glyph data
+			GlyphInfo* _glyphs = 0;			// List of glyphs currently being rendered
+			int16_t _nextLineY = 0;			// Start y position of the next line
+			int32_t _charIndex = 0;			// Current character index
+			boolean _justWrapped = false; 	// Unforced wrap just occured
 
 			/**
-			 * Methods to prepare for drawing a font character
+			 * @brief Calculate the size of the text area based on the text string
+			 * 
+			 * Will automatically calculate width and height based on the _autoWidth and _autoHeight settings
 			 */
-			void _prepareCharAt( int16_t x );
-			void _prepareChar();
-			void _nextChar();
+			void _calculateSize();
 
 			/**
-			 * Methods to read bits within packed data
+			 * @brief Prepare the next line of glyphs
+			 * 
+			 * @param skip If true, will not add the glyphs to the render list
 			 */
-			uint32_t _fetchbit( const uint8_t *p, uint32_t index );
-			uint32_t _fetchbits_unsigned( const uint8_t *p, uint32_t index, uint32_t required );
-			int32_t _fetchbits_signed( const uint8_t *p, uint32_t index, uint32_t required );
-			uint32_t _fetchpixel();
+			void _prepareLine( boolean skip );
 
 			/**
-			 * Methods to get text metrics
+			 * @brief Check if a character is a printable character (has a glyph)
+			 * 
+			 * @param c The character
+			 * @return boolean True if printable
 			 */
-			int32_t _getTextWidth();
-			int32_t _getWordWidth( char* c, char* &cw );
-			int32_t _getCharWidth( uint16_t c );
-			int32_t _getSentence( char* c, uint32_t w, char* &cw );
-			char* _ignoreWhitespace( char* p );
+			boolean _isPrintable( uint8_t c );
 
 	};
 	

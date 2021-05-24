@@ -27,11 +27,11 @@
  */	
 
 #pragma once
-#ifndef _MAC_DISPLAYLISTH_
-#define _MAC_DISPLAYLISTH_ 1
+#ifndef _MAC_GLYPHINFOH_
+#define _MAC_GLYPHINFOH_ 1
 
+#include "Common.h"
 #include "LinkedList.h"
-#include "DisplayObject.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -43,38 +43,43 @@
 namespace mac{
 
 	/**
-	 * The compare function type
-	 */
-	typedef int (*displayObjectCompareFunc)( DisplayObject*, DisplayObject* );
-	
-	/**
 	 * Display list that stores a list of display objects in render order.
 	 */
-	class DisplayList: public LinkedList {
+	class GlyphInfo: public LinkedList {
 		
 		public:
 
 			/**
 			 * Memory pool of recycled objects
 			 */
-			static DisplayList* pool;
+			static GlyphInfo* pool;
 
 			/**
 			 * Create factory method. Uses memory pool
 			 * for object re-use.
 			 */
-			static DisplayList* Create( DisplayObject* object ){
-				DisplayList* obj;
-				if (DisplayList::pool){
-					obj = DisplayList::pool;
-					DisplayList::pool = obj->_poolNext;
+			static GlyphInfo* Create( char c ){
+				GlyphInfo* obj;
+				if (GlyphInfo::pool){
+					obj = GlyphInfo::pool;
+					GlyphInfo::pool = obj->_poolNext;
+					obj->code = c;
 				}
 				else{
-					obj = new DisplayList();
+					obj = new GlyphInfo( c );
 				}
-				obj->object = object;
 				return obj;
 			}
+
+			/**
+			 * @brief Construct a new Glyph Info object
+			 */
+			GlyphInfo( char c );
+
+			/**
+			 * @brief Destroy the Glyph Info object
+			 */
+			~GlyphInfo();
 
 			/**
 			 * Return this object to the pool
@@ -82,56 +87,73 @@ namespace mac{
 			void recycle();
 
 			/**
-			 * The display object at this position
+			 * @brief Set the glyph to a new character and position
+			 * 
+			 * @param c 	The character code
+			 * @param x 	The x position
+			 * @param baseline The y position of the baseline
 			 */
-			DisplayObject* object;
+			void set( char c );
+
+			/**
+			 * @brief The character code of this glyph
+			 */
+			char code;
+
+			/**
+			 * @brief Rect describing the graphical bounds of the glyph
+			 */
+			ClipRect* bounds;
+
+			/**
+			 * @brief Pointer to the character data
+			 */
+			const uint8_t* charData = 0;
+
+			/**
+			 * @brief Pointer to the current line of character data
+			 */
+			uint32_t dataOffset = 0;
+
+			/**
+			 * @brief Indicate whether the glyph has started rendering yet
+			 */
+			boolean renderStarted = false;
+
+			/**
+			 * @brief Number of repeats left on current line
+			 */
+			int8_t lineRepeat = 0;
+
+			/**
+			 * @brief Width of the glyph (to next character)
+			 */
+			uint32_t width;
 
 			/**
 			 * Return the next item
 			 */
-			DisplayList* next();
+			GlyphInfo* next();
 			
 			/**
-			 * Inserts an object into the list into sorted order by depth
-			 * Assumes object is visible and on the display.
-			 * @param object The object to insert
+			 * Inserts a glyph into the list into sorted order by x position
+			 * @param glyph The glyph to insert
 			 */
-			void insertByDepth( DisplayObject* object );
+			void insert( GlyphInfo* glyph );
 
 			/**
-			 * Inserts an object into the list into sorted order by position.
-			 * Assumes object is visible and on the display.
-			 * @param object The object to insert
-			 */
-			void insertByPosition( DisplayObject* object );
-
-			/**
-			 * Remove a display object from the list
-			 * @param object The display object to remove
-			 * @return The removed node
-			 */
-			DisplayList* remove( DisplayObject* object );
-
-			/**
-			 * Remove the current node from teh display list
+			 * Remove the current node from the list
 			 * @return The removed node (self)
 			 */
-			DisplayList* remove();
+			GlyphInfo* remove();
 
 		protected:
 
 			/**
 			 * Pointer to next object in memory pool of recycled objects
 			 */
-			DisplayList* _poolNext;
-
-			/**
-			 * The internal function that inserts the object into the list using the
-			 * specified compare function for sorting.
-			 * @param object The object to insert
-			 * @param compare The compare function
-			 */
-			void _insert( DisplayObject* object, displayObjectCompareFunc compare );
+			GlyphInfo * _poolNext = 0;
+			
 	};
 	
 } // namespace

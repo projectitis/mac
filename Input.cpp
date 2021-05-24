@@ -158,10 +158,10 @@ namespace mac{
 		while (ip){
 			InputPin* ip_next = ip->next;
 			InputMap* im = ip->mappings;
-Serial.printf("Unmapping pin %d\n", ip->pin);
+//Serial.printf("Unmapping pin %d\n", ip->pin);
 			while (im){
 				InputMap* im_next = im->next;
-Serial.printf("  Click type %d\n", im->clickType);
+//Serial.printf("  Click type %d\n", im->clickType);
 				delete im;
 				im = im_next;
 			}
@@ -193,6 +193,7 @@ Serial.printf("  Click type %d\n", im->clickType);
 
 			// Process digital pin
 			if (ip->pinType == mac::PinType::digital){
+
 				// State based
 				switch (ip->state){
 

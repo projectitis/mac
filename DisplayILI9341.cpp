@@ -261,11 +261,11 @@ namespace mac{
 		// Tell display we are about to send data
 		writeCommand(ILI9341_RAMWR);
 
-		uint16_t i = back->x;
+		uint16_t i = back->x << _px;
 		uint16_t c = i + ((back->x2 - back->x + 1) << _px) - 1;
 		uint16_t l = 1 << _px;
 		while (l--) {
-			i = back->x;
+			i = back->x << _px;
 			while (i < (c + ((l>0)?1:0))) writeData16( convert888to565( back->pixels[ i++ >> _px ] ) );
 		}
 		writeData16_last( convert888to565( back->pixels[ i >> _px ] ) );

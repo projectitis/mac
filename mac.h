@@ -1,6 +1,12 @@
 /**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
+ * @file mac.h
+ * @author Peter "Projectitis" Vullings <peter@projectitis.com>
+ * @brief GUI library for "mac/μac"
+ * @version 0.2
+ * @date 2021-05-18
+ * 
+ * @copyright Copyright (c) 2021
+ *
  * Distributed under the MIT licence
  *
  * MIT LICENCE
@@ -29,7 +35,8 @@
 #pragma once
 #ifndef _MAC_H_
 #define _MAC_H_ 1
-#define MAC_VERSION 0.1
+
+#define MAC_VERSION 0.2
 
 /**
  * Include all mac headers

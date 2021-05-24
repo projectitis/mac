@@ -87,6 +87,7 @@ namespace mac{
 
 	/**
 	 * Listener. An object that is listening for a message.
+	 * Inherit from this class to be able to listen for events.
 	 */
 	class Listener{
 		public:
@@ -99,6 +100,56 @@ namespace mac{
 			 * @return             Keep the listener?
 			 */
 			virtual boolean listen( uint32_t event, void* messageData ){ return true; }
+	};
+
+	/**
+	 * Listener that fires a callback.
+	 * Example usage:
+	 * 
+	 * // Define the callback function
+	 * boolean handleTheEvent( uint32_t event, void* data ) {
+	 * 		// Do something
+	 * 		Serial.printf("Event received. The event is %l.\n", event );
+	 * 
+	 * 		// Continue to listen to events
+	 * 		return true;
+	 * }
+	 * 
+	 * // Create the listener
+	 * CallbackListener* listener = new CallbackListener( handleTheEvent );
+	 * 
+	 * // Add the listener to listen for the "action_play" event
+	 * messenger->addListener( Event::action_play, listener );
+	 * 
+	 */
+	class CallbackListener: public Listener{
+		public:
+			/**
+			 * @brief Construct a new Callback Listener object
+			 * 
+			 * @param callback The callback function to trigger when the event is received 
+			 */
+			CallbackListener( boolean (*callback)( uint32_t event, void* data) ){
+				this->callback = callback;
+			}
+
+			/**
+			 * The callback listener that is triggered when the event is received
+			 */
+			boolean (*callback)( uint32_t event, void* data);
+
+			/**
+			 * @brief This method is called when the event is fired. It will trigger the callback.
+			 * 
+			 * @param event The event that was received
+			 * @param messageData Any message data passed through with the event
+			 * @return boolean True to continue to listen for events, false to remove this listener
+			 */
+			boolean listen( uint32_t event, void* messageData ){
+				Serial.println("listen");
+				if (this->callback) return this->callback( event, messageData );
+				return true;
+			}
 	};
 
 	/**

@@ -15,31 +15,46 @@
  **/
 namespace mac{
 
+	/**
+	 * @brief Instantiate the pool for object re-use
+	 */
 	DisplayObject* Text::pool = 0;
 
-	Text::Text() {
-		_glyphBounds = new ClipRect();
-	}
+	/**
+	 * @brief Construct a new Text object
+	 */
+	Text::Text() {}
 
+	/**
+	 * @brief Destroy the Text object
+	 */
 	Text::~Text() {
-		delete _glyphBounds;
+		while (_glyphs) {
+			GlyphInfo* glyph = _glyphs;
+			_glyphs = _glyphs->next();
+			glyph->recycle();
+		}
 	}
 
 	/**
-	 * Pool getter
+	 * @brief Pool getter
 	 */
 	DisplayObject** Text::_getPool(){
 		return &Text::pool;
 	}
 
 	/**
-	 * Create a new object or take one from the pool
+	 * @brief Create a new object or take one from the pool
 	 * @return The new or recycled object
 	 */
 	Text* Text::Create(){
 		return (Text*)DisplayObject::Create<Text>();
 	}
 
+	/**
+	 * @brief Create a new object by passing in a font definition, or take one from the pool
+	 * @return The new or recycled object
+	 */
 	Text* Text::Create( packedbdf_t* font ) {
 		Text* object = (Text*)DisplayObject::Create<Text>();
 		object->font( font );
@@ -47,7 +62,7 @@ namespace mac{
 	}
 
 	/**
-	 * Reset the object back to default settings
+	 * @brief Reset the object back to default settings
 	 */
 	void Text::reset(){
 		DisplayObject::reset();
@@ -58,26 +73,8 @@ namespace mac{
 	 * @param font 	The font to use
 	 */
 	void Text::font( packedbdf_t* font ) {
-Serial.printf("Text::font %d (v%d)\n", font, font->version );
-		//if (_font == font) return;
-		
-		_font = font;
-		// Anti-aliased (multi-bit pixels)
-		if (_font->version==23){
-			_fontbpp = (_font->reserved & 0b000011)+1;
-			_fontppb = 8/_fontbpp;
-			_fontalphamx = 1.0/((1<<_fontbpp)-1);
-		}
-		// Aliased (single-bit pixels)
-		else {
-			_fontbpp = 1;
-			_fontppb = 8;
-			_fontalphamx = 1.0;
-		}
-		_fontbppmask = (1 << _fontbpp) - 1;
-Serial.printf("  _fontbpp:%d _fontppb:%d _fontbppmask:%d\n", _fontbpp, _fontppb,  _fontbppmask );
-		_fontdeltaoffset = 3 + _font->bits_width + _font->bits_height + _font->bits_xoffset + _font->bits_yoffset;
-		_fontspacewidth = _getCharWidth(32);
+		if (_font) delete _font;
+		_font = new Font( font );
 
 		dirty();
 	}
@@ -93,12 +90,13 @@ Serial.printf("  _fontbpp:%d _fontppb:%d _fontbppmask:%d\n", _fontbpp, _fontppb,
 	}
 
 	/**
-	 * @brief Set the line height of the text
-	 * @param lh 	The line height. Usually between 1 - 1.5
+	 * @brief Set the line spacing of the text
+	 * @param lh 	The line spacing. Usually between 1 - 1.5
 	 */
-	void Text::lineHeight( float lh ) {
-		if (_lineHeight == lh) return;
-		_lineHeight = lh;
+	void Text::lineSpacing( float lh ) {
+		if (_lineSpacing == lh) return;
+		_lineSpacing = lh;
+		_needsCalc = true;
 		dirty();
 	}
 
@@ -113,23 +111,151 @@ Serial.printf("  _fontbpp:%d _fontppb:%d _fontbppmask:%d\n", _fontbpp, _fontppb,
 	}
 
 	/**
+	 * @brief Set the text wrap type
+	 * @param w The wrap type
+	 */
+	void Text::wrap( TextWrap w ) {
+		if (_wrap == w) return;
+		_wrap = w;
+		_needsCalc = true;
+		dirty();
+	}
+
+	/**
 	 * @brief Set the text string
 	 * @param t The text string
 	 */
 	void Text::text( char* t ) {
 		_text = t;
+		_needsCalc = true;
 		dirty();
-		size( _getTextWidth(), _font->line_space );
 	}
 
 	/**
-	 * Set the position at which to read the next pixel
-	 * @param x The global x coordinate
+	 * @brief Set the width
+	 * This sets the width of the text area. A string will wrap at or before the text area
+	 * depending on the wrap setting. If the width is set to 0, the width is calculated
+	 * automatically based on the maximum width of the text string.
+	 * @param value The new width
+	 */
+	void Text::width( float value ) {
+		DisplayObject::width( value );
+		_autoWidth = (_localBounds->width==0);
+		_needsCalc = true;
+	}
+
+	/**
+	 * @return float The width
+	 */
+	float Text::width() {
+		if (_needsCalc) _calculateSize();
+		return DisplayObject::width();
+	}
+
+	/**
+	 * @brief Set the height
+	 * This sets the height of the text area. If the height is set to 0, the height is calculated
+	 * automatically based on the maximum height of the text string (with wrapping).
+	 * @param value The new height
+	 */
+	void Text::height( float value ) {
+		DisplayObject::height( value );
+		_autoHeight = (_localBounds->height==0);
+		_needsCalc = true;
+	}
+
+	/**
+	 * @return float The height
+	 */
+	float Text::height() {
+		if (_needsCalc) _calculateSize();
+		return DisplayObject::height();
+	}
+
+	/**
+	 * @brief Set the tab width in number of spaces
+	 * @param spaces The number of spaces for a tab
+	 */
+	void Text::tabWidth( uint8_t spaces ) {
+		_tabWidth = spaces;
+	}
+
+	/**
+	 * @brief Get the tab width in number of spaces
+	 * @return uint8_t The number of spaces for a tab
+	 */
+	uint8_t Text::tabWidth() {
+		return _tabWidth;
+	}
+
+	/**
+	 * @brief Set the global position of the display object
+	 * 
+	 * @param x The global X position
+	 * @param y The global Y position
+	 */
+	void Text::globalPos( float x, float y ) {
+		// Do we need to recalculate text area?
+		if (_needsCalc) _calculateSize();
+
+		// Now we can calc global position
+		DisplayObject::globalPos( x, y );
+	}
+
+	/**
+	 * @brief Called every frame to begin rendering this object
 	 * @param y The global y coordinate
 	 */
-	void Text::readPosition( int16_t gx, int16_t gy ){
-		DisplayObject::readPosition( gx, gy );
-		_prepareCharAt( gx );
+	void Text::beginRender( ClipRect* updateArea ) {
+		DisplayObject::beginRender( updateArea );
+
+		// Calculate how many lines of text this is
+		uint16_t lines = (uint16_t)( renderBounds->y / _lineHeight );
+
+		// Calculate where the next line will start
+		// XXX: Line spacing
+		_nextLineY = lines * _lineHeight;
+
+		// Ignore glyphs for specified number of lines
+		_endOfText = false;
+		_charIndex = 0;
+		_justWrapped = false;
+		while (lines--) {
+			_prepareLine( true );
+			if (_endOfText) break;
+		}
+	}
+
+	/**
+	 * Prepare to render the next line
+	 * @param ry The local y coordinate
+	 */
+	void Text::beginLine( int16_t ry ){
+		// Exit early if we have no more characters to render
+		if (_endOfText && !_glyphs) return;
+
+		// Check if we are starting a new line of glyphs, and add them if we are
+		if (ry >= _nextLineY) {
+			_prepareLine( false );
+			_nextLineY += _lineHeight;
+		}
+
+		// Step through all glyphs. Remove any that are complete. Inform others of current line
+		GlyphInfo* g = _glyphs;
+		GlyphInfo* n;
+		while (g) {
+			n = g->next();
+			if ( ry > g->bounds->y2 ) {
+				GlyphInfo* n = g->next();
+				g->remove();
+				if (g == _glyphs) _glyphs = n;
+				g->recycle();
+			}
+			else {
+				_font->beginLine( g, ry );
+			}
+			g = n;
+		}
 	}
 
 	/**
@@ -137,364 +263,284 @@ Serial.printf("  _fontbpp:%d _fontppb:%d _fontbppmask:%d\n", _fontbpp, _fontppb,
 	 * @param c (out) color
 	 * @param a (out) alpha
 	 */
-	void Text::readPixel( color888 &c, float &a ) {
-		a = 0;
-		c = _color;
-		if (_charIndex >= 0) {
-			// If we are above or below the letter, skip
-			if (_glyphBounds->contains( rx, ry )) {
-				uint8_t pv = _fetchpixel();
-				a = (float)pv * _fontalphamx;
-				_bitoffset += _fontbpp;
+	void Text::calcPixel( int16_t rx, int16_t ry ) {
+		_ra = 0;
+		_rc = _color;
+
+		// Exit early if we have no more characters to render
+		if (_endOfText && !_glyphs) return;
+
+		GlyphInfo* g = _glyphs;
+		while (g) {
+			if (g->bounds->contains( rx, ry )) {
+				_ra = _font->getPixel( g, rx );
 			}
-			else {
-Serial.print(".");
-			}
-			// Advance x
-			rx++;
-			if (rx >= _nextCharX) _nextChar();
-		}
-		else {
-			rx++;
+			g = g->next();
 		}
 	}
 
-	uint32_t Text::_fetchbit( const uint8_t *p, uint32_t index ){
-		if (p[index >> 3] & (1 << (7 - (index & 7)))) return 1;
-		return 0;
+	/**
+	 * @brief Called every frame to begin rendering this object
+	 */
+	void Text::endRender() {
+		// Clear any remaining glyphs
+		while (_glyphs) {
+			GlyphInfo* glyph = _glyphs;
+			_glyphs = _glyphs->next();
+			glyph->recycle();
+		}
+		_glyphs = 0;
 	}
 
-	uint32_t Text::_fetchbits_unsigned( const uint8_t *p, uint32_t index, uint32_t required ){
-		uint32_t val = 0;
-		do {
-			uint8_t b = p[index >> 3];
-			uint32_t avail = 8 - (index & 7);
-			if (avail <= required) {
-				val <<= avail;
-				val |= b & ((1 << avail) - 1);
-				index += avail;
-				required -= avail;
-			} else {
-				b >>= avail - required;
-				val <<= required;
-				val |= b & ((1 << required) - 1);
+	/**
+	 * @brief Prepare the next line of glyphs
+	 * 
+	 * @param skip If true, will not add the glyphs to the render list
+	 */
+	void Text::_prepareLine( boolean skip ) {
+		int32_t startCharIndex = _charIndex;
+		int32_t endCharIndex = _charIndex;
+		int16_t charWidth = 0;
+		int16_t lineWidth = 0;
+		int16_t lineWidthAtEndChar = 0;
+		GlyphInfo* glyph = 0;
+		boolean ignoreRest = false; 
+		char c = 0;
+
+		lineWidth = 0;
+		while (true) {
+			c = _text[_charIndex++];
+			charWidth = 0;
+			if (c=='\0') { // EOF
+				_endOfText = true;
 				break;
 			}
-		} while (required);
-		return val;
-	}
-
-	int32_t Text::_fetchbits_signed(const uint8_t *p, uint32_t index, uint32_t required){
-		uint32_t val = _fetchbits_unsigned(p, index, required);
-		if (val & (1 << (required - 1))) {
-			return (int32_t)val - (1 << required);
-		}
-		return (int32_t)val;
-	}
-
-	uint32_t Text::_fetchpixel(){
-		// The byte
-		uint32_t bt = _bitoffset >> 3;
-		uint8_t b = _data[bt];
-
-		// Shift to LSB position
-		uint8_t s = 8 - (_bitoffset - (bt << 3)) - _fontbpp;
-
-		//((_fontppb-(x % _fontppb)-1)*_fontbpp);
-//Serial.printf("[%d>>%d (%d)] ",b,s,x);
-		b = b >> s;
-		// Mask and return
-Serial.printf("_fetchpixel %d [%d] (%d.%d) = %d\n", _bitoffset, _data[bt], bt, s, (b & _fontbppmask));
-		return b & _fontbppmask;
-	}
-
-	/**
-	 * @brief Get the index into the string at the specified x position
-	 * Assumes the string starts at x=0 and is on one line only
-	 * @param x The x coordinate
-	 * @return uint32_t The index into the string. -1 means char not found
-	 */
-	void Text::_prepareCharAt( int16_t x ){
-Serial.printf("_prepareCharAt %d\n", x);
-		char b;
-		_charIndex = 0;
-		_pixelOffset = 0;
-		_charWidth = 0;
-		_nextCharX = 0;
-		while(true){
-			b = _text[_charIndex];
-			if (b=='\0'){
-				_pixelOffset = 0;
-				_charIndex = -1;
-				break; // End of string
+			else if (c=='\t') { // tab
+				if (_justWrapped) {
+					charWidth = 0;
+					startCharIndex = _charIndex;
+				}
+				else {
+					charWidth = _font->spaceWidth() * _tabWidth;
+				}
+				endCharIndex = _charIndex;
+				lineWidthAtEndChar = lineWidth;
 			}
-			_pixelOffset = x;
-			x -= _getCharWidth( b );
-			if (x < 0) break;
-			_charIndex++;
+			else if (c==' ') { // space
+				if (_justWrapped) {
+					charWidth = 0;
+					startCharIndex = _charIndex;
+				}
+				else {
+					charWidth = _font->spaceWidth();
+				}
+				endCharIndex = _charIndex;
+				lineWidthAtEndChar = lineWidth;
+			}
+			else if (c=='\n') { // newline
+				_justWrapped = false;
+				endCharIndex = _charIndex;
+				lineWidthAtEndChar = lineWidth;		
+				break; // next line
+			}
+			else if (_isPrintable( c )){ // printable character
+				charWidth = _font->charWidth( c );
+				if ((c==',') || (c=='.')){ // Potential wrap point
+					endCharIndex = _charIndex;
+					lineWidthAtEndChar = lineWidth;
+				}
+				_justWrapped = false;
+			}
+
+			// Are we wider than the text area?
+			if ( (lineWidth + charWidth) > _localBounds->width) {
+				// See if character wrap is set
+				if (_wrap == TextWrap::character) {
+					_charIndex--;
+					if (_charIndex == startCharIndex) _charIndex++;
+					endCharIndex = _charIndex;
+					lineWidthAtEndChar = lineWidth;
+					break; // next line
+				}
+				// Wrap if there is a suitable point earlier in this line to wrap to
+				else if (endCharIndex > 0) { 
+					// Start next line
+					_justWrapped = true;
+					_charIndex = endCharIndex;
+					break; // next line
+				}
+				// Long single word on line. Add the current glyph (will be
+				// clipped) and skip the rest until a wrap.
+				else {
+					ignoreRest = true;
+				}
+			}
+
+			// Increase line width by character
+			lineWidth += charWidth;
 		}
-		if (_charIndex >= 0){
-			_prepareChar();
-			_glyphBounds->setPos( _glyphBounds->x - _pixelOffset, _glyphBounds->y );
+
+		// Adjust for text align
+		if ( _align == TextAlign::right ){
+			lineWidth = max( 0, _localBounds->width - lineWidthAtEndChar );
 		}
+		else if ( _align == TextAlign::center ){
+			lineWidth = max( 0, (int16_t)( (_localBounds->width - (float)lineWidthAtEndChar) / 2 ) );
+		}
+		else {
+			lineWidth = 0;
+		}
+
+		// Are we skipping glyphs?
+		if (skip) return;
+
+		// Now having start and end indexes in the string, add the glyphs
+		while (startCharIndex < endCharIndex) {
+			c = _text[ startCharIndex++ ];
+			if (_isPrintable( c )) {
+				glyph = _font->glyphInfo( c );
+				if (glyph) {
+					glyph->bounds->translate( lineWidth - _ox, _nextLineY );
+					if (!_glyphs) _glyphs = glyph;
+					else _glyphs->add( glyph );
+
+					lineWidth += glyph->width;
+				}
+			}
+			else if (c == ' ') {
+				lineWidth += _font->spaceWidth();
+			}
+			else if (c == '\t') {
+				lineWidth += _font->spaceWidth() * _tabWidth;
+			}
+		}
+
+/* Debug glyphs 
+Serial.println("Glyphs:");
+GlyphInfo* g = _glyphs;
+while (g) {
+	Serial.printf("  %c: %d,%d %dx%d\n", g->code, g->bounds->x, g->bounds->y, g->bounds->width, g->bounds->height );
+	g = g->next();
+}*/
+
 	}
 
 	/**
-	 * @brief Move along to the next char
+	 * @brief Calculate the size of the text area based on the text string
 	 */
-	void Text::_nextChar() {
-		_charIndex++;
-		_pixelOffset = 0;
-		if (_text[_charIndex]=='\0'){
-			_charIndex = -1;
-			return;
+	void Text::_calculateSize() {
+		_needsCalc = false;
+		_lineHeight = (int16_t)((float)_font->lineHeight() * _lineSpacing);
+		if (_autoWidth) {	
+			int16_t maxWidth = 0;
+			int16_t lineWidth = 0;
+			int16_t lineHeight = _lineHeight;
+			int16_t index = 0;
+			char c = 0;
+			while (true) {
+				if (lineWidth > maxWidth) maxWidth = lineWidth;
+				c = _text[index++];
+				if (c=='\0') break; // End of string
+				if (c=='\t') { // tab
+					lineWidth += _font->spaceWidth() * _tabWidth;
+					continue;
+				}
+				if (c=='\n') { // newline
+					lineWidth = 0;
+					if (!_autoHeight && (lineHeight >= _localBounds->height)) break; // Reached height
+					lineHeight += _lineHeight;
+					continue;
+				}
+				lineWidth += _font->charWidth( c );
+			}
+			width( maxWidth );
+			if (_autoHeight) height( lineHeight );
 		}
-		if (_charIndex >= 0) _prepareChar();
-	}
+		else if (_autoHeight){
+			int16_t lineWidth = 0;
+			int16_t charWidth = 0;
+			int16_t lineHeight = _lineHeight;
+			int32_t index = 0;
+			int16_t wrapIndex = 0;
+			boolean justWrapped = false; // Wrap without newline just occured
+			char c = 0;
+			while (true) {
+				c = _text[index++];
+				charWidth = 0;
+				if (c=='\0') { // EOF
+					if (wrapIndex == index) lineHeight -= _lineHeight; // If just wrapped, don't count this line
+					break;
+				}
+				else if (c=='\t') { // tab
+					charWidth = justWrapped?0:_font->spaceWidth() * _tabWidth;
+					wrapIndex = index;
+				}
+				else if (c==' ') { // space
+					charWidth = justWrapped?0:_font->spaceWidth();
+					wrapIndex = index;
+				}
+				else if (c=='\n') { // newline
+					justWrapped = false;
+					wrapIndex = index;
 
-	/**
-	 * @brief Prepare internal properties for drawing the char at the specified index
-	 * @param i The index into the string
-	 */
-	void Text::_prepareChar() {
-		char c = _text[_charIndex];
-Serial.printf("\n_prepareChar %c %d", c, c);
-
-		// Check character is supported by the _font
-		if ((c >= _font->index1_first) && (c <= _font->index1_last)) {
-			_bitoffset = c - _font->index1_first;
-			_bitoffset *= _font->bits_index;
-		}
-		else if ((c >= _font->index2_first) && (c <= _font->index2_last)) {
-			_bitoffset = c - _font->index2_first + _font->index1_last - _font->index1_first + 1;
-			_bitoffset *= _font->bits_index;
-		}
-		else if (_font->unicode) {
-Serial.println(". WARNING: Unsupported unicode character");
-			_nextChar();
-			return;
-		}
-		else {
-Serial.println(". WARNING: Unsupported character");
-			_nextChar();
-			return;
-		}
-
-		// Char data
-		uint32_t goffset = _fetchbits_unsigned( _font->index, _bitoffset, _font->bits_index );
-		_data = _font->data + goffset;
-//Serial.printf(" go=%d",goffset);
-
-		uint32_t encoding = _fetchbits_unsigned(_data, 0, 3);
-		if (encoding != 0) return _nextChar();
-
-		int16_t width = _fetchbits_unsigned(_data, 3, _font->bits_width);
-		_bitoffset = _font->bits_width + 3;
-		int16_t height = _fetchbits_unsigned(_data, _bitoffset, _font->bits_height);
-		_bitoffset += _font->bits_height;
-
-		int32_t xoffset = _fetchbits_signed(_data, _bitoffset, _font->bits_xoffset);
-		_bitoffset += _font->bits_xoffset;
-		int32_t yoffset = _fetchbits_signed(_data, _bitoffset, _font->bits_yoffset);
-		_bitoffset += _font->bits_yoffset;
-//Serial.printf(" o(%d,%d %dx%d)", xoffset, yoffset, width, height);
-
-		_glyphBounds->setPosAndSize( _nextCharX + xoffset, _font->cap_height - height - yoffset, width, height );
-Serial.printf(" b(%d,%d %dx%d)", _glyphBounds->x, _glyphBounds->y, _glyphBounds->width, _glyphBounds->height);
-
-		_charWidth = _fetchbits_unsigned(_data, _bitoffset, _font->bits_delta);
-		_bitoffset += _font->bits_delta;
-		_nextCharX += _charWidth;
-//Serial.printf(" w=%d",_charWidth);
-//Serial.printf(" ch=%d",_font->cap_height);
-
-		// Number of lines into the glyph (_pixelOffset is number of pixels into the line)
-		int32_t lineOffset = max( 0, ry - _glyphBounds->y );
-
-		// Anti-aliased (multi-bit pixel) fonts
-		// All pixels are sequential. No duplicate line support
-		if (_fontbpp>1){
-			_bitoffset = ((_bitoffset + 7) & (-8)); // Round to byte boundary
-			_bitoffset += (lineOffset * _glyphBounds->width + _pixelOffset) * _fontbpp;
-		}
-		// For aliased fonts
-		// First bit of every line indicates if the line is duplicated
-		// 0: Next line is not duplicated. Following bits are pixels
-		// 1: Next line is duplicated. Read next 3 bits and add 2 for number of lines
-		else {
-			lineOffset++;
-			uint8_t linesDuplicated = 0;
-			while (lineOffset--) {
-
-				// Skip duplicated lines
-				if (linesDuplicated){
-					if (--linesDuplicated==0){
-						_bitoffset += _glyphBounds->width;
+					charWidth = 0;
+					lineWidth = 0;
+					lineHeight += _lineHeight;	
+				}
+				else if (_isPrintable( c )){ // printable character
+					charWidth = _font->charWidth( c );
+					if ((c==',') || (c=='.')){ // Potential wrap point				
+						wrapIndex = index;
 					}
+					justWrapped = false;
+				}
+
+				// Are we wider than the text area?
+				if ( (lineWidth + charWidth) > _localBounds->width) {
+					// See if character wrap is set
+					if (_wrap == TextWrap::character) {
+						index--;
+						if (index == wrapIndex) index++;
+						wrapIndex = index;
+
+						charWidth = 0;
+						lineWidth = 0;
+						lineHeight += _lineHeight;
+					}
+					// Wrap if there is a suitable point earlier in this line to wrap to
+					else if (wrapIndex > 0) { 
+						// Start next line
+						justWrapped = true;
+						index = wrapIndex;
+						
+						charWidth = 0;
+						lineWidth = 0;
+						lineHeight += _lineHeight;
+					}
+					// Long single word on line. Add the current glyph (will be
+					// clipped) and skip the rest until a wrap.
 					else {
-						continue;
+						// Ignore
 					}
 				}
 
-				// If first bit in line is 1, line is duplicated
-				if (_fetchbit( _data, _bitoffset++)){
-					linesDuplicated = _fetchbits_unsigned( _data, _bitoffset, 3 ) + 2;
-					_bitoffset += 3;
-				}
-				else {			
-					linesDuplicated = 1;
-				}
+				// Increase line width by character
+				lineWidth += charWidth;
 			}
-			_bitoffset += _pixelOffset;
+			height( lineHeight );
 		}
-Serial.println();
 	}
 
 	/**
-	 * Get the width of a single character in the current font
-	 * @param  c  	The character code (encoding)
-	 * @return   The width in pixels (0 if not found in the font)
+	 * @brief Check if a character is a printable character (has a glyph)
+	 * 
+	 * @param c The character
+	 * @return boolean True if printable
 	 */
-	int32_t Text::_getCharWidth( uint16_t c ){
-		uint32_t bitoffset;
-		const uint8_t *data;
-
-		// Check character is supported by the _font
-		if ((c >= _font->index1_first) && (c <= _font->index1_last)) {
-			bitoffset = c - _font->index1_first;
-			bitoffset *= _font->bits_index;
-		}
-		else if ((c >= _font->index2_first) && (c <= _font->index2_last)) {
-			bitoffset = c - _font->index2_first + _font->index1_last - _font->index1_first + 1;
-			bitoffset *= _font->bits_index;
-		}
-		else if (_font->unicode) {
-			return 0;
-		}
-		else {
-			return 0;
-		}
-
-		// Char data
-		uint32_t goffset = _fetchbits_unsigned( _font->index, bitoffset, _font->bits_index );
-		data = _font->data + goffset;
-		return _fetchbits_unsigned(data, _fontdeltaoffset, _font->bits_delta);
-	}
-
-	/**
-	 * Step through string and calculate width until a space or non-printable
-	 * character is encountered. If the string starts with whitespace, this is
-	 * included in the word.
-	 * @param  c  The start of the string to calculate from
-	 * @param  cw (out) The last character in the word
-	 * @return    The width of all characters from c to cw
-	 */
-	int32_t Text::_getWordWidth( char* c, char* &cw ){
-		int32_t w = 0;
-		boolean started = false;
-		char b;
-		cw = c;
-		while(true){
-			b = *c;
-			if (b<' ') break;
-			else if (b>'~') break;
-			else if (b==' '){
-				if (started) break;
-			}
-			else started = true;
-			cw = c;
-			w += _getCharWidth( b );
-			c++;
-		}
-Serial.println(w);
-		return w;
-	}
-
-	/**
-	 * Get the pixel width of the entire string (to null)
-	 * @return   Pixel width of string
-	 */
-	int32_t Text::_getTextWidth(){
-		uint32_t i = 0;
-		int32_t w = 0;
-		char b;
-
-		while(true){
-			b = _text[i];
-			if (b<='\0') break;
-			w += _getCharWidth( b );
-			i++;
-		}
-Serial.printf("_getTextWidth %d\n",w);
-		return w;
-	}
-
-	/**
-	 * Check how many words from a string will fit into the given width (w), with word
-	 * wrap. The last character in the sentence is stored in cw, and the pixel width of the
-	 * sentence is returned.
-	 * last character 
-	 * @param  c  The string
-	 * @param  w  The width to fit in
-	 * @param  cw (out) the last character in the sentence
-	 * @return    The width of the sentence in pixels
-	 */
-	int32_t Text::_getSentence( char* c, uint32_t w, char* &cw ){
-//Serial.print("    _getSentence");
-		int32_t sw = 0; 	// sentence width
-		uint32_t ww;		// word width
-		char* sp;			// sentence pointer
-		char* p = c;		// string pointer
-		char b;				// byte
-		cw = c;
-		while (true){
-			// Get width of next word
-			ww = _getWordWidth( p, sp );
-			// Check if word fits
-			if ((sw + ww) <= w){
-//Serial.printf("    %.*s = %d\n", (sp-p+1), p, ww);
-				// Fits. Save this word
-				sw += ww;
-				cw = sp;
-				// Move to next character
-				p = sp+1;
-				// See if next character is end of string or newline
-				b = *p;
-				if ((b=='\0') || (b=='\n')) break;
-				// Carry on to next word
-			}
-			// Word doesn't fit
-			else break;
-		}
-		return sw;
-	}
-
-	/**
-	 * Step through a string and return pointer to the first character that is
-	 * not a whitespace or unprintable character (i.e. a character not supported
-	 * by the current font).
-	 * @param  p 	The string to step through
-	 * @return   The pointer to the first printable character, or 0 if null is found
-	 */
-	char* Text::_ignoreWhitespace( char* p ){
-//Serial.print("    _ignoreWhitespace");
-		char c;
-		while (true){
-			c = *p;
-			if (c=='\0') return 0; // end of string
-			if (c=='\n') return p; // newline
-			if (c=='\t') return p; // tab
-			if (c>32){ // After space
-				// Check character is supported by the _font
-				if ((c >= _font->index1_first) && (c <= _font->index1_last)) {
-					return p;
-				}
-				else if ((c >= _font->index2_first) && (c <= _font->index2_last)) {
-					return p;
-				}
-			}
-			p++;
-		}
+	boolean Text::_isPrintable( uint8_t c ) {
+		if ( c < 32 ) return false;
+		if ( c > 126 ) return false;
+		return true;
 	}
 	
 } // namespace

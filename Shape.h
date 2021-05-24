@@ -27,11 +27,11 @@
  */	
 
 #pragma once
-#ifndef _MAC_SPRITEH_
-#define _MAC_SPRITEH_ 1
+#ifndef _MAC_SHAPEH_
+#define _MAC_SHAPEH_ 1
 
 #include "DisplayObject.h"
-#include "Bitmap.h"
+#include "Point.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -43,35 +43,11 @@
 namespace mac{
 
 	/**
-	 * Blend modes supported by Sprite
+	 * A shape (polygon)
 	 */
-	enum class BlendMode{
-		normal,
-		stamp
-	};
-
-	/**
-	 * Transformations supported by Sprite
-	 */
-	enum class Transform{
-		normal,
-		flipH,
-		flipV,
-		flipHV,
-		rotate180
-	};
-
-	/**
-	 * A sprite
-	 */
-	class Sprite: public DisplayObject {
+	class Shape: public DisplayObject {
 		
 		public:
-			/**
-			 * Constructor
-			 */
-			//Sprite();
-
 			/**
 			 * Memory pool of recycled objects
 			 */
@@ -81,70 +57,59 @@ namespace mac{
 			 * Create a new object or take one from the pool
 			 * @return The new or recycled object
 			 */
-			static Sprite* Create();
-			static Sprite* Create( Tilemap* tilemap, uint16_t tileIndex = 0 );
+			static Shape* Create();
+			static Shape* Create( Point** points, uint16_t len );
 
 			/**
 			 * Type identifier for this object
 			 **/
-			static const DisplayObjectType TYPE = DisplayObjectType::sprite;
+			static const DisplayObjectType TYPE = DisplayObjectType::shape;
 
 			/**
 			 * Reset the object back to default settings
 			 */
-			void reset() override;
+			void reset();
+
+			/**
+			 * @brief Provide the points that define teh shape
+			 * If the first and last points are different, the are automatically joined
+			 * 
+			 * @param points An array of points
+			 * @param len The number of points
+			 */
+			void set( Point** points, uint16_t len );
 
 			/**
 			 * Update the display object.
 			 * @param	dt 			Time since last update in seconds
 			 */
-			void update( float dt ) override;
+			void update( float dt );
 
 			/**
-			 * The tilemap that contains the sprite bitmap data.
-			 * Do not change directly. Use set() to change this.
-			 */
-			Tilemap* tilemap;
-
-			/**
-			 * The index of the tile within the tilemap.
-			 */
-			uint16_t tileIndex; 
-
-			/**
-			 * transform for sprite
-			 */
-			Transform transform = Transform::normal;
-
-			/**
-			 * Blend mode for sprite
-			 */
-			BlendMode blendMode = BlendMode::normal;
-
-			/**
-			 * Color (used for some blend modes)
+			 * Color
 			 */
 			color888 color;
 
 			/**
-			 * Set the tilemap and the tileIndex that teh sprite uses.
-			 * @param tilemap 	The tilemap to use
-			 * @param tileIndex The index of teh active tile
+			 * @brief Set the global position of the display object
+			 * 
+			 * @param x The global X position
+			 * @param y The global Y position
 			 */
-			virtual void set( Tilemap* tilemap, uint16_t tileIndex = 0 );
+			void globalPos( float x, float y );
 
 			/**
 			 * prepare to render the next line
 			 * @param ry The y position in local coordinates
 			 */
-			virtual void beginLine( int16_t ry );
+			void beginLine( int16_t ry );
 
 			/**
 			 * Read a pixel from the sprite and advance position
 			 * @param rx The x position in local coordinates
 			 * @param ry The y position in local coordinates
 			 */
-			virtual void calcPixel( int16_t rx, int16_t ry );
+			void calcPixel( int16_t rx, int16_t ry );
 
 		protected:
 			
@@ -154,19 +119,14 @@ namespace mac{
 			DisplayObject** _getPool() override;
 
 			/**
-			 * Pixel accessor for correct tilemap pixel format
+			 * @brief The points that make up the shape
 			 */
-			access8888 _getPixelAs8888;
+			Point** _points = 0;
 
 			/**
-			 * Current offset into the pixel data
+			 * @brief The number of points
 			 */
-			int32_t _dataOffset;
-
-			/**
-			 * Current setp with each drawn pixel
-			 */
-			int32_t _dataStep;
+			uint16_t _pointsLen = 0;
 
 	};
 	

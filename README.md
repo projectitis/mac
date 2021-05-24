@@ -8,11 +8,12 @@ This project has a software component (the libraries) and a hardware component (
 
 ## DEVELOPER NOTES 2021-03-4
 ### TODO next
-- Display object origin offset (e.g. origin of sprite could be at center instead of top-left)
 - Sprite animation
-- Refactor text area for use with new stage approach to rendering
+- Box class enhancements (border)
+- Attempt to measure RAM usage
 
 ## Current status
+ - **2021-05-25** Completely refactored to stage and display list approach (like Flash)
  - **2021-04-27** Completely rewritten to convert framebuffer to linebuffer
  - **2019-04-14** Many bitmap and vector features implemented. Working on GUI components.
  - **2018-04-24** Very much a work in progress. Only display components currently implemented.

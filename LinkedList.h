@@ -84,13 +84,13 @@ namespace mac{
 
 			/**
 			 * Remove the current item from the list
-			 * @return	Pointer to the next item in the list
+			 * @return	The removed item (this)
 			 */
 			LinkedList* remove();
 
 			/**
 			 * Remove the specified item from the list
-			 * @return	Pointer to the next item in the list
+			 * @return	The removed item, or null if not found
 			 */
 			LinkedList* remove( LinkedList* item );
 

@@ -80,7 +80,7 @@ namespace mac{
 	Vector2F* Vector2F::getRotated( float a ){
 		Vector2F* v = new Vector2F();
 		v->m = this->m;
-		v->a += a;
+		v->a = this->a + a;
 		v->a -= M_2PI * floor(v->a * M_1_2PI);
 		v->calcXY();
 		return v; 

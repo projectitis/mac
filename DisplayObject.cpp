@@ -19,7 +19,10 @@ namespace mac{
 	 * Constructor
 	 */
 	DisplayObject::DisplayObject(){
-		globalRect = new ClipRect();
+		globalBounds = new ClipRect();
+		_localBounds = new ClipRect();
+		cleanBounds = new ClipRect();
+		renderBounds = new ClipRect();
 	}
 
 	/**
@@ -27,7 +30,10 @@ namespace mac{
 	 **/
 	DisplayObject::~DisplayObject(){
 		reset();
-		delete globalRect;
+		delete renderBounds;
+		delete cleanBounds;
+		delete _localBounds;
+		delete globalBounds;
 	}
 
 	/**
@@ -38,9 +44,10 @@ namespace mac{
 	}
 
 	/**
-	 * Return this widget to the pool
+	 * Return this object to the pool
 	 */
 	void DisplayObject::recycle(){
+#ifdef MAC_OBJECT_REUSE
 		this->reset();
 		DisplayObject** pool = _getPool();
 		if (pool==0){
@@ -50,25 +57,33 @@ namespace mac{
 			this->_poolNext = *pool;
 			*pool = this;
 		}
+#else
+		delete this;
+#endif
 	}
 
 	/**
-	 * Reset the widget back to default settings
+	 * Reset the object back to default settings
 	 */
 	void DisplayObject::reset(){
 		removeAllChildren();
 		id = 0;
-		x = 0.0;
-		y = 0.0;
+		_ox = 0.0;
+		_oy = 0.0;
 		_dirty = true;
 		_visible = true;
 		_active = true;
-		globalRect->clear();
+		width(0);
+		height(0);
+		globalBounds->clear();
+		_localBounds->clear();
+		cleanBounds->clear();
+		renderBounds->clear();
 	}
 
 	void DisplayObject::visible( boolean v ) {
 		_visible = v;
-		if (v) dirty();
+		_dirty = true;
 	}
 
 	/**
@@ -93,7 +108,6 @@ namespace mac{
 			_childrenTop->add( child );
 		}
 		_childrenTop = child;
-		dirty();
 	}
 
 	/**
@@ -272,45 +286,106 @@ namespace mac{
 	}
 
 	/**
-	 * @brief Set the position of the object
-	 * @param x 	The x coord
-	 * @param y 	The y coord
+	 * @brief Set the origin x coordinate within the object
+	 * @param value The origin x coordinate
 	 */
-	void DisplayObject::position( float x, float y ){
-		this->x = x;
-		this->y = y;
+	void DisplayObject::originX( float value ) {
+		_ox = -value;
 		dirty();
 	}
 
 	/**
-	 * Set the size of the object
-	 * @param w           		Width
-	 * @param h          		Height
+	 * @return float The origin x coordinate
 	 */
-	void DisplayObject::size( float w, float h ) {
-		_w = w;
-		_h = h;
+	float DisplayObject::originX() {
+		return -_ox;
+	}
+
+	/**
+	 * @brief Set the origin y coordinate within the object
+	 * @param value The origin y coordinate
+	 */
+	void DisplayObject::originY( float value ) {
+		_oy = -value;
+		dirty();
+	}
+
+	/**
+	 * @return float The origin y coordinate
+	 */
+	float DisplayObject::originY() {
+		return -_oy;
+	}
+
+	/**
+	 * @brief Set the x coordinate
+	 * @param value The x coordinate
+	 */
+	void DisplayObject::x( float value ) {
+		_localBounds->setPos( value, _localBounds->y );
+		dirty();
+	}
+
+	/**
+	 * @return float The x coordinate
+	 */
+	float DisplayObject::x() {
+		return _localBounds->x;
+	}
+
+	/**
+	 * @brief Set the y coordinate
+	 * @param value The y coordinate
+	 */
+	void DisplayObject::y( float value ) {
+		_localBounds->setPos( _localBounds->x, value );
+		dirty();
+	}
+
+	/**
+	 * @return float The y coordinate
+	 */
+	float DisplayObject::y() {
+		return _localBounds->y;
+	}
+
+	/**
+	 * @brief Set the width
+	 * @param value The new width
+	 */
+	void DisplayObject::width( float value ) {
+		_localBounds->setWidth( (value > 0)?value:0 );
+		dirty();
 	}
 
 	/**
 	 * @return float The width
 	 */
 	float DisplayObject::width() {
-		return _w;
+		return _localBounds->width;
+	}
+
+	/**
+	 * @brief Set the height
+	 * @param value The new height
+	 */
+	void DisplayObject::height( float value ) {
+		_localBounds->setHeight( (value > 0)?value:0 );
+		dirty();
 	}
 
 	/**
 	 * @return float The height
 	 */
 	float DisplayObject::height() {
-		return _h;
+		return _localBounds->height;
 	}
 
 	/**
-	 * Set self and parent to dirty (recursive)
+	 * Set self to dirty
 	 */
 	void DisplayObject::dirty() {
-		_dirty = true;
+		if (_visible) _dirty = true;
 	}
 
 	/**
@@ -318,6 +393,52 @@ namespace mac{
 	 */
 	boolean DisplayObject::isDirty() {
 		return _dirty;
+	}
+
+	/**
+	 * @brief Set the global position of the display object
+	 * 
+	 * @param x The global X position
+	 * @param y The global Y position
+	 */
+	void DisplayObject::globalPos( float x, float y ) {
+		globalBounds->setPosAndSize(
+			x + _ox + _localBounds->x,
+			y + _oy + _localBounds->y,
+			_localBounds->width,
+			_localBounds->height
+		);
+	}
+
+	/**
+	 * @brief Convert a global X coordinate to a local coord
+	 * 
+	 * @param x The global X coordinate
+	 * @return float The local X coordinate
+	 */
+	float DisplayObject::globalToLocalX( float x ) {
+		return x - (float)(globalBounds->x);
+	}
+
+	/**
+	 * @brief Convert a global Y coordinate to a local coord
+	 * 
+	 * @param x The global Y coordinate
+	 * @return float The local Y coordinate
+	 */
+	float DisplayObject::globalToLocalY( float y ) {
+		return y - (float)(globalBounds->y);
+	}
+
+	/**
+	 * @brief Begin the render sweep for the current frame
+	* @param updateArea The area of the display being updated
+	*/
+	void DisplayObject::beginRender( ClipRect* updateArea ) {
+		_dirty = false;
+		renderBounds->set( updateArea );
+		renderBounds->clip( globalBounds );
+		renderBounds->translate( -_localBounds->x - _ox, -_localBounds->y - _oy );
 	}
 	
 } // namespace

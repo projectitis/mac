@@ -37,6 +37,8 @@
 #include "DisplayObject.h"
 #include "Sprite.h"
 #include "Text.h"
+#include "Shape.h"
+#include "Box.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -108,6 +110,16 @@ namespace mac{
 			 */
 			color888 backgroundColor();
 
+			/**
+			 * @brief Enable visual debugging of update area
+			 */
+			boolean debug = false;
+
+			/**
+			 * @brief Color for visual debugging
+			 */
+			color888 debugColor = RGB888_IndianRed;
+
 		protected:
 			
 			/**
@@ -123,22 +135,7 @@ namespace mac{
 			/**
 			 * Area of the display that is dirty
 			 */
-			ClipRect* _dirtyRect;
-
-			/**
-			 * Area of the display that is clean (just written)
-			 */
-			ClipRect* _cleanRect;
-
-			/**
-			 * Temporary rect that describes are of display being updated
-			 */
-			ClipRect* _updateRect;
-
-			/**
-			 * Temporary rect to hold bounds of the display
-			 */
-			ClipRect* _displayRect;
+			ClipRect* _dirtyBounds;
 
 			/**
 			 * Increments as the display list is traversed. Used to calculate
@@ -163,13 +160,13 @@ namespace mac{
 			 * children, and insert into the display list.
 			 * @param children The children to add
 			 */
-			void _traverse( DisplayObject* child, float px, float py );
+			void _traverse( Display* display, DisplayObject* child, float px, float py );
 
 			/**
 			 * Clear a DisplayList
-			 * @param list The list to clear
+			 * @param list The list to recycle
 			 */
-			void _clearList( DisplayList* list );
+			void _recycleList( DisplayList* list );
 
 	};
 	
