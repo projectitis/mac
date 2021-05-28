@@ -81,7 +81,7 @@ namespace mac{
 		else _dirtyBounds->clear();
 		_displayListDepth = 0;
 		_displayList = DisplayList::Create( this );
-		if (_children) _traverse( display, _children, 0, 0 );
+		if (_children) _traverse( display, _children, _dirty, 0, 0 );
 
 		// Calculate the updated area of ths display
 		renderBounds->set( _dirtyBounds );
@@ -217,7 +217,7 @@ while (list) {
 	 * @param px The global x coordinate of the parent
 	 * @param py The global y coordinate of the parent
 	 */
-	void Stage::_traverse( Display* display, DisplayObject* child, float px, float py ) {
+	void Stage::_traverse( Display* display, DisplayObject* child, boolean forceDirty, float px, float py ) {
 		// Step all children
 		while (child) {
 
@@ -227,7 +227,10 @@ while (list) {
 				continue;
 			}
 
-			// Set global position and sizing
+			// Force dirty?
+			if (forceDirty) child->dirty();
+
+			// Get child to calculate global bounds
 			child->globalPos( px, py );
 
 			// If child is dirty, include it's old position
@@ -253,7 +256,7 @@ while (list) {
 			}
 
 			// Recurse
-			if (child->hasChildren()) _traverse( display, child->firstChild(), child->globalBounds->x - child->_ox, child->globalBounds->y - child->_oy );
+			if (child->hasChildren()) _traverse( display, child->firstChild(), child->isDirty(), child->globalBounds->x - child->_ox, child->globalBounds->y - child->_oy );
 
 			// Next sibling
 			child = child->next();
