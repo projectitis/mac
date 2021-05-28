@@ -95,6 +95,21 @@ namespace mac{
 	}
 
 	/**
+	 * @brief Return parent
+	 * @return DisplayObject* The parent display object, or null
+	 */
+	DisplayObject* DisplayObject::parent() {
+		return _parent;
+	}
+
+	/**
+	 * Return true if there is a parent
+	 */
+	boolean DisplayObject::hasParent() {
+		return (_parent != 0);
+	}
+
+	/**
 	 * Add a child to the list
 	 */
 	void DisplayObject::addChild( DisplayObject* child ){
@@ -131,6 +146,7 @@ namespace mac{
 				if (_childrenTop==displayObject){
 					_childrenTop = displayObject->_prev;
 				}
+				displayObject->_parent = 0;
 				dirty();
 				break;
 			}
@@ -159,6 +175,7 @@ namespace mac{
 				if (_childrenTop==displayObject){
 					_childrenTop = displayObject->_prev;
 				}
+				displayObject->_parent = 0;
 				dirty();
 				break;
 			}
@@ -431,6 +448,15 @@ namespace mac{
 	}
 
 	/**
+	 * @brief Convert a rect in global coordinates to local coordinates
+	 * 
+	 * @param rect (out) The rext with global coordinate
+	 */
+	void DisplayObject::globalToLocal( ClipRect* rect ) {
+		rect->translate( -globalBounds->x, -globalBounds->y );
+	}
+
+	/**
 	 * @brief Begin the render sweep for the current frame
 	* @param updateArea The area of the display being updated
 	*/
@@ -438,7 +464,7 @@ namespace mac{
 		_dirty = false;
 		renderBounds->set( updateArea );
 		renderBounds->clip( globalBounds );
-		renderBounds->translate( -_localBounds->x - _ox, -_localBounds->y - _oy );
+		globalToLocal( renderBounds );
 	}
 	
 } // namespace

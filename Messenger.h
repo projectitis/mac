@@ -146,7 +146,6 @@ namespace mac{
 			 * @return boolean True to continue to listen for events, false to remove this listener
 			 */
 			boolean listen( uint32_t event, void* messageData ){
-				Serial.println("listen");
 				if (this->callback) return this->callback( event, messageData );
 				return true;
 			}

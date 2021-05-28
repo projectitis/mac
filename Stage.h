@@ -160,7 +160,7 @@ namespace mac{
 			 * children, and insert into the display list.
 			 * @param children The children to add
 			 */
-			void _traverse( Display* display, DisplayObject* child, float px, float py );
+			void _traverse( Display* display, DisplayObject* child, boolean forceDirty, float px, float py );
 
 			/**
 			 * Clear a DisplayList

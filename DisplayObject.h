@@ -159,6 +159,17 @@ namespace mac{
 			boolean visible();
 
 			/**
+			 * @brief Return parent
+			 * @return DisplayObject* The parent display object, or null
+			 */
+			DisplayObject* parent();
+
+			/**
+			 * Return true if there is a parent
+			 */
+			boolean hasParent();
+
+			/**
 			 * Add a display object to the top of the list
 			 */
 			void addChild( DisplayObject* child );
@@ -323,6 +334,13 @@ namespace mac{
 			 * @return float The local Y coordinate
 			 */
 			float globalToLocalY( float y );
+
+			/**
+			 * @brief Convert a rect in global coordinates to local coordinates
+			 * 
+			 * @param rect (out) The rext with global coordinate
+			 */
+			void globalToLocal( ClipRect* rect );
 
 			/**
 			 * Set dirty
