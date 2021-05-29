@@ -30,6 +30,7 @@
 #ifndef _MAC_DISPLAYOBJECTH_
 #define _MAC_DISPLAYOBJECTH_ 1
 
+#include "IDrawable.h"
 #include "Messenger.h"
 #include "Tween.h"
 
@@ -57,7 +58,7 @@ namespace mac{
 	/**
 	 * The base class for all display objects (@see Stage)
 	 */
-	class DisplayObject: public Listener {
+	class DisplayObject: public Listener, IDrawable {
 		friend class Stage;
 		public:
 			/**
@@ -364,7 +365,7 @@ namespace mac{
 			 * 		endRender
 			 * @param updateArea The area of the display being updated
 			 */
-			virtual void beginRender( ClipRect* updateArea );
+			void beginRender( ClipRect* updateArea );
 
 			/**
 			 * @Brief Initialise the next line to be read for rendering
@@ -375,7 +376,7 @@ namespace mac{
 			 * 
 			 * @param ry The current Y position (line) in local coordinates
 			 */
-			virtual void beginLine( int16_t ry ){}
+			void beginLine( int16_t ry ){}
 
 			/**
 			 * @brief Calculate the pixel to be rendered at the current position
@@ -391,7 +392,7 @@ namespace mac{
 			 * @param rx The current X position in local coordinates
 			 * @param ry The current Y position in local coordinates
 			 */
-			virtual void calcPixel( int16_t rx, int16_t ry ){
+			void calcPixel( int16_t rx, int16_t ry ){
 				_rc = 0;
 				_ra = 0.0;
 			}
@@ -406,7 +407,7 @@ namespace mac{
 			 * @param rx The current X position in local coordinates
 			 * @param ry The current Y position in local coordinates
 			 */
-			virtual void calcMaskPixel( int16_t rx, int16_t ry ){
+			void calcMaskPixel( int16_t rx, int16_t ry ){
 				_rc = 0;
 				_ra = 1.0;
 			}
@@ -420,13 +421,13 @@ namespace mac{
 			 * @param rx The current X position in local coordinates
 			 * @param ry The current Y position in local coordinates
 			 */
-			virtual void skipPixel( int16_t rx, int16_t ry ){}
+			void skipPixel( int16_t rx, int16_t ry ){}
 
 			/**
 			 * @brief End the render sweep for the current frame
 			 * @see beginRender
 			 */
-			virtual void endRender(){}
+			void endRender(){}
 
 		protected:
 
