@@ -52,6 +52,14 @@ namespace mac{
 	};
 
 	/**
+	 * Display size
+	 */
+	enum DisplaySize {
+	    displaySize_128x128,
+		displaySize_320x240,
+	};
+
+	/**
 	 * Holds the pixel data and state of the line buffer. There
 	 * are two of these - one for the sront and one for the back.
 	 */
@@ -212,6 +220,100 @@ namespace mac{
 			 * the buffer is flipped, and can be set back to 0 (not ready) when back buffer has been drawn to the display.
 			 */
 			uint8_t ready = 0;
+
+			/**
+			 * Turn the backlight on or off. If the backlight pin is set, the backlight
+			 * is turned on automatically during init/construction. If you want it off, call
+			 * backlight(0) after construction.
+			 * @param	brightness	0.0 - 1.0
+			 **/
+			void backlight( float brightness );
+
+		protected:
+
+			/**
+			 * Pixel scale
+			 */
+			PixelScale _px;
+
+			/**
+			 * Backlight
+			 **/
+			uint8_t _bklt = 255;
+			boolean _bkltPWM = false;
+
+			/**
+			 * SPI
+			 **/
+			uint8_t _rst;
+			uint8_t _cs, _dc;
+			uint8_t _pcs_data, _pcs_command;
+			uint8_t _miso, _mosi, _sclk;
+
+			void waitFifoNotFull( void );
+			void waitFifoEmpty( void );
+			
+			/**
+			 * @brief Wait until SPI transaction is complete
+			 */
+			__attribute__((always_inline)) inline void waitTransmitComplete(void){
+				uint32_t tmp __attribute__((unused));
+				while (!(KINETISK_SPI0.SR & SPI_SR_TCF)) ; // wait until final output done
+				tmp = KINETISK_SPI0.POPR;                  // drain the final RX FIFO word
+			}
+			__attribute__((always_inline)) inline void waitTransmitComplete(uint32_t mcr){
+				uint32_t tmp __attribute__((unused));
+				while (1) {
+					uint32_t sr = KINETISK_SPI0.SR;
+					if (sr & SPI_SR_EOQF) break;  // wait for last transmit
+					if (sr &  0xF0) tmp = KINETISK_SPI0.POPR;
+				}
+				KINETISK_SPI0.SR = SPI_SR_EOQF;
+				SPI0_MCR = mcr;
+				while (KINETISK_SPI0.SR & 0xF0) {
+					tmp = KINETISK_SPI0.POPR;
+				}
+			}
+			
+			/**
+			 * @brief Write an SPI command
+			 */
+			__attribute__((always_inline)) inline void writeCommand(uint8_t c){
+				KINETISK_SPI0.PUSHR = c | (_pcs_command << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+				waitFifoNotFull();
+			}
+			__attribute__((always_inline)) inline void writeCommand_last(uint8_t c){
+				uint32_t mcr = SPI0_MCR;
+				KINETISK_SPI0.PUSHR = c | (_pcs_command << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_EOQ;
+				waitTransmitComplete(mcr);
+			}
+			
+			/**
+			 * @brief Write SPI data
+			 */
+			__attribute__((always_inline)) inline void writeData8(uint8_t c){
+				KINETISK_SPI0.PUSHR = c | (_pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+				waitFifoNotFull();
+			}
+			__attribute__((always_inline)) inline void writeData8_last(uint8_t c){
+				uint32_t mcr = SPI0_MCR;
+				KINETISK_SPI0.PUSHR = c | (_pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_EOQ;
+				waitTransmitComplete(mcr);
+			}
+			__attribute__((always_inline)) inline void writeData16(uint16_t d){
+				KINETISK_SPI0.PUSHR = d | (_pcs_data << 16) | SPI_PUSHR_CTAS(1) | SPI_PUSHR_CONT;
+				waitFifoNotFull();
+			}
+			__attribute__((always_inline)) inline void writeData16_last(uint16_t d){
+				uint32_t mcr = SPI0_MCR;
+				KINETISK_SPI0.PUSHR = d | (_pcs_data << 16) | SPI_PUSHR_CTAS(1) | SPI_PUSHR_EOQ;
+				waitTransmitComplete(mcr);
+			}
+
+			/**
+			 * I2C
+			 **/
+			
 	};
 
 } // namespace

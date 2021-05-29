@@ -63,5 +63,43 @@ namespace mac{
 		data[frontIndex].x2 = data[backIndex].x2;
 		ready = 1;
 	}
+
+	/**
+	 * Turn the backlight on or off. If the backlight pin is set, the backlight
+	 * is turned on automatically during init/construction. If you want it off, call
+	 * setbacklight(0) after construction.
+	 * @param	brightness	0.0 - 1.0 (PWM)
+	 **/
+	void Display::backlight( float brightness ){
+		if (_bklt==255) return;
+		brightness = alphaClamp( brightness );
+		if (brightness == 0) digitalWrite( _bklt, LOW );
+		else if (_bkltPWM) analogWrite( _bklt, (uint8_t)(255.0*brightness) );
+		else digitalWrite( _bklt, HIGH );
+	}
+	
+	/**
+	 * @brief Wait until there is space on the SPI fifo
+	 */
+	void Display::waitFifoNotFull(void) {
+		uint32_t sr;
+		uint32_t tmp __attribute__((unused));
+		do {
+			sr = KINETISK_SPI0.SR;
+			if (sr & 0xF0) tmp = KINETISK_SPI0.POPR;  // drain RX FIFO
+		} while ((sr & (15 << 12)) > (3 << 12));
+	}
+
+	/**
+	 * @brief Wait until the SPI fifo is empty
+	 */
+	void Display::waitFifoEmpty(void) {
+		uint32_t sr;
+		uint32_t tmp __attribute__((unused));
+		do {
+			sr = KINETISK_SPI0.SR;
+			if (sr & 0xF0) tmp = KINETISK_SPI0.POPR;  // drain RX FIFO
+		} while ((sr & 0xF0F0) > 0);             // wait both RX & TX empty
+	}
 	
 } // namespace
