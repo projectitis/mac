@@ -120,7 +120,7 @@ namespace mac{
 		_bklt = bklt;
 		_bkltPWM = false;
 		_xoffset = 2;
-		_yoffset = 2;
+		_yoffset = 3;
 		switch (sz){
 			case displaySize_128x128:
 			default:
