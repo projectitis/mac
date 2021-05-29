@@ -44,6 +44,6 @@
 #include "App.h"
 #include "Stage.h"
 #include "DisplayILI9341.h"
-#include "DisplaySSD1306.h"
+#include "DisplayST7735.h"
 
 #endif

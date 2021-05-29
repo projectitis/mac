@@ -62,8 +62,8 @@
  */
 
 #pragma once
-#ifndef _MAC_DISPLAYILI9341H_
-#define _MAC_DISPLAYILI9341H_ 1
+#ifndef _MAC_DISPLAYST7735H_
+#define _MAC_DISPLAYST7735H_ 1
 
 #include "Display.h"
 
@@ -75,35 +75,33 @@
  * be useful in other projects.
  **/
 namespace mac{
-
+	
 	/**
-	 * Display base class for ILI9341 displays.
+	 * Display base class for ST7735 displays.
 	 * A contructor overload should be implemented for each communication type. At the moment
-	 * only 4-wire SPI is implemented.
+	 * only 3-wire SPI is implemented.
 	 **/
-	class DisplayILI9341: public Display {
+	class DisplayST7735: public Display {
 		public:
 			
 			/**
 			 * Constructor for 4-wire SPI.
 			 * Note - constructor calls init, so you don't need to.
 			 * @param	cs		Pin used for Chip Select
-			 * @param	dc		Pin used for Data Control
+			 * @param	dc		Pin used for Data Control (sometimes A0)
 			 * @param	rst		Pin used for Reset (optional. 255=unused)
-			 * @param	mosi	Pin used for MOSI communication (data out from master)
-			 * @param	sclk	Pin used for clock
-			 * @param	miso	Pin used for MISO communication (data out from slave)
+			 * @param	mosi	Pin used for MOSI communication (data out from master, sometimes SDA)
+			 * @param	sclk	Pin used for clock (sck)
 			 * @param	bklt	Pin used for backlight (optional. 255=unused)
 			 * @param	px 		Scale factor from framebuffer to display. Normally 1:1 (pixelScale_1x1)
 			 **/
-			DisplayILI9341(
-				DisplaySize sz,	// size320x240
+			DisplayST7735(
+				DisplaySize sz,	// displaySize_128x128
 				uint8_t cs,		// 10
 				uint8_t dc,		// 15
 				uint8_t rst		= 4,
 				uint8_t mosi	= 11,
 				uint8_t sclk	= 13,
-				uint8_t miso	= 12,
 				uint8_t bklt	= 6,
 				PixelScale px 	= pixelScale_1x1
 			);
@@ -111,31 +109,39 @@ namespace mac{
 			/**
 			 * Destructor
 			 */
-			~DisplayILI9341( void );
+			~DisplayST7735( void );
 
 			/**
 			 * Flip the front and back buffers, and trigger the drawing of the back buffer
 			 * to the display. Moves the front buffer to the next line.
 			 */
 			void flip();
-
-			/**
-			 * Resets the region without changing it. This resets the line buffer to
-			 * start of the region. The backbuffer is not affected until the next flip.
-			 */
-			void reset();
-
+			
 			/**
 			 * Initialise the display. Called from the constructor.
 			 **/
 			void init( void );
 			
 		protected:
+
+			/**
+			 * @brief Pixel offset
+			 */
+			int8_t _xoffset = 0;
+			int8_t _yoffset = 0;
 			
 			/**
-			 * Set aera of the display to render to
+			 * @brief Get the Init Commands list
+			 * Override this in subclasses to porvide custom init commands
+			 * @return const uint8_t* 
+			 */
+			virtual const uint8_t* getInitCommands();
+			
+			/**
+			 * Display controls
 			 **/
 			__attribute__((always_inline)) inline void setDestinationLine( LineBufferData *data );
+
 	};
 
 } // namespace
