@@ -27,11 +27,12 @@
  */	
 
 #pragma once
-#ifndef _MAC_RECTANGLEH_
-#define _MAC_RECTANGLEH_ 1
+#ifndef _MAC_GRADIENTH_
+#define _MAC_GRADIENTH_ 1
 
-#include "DisplayObject.h"
-#include "Gradient.h"
+#include "IDrawable.h"
+#include "Bitmap.h"
+#include "Vector2D.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -43,33 +44,54 @@
 namespace mac{
 
 	/**
-	 * A rectangle
+	 * @brief A gradient stop
+	 * XXX: Pool/recycle
 	 */
-	class Box: public DisplayObject {
+	class GradientStop {
+		public:
+			GradientStop( color888 color, float alpha, float position );
+
+			void set( color888 color, float alpha, float position );
+
+			void update();
+
+			color888 color = 0;
+			float alpha = 1.0;
+			float position = 0;
+
+			GradientStop* next = 0;
+
+			float r;
+			float g;
+			float b;
+			float a;
+			float dr = 0.0;
+			float dg = 0.0;
+			float db = 0.0;
+			float da = 0.0;
+	};
+
+	/**
+	 * A gradient
+	 */
+	class Gradient: public IDrawable {
 		
 		public:
 			/**
 			 * Memory pool of recycled objects
 			 */
-			static DisplayObject* pool;
+			static Gradient* pool;
 
 			/**
 			 * Create a new object or take one from the pool
 			 * @return The new or recycled object
 			 */
-			static Box* Create();
-			static Box* Create( int16_t x, int16_t y, int16_t w, int16_t h );
-			static Box* Create( ClipRect* rect );
+			static Gradient* Create();
 
 			/**
-			 * Type identifier for this object
-			 **/
-			static const DisplayObjectType TYPE = DisplayObjectType::box;
-
-			/**
-			 * @brief Destroy the Box object
+			 * Return this object to the pool
 			 */
-			~Box();
+			void recycle();
 
 			/**
 			 * Reset the object back to default settings
@@ -77,23 +99,32 @@ namespace mac{
 			void reset();
 
 			/**
-			 * @brief Provide the points that define the shape
-			 * If the first and last points are different, the are automatically joined
-			 * 
-			 * @param points An array of points
-			 * @param len The number of points
+			 * @brief Construct a new Gradient object
 			 */
-			void set( int16_t x, int16_t y, int16_t w, int16_t h );
+			Gradient();
 
 			/**
-			 * Color. Note that if a gradient is set, it will be used instead
+			 * @brief Destroy the Gradient object
 			 */
-			color888 color;
+			virtual ~Gradient();
 
 			/**
-			 * Gradient. If set, will be sued instead of color
+			 * @brief Specify the start and end points
 			 */
-			Gradient* gradient;
+			void set( float x, float y, float x2, float y2 );
+
+			color888 rc(){ return _rc; }
+
+			float ra(){ return _ra; }
+
+			/**
+			 * @brief Add a gradient stop
+			 * A stop at the same position as another will replace the first
+			 * @param color The color of the stop
+			 * @param alpha The alpha at the stop
+			 * @param position The position along the gradient (0.0 - 1.0)
+			 */
+			void setStop( color888 color, float alpha, float position );
 
 			/**
 			 * @brief Begin the render sweep for the current frame
@@ -114,19 +145,42 @@ namespace mac{
 			 */
 			void calcPixel( int16_t rx, int16_t ry );
 
-			/**
-			 * Skip a pixel
-			 * @param rx The x position in local coordinates
-			 * @param ry The y position in local coordinates
-			 */
 			void skipPixel( int16_t rx, int16_t ry );
 
 		protected:
-			
+
 			/**
-			 * Pool getter
+			 * Pointer to next object in memory pool of recycled objects
 			 */
-			DisplayObject** _getPool() override;
+			Gradient* _poolNext = 0;
+
+			/**
+			 * @brief The color from the previous call to readPixel
+			 */
+			color888 _rc = 0;
+
+			/**
+			 * @brief The alpha from the previous call to readPixel or readMaskPixel
+			 */
+			float _ra = 1.0;
+
+			/**
+			 * @brief The stops that make up this gradient
+			 */
+			GradientStop* stops = 0;
+
+			float _x = 0;
+			float _y = 0;
+			float _x2 = 0;
+			float _y2 = 0;
+			float _a = 0;
+			float _m = 0;
+
+			int16_t _updateX = 0;
+			float _xStep = 0;
+			float _yStep = 0;
+			float _pos = 0;
+			GradientStop* activeStop = 0;
 
 	};
 	

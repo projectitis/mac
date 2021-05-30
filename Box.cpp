@@ -45,6 +45,14 @@ namespace mac{
 	}
 
 	/**
+	 * @brief Destroy the Box object
+	 * Should not be called normally. use recycle and Create where possible
+	 */
+	Box::~Box(){
+		if (gradient) delete gradient;
+	}
+
+	/**
 	 * Reset the object back to default settings
 	 */
 	void Box::reset(){
@@ -65,13 +73,46 @@ namespace mac{
 	}
 
 	/**
+	 * @brief Begin the render sweep for the current frame
+	 * @param updateArea The area of the display being updated
+	 */
+	void Box::beginRender( ClipRect* updateArea ) {
+		DisplayObject::beginRender( updateArea );
+		if (gradient) gradient->beginRender( updateArea );
+	}
+
+	/**
+	 * prepare to render the next line
+	 * @param ry The y position in local coordinates
+	 */
+	void Box::beginLine( int16_t ry ) {
+		if (gradient) gradient->beginLine( ry );
+	}
+
+	/**
 	 * Read a pixel from the sprite and advance position
 	 * @param c (out) color
 	 * @param a (out) alpha
 	 */
 	void Box::calcPixel( int16_t rx, int16_t ry ) {
-		_ra = 1;
-		_rc = color;
+		if (gradient) {
+			gradient->calcPixel( rx, ry );
+			_ra = gradient->ra();
+			_rc = gradient->rc();
+		}
+		else {
+			_ra = 1;
+			_rc = color;
+		}	
+	}
+
+	/**
+	 * Skip a pixel
+	 * @param rx The x position in local coordinates
+	 * @param ry The y position in local coordinates
+	 */
+	void Box::skipPixel( int16_t rx, int16_t ry ) {
+		if (gradient) gradient->skipPixel( rx, ry );
 	}
 	
 } // namespace
