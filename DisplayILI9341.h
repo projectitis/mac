@@ -100,12 +100,6 @@ namespace mac{
 			void flip();
 
 			/**
-			 * Resets the region without changing it. This resets the line buffer to
-			 * start of the region. The backbuffer is not affected until the next flip.
-			 */
-			void reset();
-
-			/**
 			 * Initialise the display. Called from the constructor.
 			 **/
 			void init( void );

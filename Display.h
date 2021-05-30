@@ -42,6 +42,11 @@
 namespace mac{
 
 	/**
+	 * Define SPI parameters
+	 **/
+	#define SPICLOCK	60e6
+
+	/**
 	 * Pixel scaling.
 	 */
 	enum PixelScale {
