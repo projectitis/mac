@@ -37,28 +37,8 @@
  *		Frank Bösing / ILI9341_t3DMA - https://github.com/FrankBoesing/ILI9341_t3DMA
  *		KurtE / ILI9341_t3n - https://github.com/KurtE/ILI9341_t3n
  *
- * TEENSY VERSION SUPPORT
- * The amount of memory will dictate how you use the framebuffer. The framebuffer supports
- * up-scaling (PixelScale) whereby the framebuffer can be smaller, but each pixel is up-scaled
- * onto the display. It appears blockier because you have less pixels, but the framebuffer
- * memory requirement is smaller. For example, PixelScale of 4 (pixelScale_4x4) means each pixel in the
- * framebuffer is mapped to 4x4 pixels on the display. 
- * PixelScale	pixelScale_1x1	Requires 154k RAM (320x240 x 16bit)		Teensy 3.5, 3.6
- * PixelScale	pixelScale_2x2	Requires 39k RAM (160x120 x 16bit)		Teensy 3.1, 3.2
- * PixelScale	pixelScale_4x4	Requires 10k RAM (80x60 x 16bit)		
- *
  * XXX: DMA SUPPORT - NOT YET IMPLEMENTED
- * To compile with or without DMA, see the GRAPHICS_USE_DMA define in Display.h
- * 
- * XXX: LINE BUFFER SUPPORT - PLANNED, NOT YET IMPLEMENTED
- * The mac graphics libraries are being rewritten to use a line (double) buffer instead of a frame buffer.
- * This means that the memory requirements will be much lower. For example, a full framebuffer at 1x1 pixel
- * scale requires 154k of RAM (at 16bpp) and a double-buffer would require 307k. A double line buffer requires
- * 3.2k (1% of the size). 
- * A line buffer for a 320x240 16bpp display is made up of:
- * 		front buffer: 24bpp x 320 pixels + 16bpp x 320 pixels
- * 		back buffer:  24bpp x 320 pixels + 16bpp x 320 pixels
- * 
+ * To compile with or without DMA, see the MAC_USE_DMA define in Common.h
  */
 
 #pragma once

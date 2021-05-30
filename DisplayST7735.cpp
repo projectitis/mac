@@ -71,19 +71,6 @@ typedef enum {
 } ST7735_Command;
 
 /**
- * Define SPI parameters
- **/
-#define MADCTL_MY	0x80
-#define MADCTL_MX	0x40
-#define MADCTL_MV	0x20
-#define MADCTL_ML	0x10
-#define MADCTL_RGB	0x00
-#define MADCTL_BGR	0x08
-#define MADCTL_MH	0x04
-
-#define SPICLOCK	60e6
-
-/**
  * mac (or μac) stands for "Microprocessor App Creator"
  * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
