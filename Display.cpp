@@ -7,11 +7,6 @@
 #include "Display.h"
 
 /**
- * Define SPI parameters
- **/
-#define SPICLOCK	60e6
-
-/**
  * mac (or μac) stands for "Microprocessor App Creator"
  * mac is a project that enables creating beautiful and useful apps on the
  * Teensy microprocessor, but hopefully is generic enough to be ported to other
