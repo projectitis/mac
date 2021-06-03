@@ -97,8 +97,8 @@ namespace mac{
 	void Box::calcPixel( int16_t rx, int16_t ry ) {
 		if (gradient) {
 			gradient->calcPixel( rx, ry );
-			_ra = gradient->ra();
-			_rc = gradient->rc();
+			_ra = gradient->ra;
+			_rc = gradient->rc;
 		}
 		else {
 			_ra = 1;

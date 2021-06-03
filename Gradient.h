@@ -46,25 +46,48 @@ namespace mac{
 	/**
 	 * @brief A gradient stop
 	 * XXX: Pool/recycle
-	 */
+	 *
 	class GradientStop {
 		public:
 			GradientStop( color888 color, float alpha, float position );
 
 			void set( color888 color, float alpha, float position );
 
-			void update();
+			void reset( float pos, float gStep );
+
+			void step();
+
+			void calc();
 
 			color888 color = 0;
 			float alpha = 1.0;
 			float position = 0;
+			float distance = 0;
+			float dStep = 0;
 
 			GradientStop* next = 0;
+			GradientStop* prev = 0;
 
 			float r;
 			float g;
 			float b;
 			float a;
+			float dr = 0.0;
+			float dg = 0.0;
+			float db = 0.0;
+			float da = 0.0;
+	}; */
+	class GradientStop {
+		public:
+			color888 color = 0;
+			float alpha = 1.0;
+			float position = 0.0;
+			float distance = 0.0;
+			float dStep = 0.0;
+			float r = 0.0;
+			float g = 0.0;
+			float b = 0.0;
+			float a = 0.0;
 			float dr = 0.0;
 			float dg = 0.0;
 			float db = 0.0;
@@ -86,7 +109,7 @@ namespace mac{
 			 * Create a new object or take one from the pool
 			 * @return The new or recycled object
 			 */
-			static Gradient* Create();
+			static Gradient* Create( uint8_t numStops );
 
 			/**
 			 * Return this object to the pool
@@ -111,20 +134,17 @@ namespace mac{
 			/**
 			 * @brief Specify the start and end points
 			 */
-			void set( float x, float y, float x2, float y2 );
-
-			color888 rc(){ return _rc; }
-
-			float ra(){ return _ra; }
+			void position( float x, float y, float x2, float y2 );
 
 			/**
-			 * @brief Add a gradient stop
-			 * A stop at the same position as another will replace the first
+			 * @brief Set a gradient stop
+			 * @param index The stop index
 			 * @param color The color of the stop
 			 * @param alpha The alpha at the stop
 			 * @param position The position along the gradient (0.0 - 1.0)
+			 * @return self, for chaining
 			 */
-			void setStop( color888 color, float alpha, float position );
+			Gradient* stop( uint8_t index, color888 color, float alpha, float position );
 
 			/**
 			 * @brief Begin the render sweep for the current frame
@@ -145,7 +165,18 @@ namespace mac{
 			 */
 			void calcPixel( int16_t rx, int16_t ry );
 
+
 			void skipPixel( int16_t rx, int16_t ry );
+
+			/**
+			 * @brief The color value result of calcPixel
+			 */
+			color888 rc;
+
+			/**
+			 * @brief The alpha value result of calcPixel
+			 */
+			float ra;
 
 		protected:
 
@@ -155,31 +186,39 @@ namespace mac{
 			Gradient* _poolNext = 0;
 
 			/**
-			 * @brief The color from the previous call to readPixel
+			 * @brief The number of stops
 			 */
-			color888 _rc = 0;
-
-			/**
-			 * @brief The alpha from the previous call to readPixel or readMaskPixel
-			 */
-			float _ra = 1.0;
+			uint8_t numStops = 0;
 
 			/**
 			 * @brief The stops that make up this gradient
 			 */
 			GradientStop* stops = 0;
 
+			/**
+			 * @brief Flag to indicate if stops need recalculating
+			 */
+			boolean _needsCalc = true;
+
 			float _x = 0;
 			float _y = 0;
 			float _x2 = 0;
 			float _y2 = 0;
-			float _a = 0;
-			float _m = 0;
 
-			int16_t _updateX = 0;
-			float _xStep = 0;
-			float _yStep = 0;
+			float _cos = 0;
+			float _sin = 0;
+			float _len = 0;
+
+			float _x0 = 0;
+			float _y0 = 0;
+			float _pos0 = 0;
+			float _reverse = false;
+			boolean _steep = false;
+
+			float _dx = 0;
+			float _dy = 0;
 			float _pos = 0;
+
 			GradientStop* activeStop = 0;
 
 	};
