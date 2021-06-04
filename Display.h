@@ -31,6 +31,7 @@
 #define _MAC_DISPLAYH_ 1
 
 #include "Common.h"
+#include "Bitmap.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -186,8 +187,8 @@ namespace mac{
 			 * @param  a 	The alpha (0.0 - 1.0)
 			 * @param  x 	The X coordinate
 			 */
-			inline void blend( color888 c, alpha a, int16_t x ) {
-				data[frontIndex].pixels[x] = alphaBlend8888( data[frontIndex].pixels[x], c, alpha8bit( a ) );
+			inline void blend( color888 c, alpha_t a, int16_t x ) {
+				data[frontIndex].pixels[x] = blend888( data[frontIndex].pixels[x], c, alpha8bit( a ) );
 			}
 
 			/**
@@ -197,7 +198,7 @@ namespace mac{
 			 * @param  x 	The X coordinate
 			 */
 			inline void blend( color888 c, uint8_t a, int16_t x ) {
-				data[frontIndex].pixels[x] = alphaBlend8888( data[frontIndex].pixels[x], c, a );
+				data[frontIndex].pixels[x] = blend888( data[frontIndex].pixels[x], c, a );
 			}
 
 			/**

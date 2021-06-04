@@ -33,6 +33,7 @@
 #include "IDrawable.h"
 #include "Messenger.h"
 #include "Tween.h"
+#include "Color8888.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"

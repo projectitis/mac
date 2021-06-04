@@ -31,6 +31,7 @@
 #define _MAC_RECTANGLEH_ 1
 
 #include "DisplayObject.h"
+#include "Gradient.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -66,6 +67,11 @@ namespace mac{
 			static const DisplayObjectType TYPE = DisplayObjectType::box;
 
 			/**
+			 * @brief Destroy the Box object
+			 */
+			~Box();
+
+			/**
 			 * Reset the object back to default settings
 			 */
 			void reset();
@@ -80,16 +86,40 @@ namespace mac{
 			void set( int16_t x, int16_t y, int16_t w, int16_t h );
 
 			/**
-			 * Color
+			 * Color. Note that if a gradient is set, it will be used instead
 			 */
 			color888 color;
 
 			/**
-			 * Read a pixel from the sprite and advance position
+			 * Gradient. If set, will be sued instead of color
+			 */
+			Gradient* gradient;
+
+			/**
+			 * @brief Begin the render sweep for the current frame
+			 * @param updateArea The area of the display being updated
+			 */
+			void beginRender( ClipRect* updateArea );
+
+			/**
+			 * prepare to render the next line
+			 * @param ry The y position in local coordinates
+			 */
+			void beginLine( int16_t ry );
+
+			/**
+			 * Read a pixel
 			 * @param rx The x position in local coordinates
 			 * @param ry The y position in local coordinates
 			 */
 			void calcPixel( int16_t rx, int16_t ry );
+
+			/**
+			 * Skip a pixel
+			 * @param rx The x position in local coordinates
+			 * @param ry The y position in local coordinates
+			 */
+			void skipPixel( int16_t rx, int16_t ry );
 
 		protected:
 			

@@ -48,11 +48,10 @@
 
 #include <Arduino.h>
 #include "ClipRect.h"
-#include "Bitmap.h"
 
 namespace mac{
 	/**
-	 * Swap two values
+	 * @brief Swap two values
 	 **/
 	template<typename T>
 	inline void swap(T &a, T &b){
@@ -60,22 +59,13 @@ namespace mac{
 		a = b;
 		b = t;
 	}
-	
+
 	/**
-	 * Defines a 2-D vertex (unsigned long)
-	 **/
-	typedef struct VertexS {
-		int32_t x;			// X position
-		int32_t y;			// Y position
-	} Vertex;
-	
-	/**
-	 * Defines a 2-D vertex (float)
-	 **/
-	typedef struct VertexFS {
-		float x;			// X position
-		float y;			// Y position
-	} VertexF;
+	 * @brief Linear interpolation between two values
+	 */
+	inline float lerp( float a, float b, float k ) {
+		return a + k * (b - a);
+	}
 
 } // ns::mac
 

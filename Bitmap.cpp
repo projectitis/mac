@@ -62,110 +62,6 @@ namespace mac{
 	uint8_t pixelFormatByteWidth( PixelFormat pixelFormat ){
 		return pixelFormatBitWidth( pixelFormat ) >> 3;
 	}
-
-	/**
-	 * ###
-	 * ### COLOR PREPARED
-	 * ###
-	 */
-
-	/**
-	 * Constructor
-	 */
-	PreparedColorS::PreparedColorS( color888 c, alpha a, PixelFormat pixelFormat ){
-		this->pf = pixelFormat;
-		this->setAlpha( a );
-		this->setColor( c );
-	}
-
-	/**
-	 * Set the alpha value as float
-	 * @param a  Alpha (0.0 - 1.0)
-	 */
-	void PreparedColorS::setAlpha( alpha a ){
-		this->a = alphaClamp( a );
-		switch (this->pf){
-			case PF_565:
-				this->a5 = (uint8_t)(this->a*31);
-				break;
-			case PF_888:
-				this->a8 = (uint8_t)(this->a*255);
-				break;
-			case PF_INDEXED:// XXX: Indexed and mono
-			default:
-				break;
-		}
-	}
-
-	/**
-	 * Set the alpha value as 8-bit
-	 * @param a  Alpha (0 - 255)
-	 */
-	void PreparedColorS::setAlpha( uint8_t a ){
-		setAlpha( (float)(a / 255) );
-	}
-
-	/**
-	 * Set the color as 24-bit RGB888
-	 * @param c The color
-	 */
-	void PreparedColorS::setColor( color888 c ){
-		this->c = c;
-		switch (this->pf){
-			case PF_565:
-				this->c565 = convert888to565( this->c );
-				this->cPre = colorPrepare565( this->c565 );
-				break;
-			case PF_888:
-				colorPrepare888( c, this->cRB, this->cG );
-				break;
-			case PF_INDEXED:// XXX: Indexed and mono
-			default:
-				break;
-		}
-	}
-
-	/**
-	 * Set the color as R G B components
-	 * @param R 	Color red component
-	 * @param G 	Color green component
-	 * @param B 	Color blue component
-	 */
-	void PreparedColorS::setColor( uint8_t R, uint8_t G, uint8_t B ){
-		setColor( R<<16 | G<<8 | B );
-	}
-
-	/**
-	 * Set the color as 24-bit RGB888, and the alpha as float
-	 * @param c   	The color
-	 * @param a 	The alpha (0.0 - 1.0)
-	 */
-	void PreparedColorS::set( color888 c, alpha a ){
-		setColor( c );
-		setAlpha( a );
-	}
-
-	/**
-	 * Set the color as 24-bit RGB888, and the alpha as 8-bit
-	 * @param c   	The color
-	 * @param a 	The alpha (0 - 255)
-	 */
-	void PreparedColorS::set( color888 c, uint8_t a ){
-		setColor( c );
-		setAlpha( (float)(a / 255) );
-	}
-
-	/**
-	 * Set the color as R G B components, and the alpha as 8-bit
-	 * @param R 	Color red component
-	 * @param G 	Color green component
-	 * @param B 	Color blue component
-	 * @param a 	The alpha (0 - 255)
-	 */
-	void PreparedColorS::set( uint8_t R, uint8_t G, uint8_t B, uint8_t A ){
-		setColor( R<<16 | G<<8 | B );
-		setAlpha( (float)(a / 255) );
-	}
 	
 	/**
 	 *  ######   #####  ######
@@ -468,13 +364,12 @@ namespace mac{
 	void get1as8888( uint8_t* p, uint32_t i, uint32_t& c ){
 		p += (i >> 3);
 		i = i - ((i >> 3) << 3); // rem 0-7
-		c = ((p[0] >> (7-i)) & 0b1)?RGB888_White:RGB888_Black;
+		c = ((p[0] >> (7-i)) & 0b1)?ARGB8888_White:ARGB8888_Black;
 	}
 
 	/**
 	 * Use getAccessor8888 on a tilemap to choose the correct data access function.
 	 */
-	typedef void (*access8888)( uint8_t*, uint32_t, uint32_t& );
 	access8888 getAccessor8888( PixelFormat pixelFormat ){
 		switch (pixelFormat){
 			case mac::PF_565: return get565as8888;

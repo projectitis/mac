@@ -37,9 +37,9 @@ namespace mac{
 		return (Sprite*)DisplayObject::Create<Sprite>();
 	}
 
-	Sprite* Sprite::Create( Tilemap* tilemap, uint16_t tileIndex ){
+	Sprite* Sprite::Create( const TilemapData* tilemapData, uint16_t tileIndex ){
 		Sprite* sprite = (Sprite*)DisplayObject::Create<Sprite>();
-		sprite->set( tilemap, tileIndex );
+		sprite->set( tilemapData, tileIndex );
 		return sprite;
 	}
 
@@ -51,16 +51,16 @@ namespace mac{
 	}
 
 	/**
-	 * Set the tilemap and the tileIndex that the sprite uses.
-	 * @param tilemap 	The tilemap to use
-	 * @param tileIndex The index of teh active tile
+	 * Set the tilemapData and the tileIndex that the sprite uses.
+	 * @param tilemapData 	The tilemap data to use
+	 * @param tileIndex 	The index of teh active tile
 	 */
-	void Sprite::set( Tilemap* tilemap, uint16_t tileIndex ) {
-		this->tilemap = tilemap;
+	void Sprite::set( const TilemapData* tilemapData, uint16_t tileIndex ) {
+		this->tilemapData = tilemapData;
 		this->tileIndex = tileIndex;
-		width( tilemap->tileWidth );
-		height( tilemap->tileHeight );
-		_getPixelAs8888 = getAccessor8888( tilemap->pixelFormat );
+		width( tilemapData->tileWidth );
+		height( tilemapData->tileHeight );
+		_getPixelAs8888 = getAccessor8888( tilemapData->pixelFormat );
 		dirty();
 	}
 
@@ -81,23 +81,23 @@ namespace mac{
 	void Sprite::beginLine( int16_t ry ) {
 		switch (transform) {
 			case Transform::flipH: {
-				_dataOffset = (tileIndex * tilemap->tileHeight + ry + 1) * tilemap->tileWidth - renderBounds->x - 1;
+				_dataOffset = (tileIndex * tilemapData->tileHeight + ry + 1) * tilemapData->tileWidth - renderBounds->x - 1;
 				_dataStep = -1;
 				break;
 			}
 			case Transform::flipV: {
-				_dataOffset = ((tileIndex + 1) * tilemap->tileHeight - ry - 1) * tilemap->tileWidth + renderBounds->x;
+				_dataOffset = ((tileIndex + 1) * tilemapData->tileHeight - ry - 1) * tilemapData->tileWidth + renderBounds->x;
 				_dataStep = 1;
 				break;
 			}
 			case Transform::flipHV:
 			case Transform::rotate180: {
-				_dataOffset = ((tileIndex + 1) * tilemap->tileHeight - ry) * tilemap->tileWidth - renderBounds->x - 1;
+				_dataOffset = ((tileIndex + 1) * tilemapData->tileHeight - ry) * tilemapData->tileWidth - renderBounds->x - 1;
 				_dataStep = -1;
 				break;
 			}
 			default: {
-				_dataOffset = (tileIndex * tilemap->tileHeight + ry) * tilemap->tileWidth + renderBounds->x;
+				_dataOffset = (tileIndex * tilemapData->tileHeight + ry) * tilemapData->tileWidth + renderBounds->x;
 				_dataStep = 1;
 			}
 		}
@@ -109,7 +109,7 @@ namespace mac{
 	 * @param a (out) alpha
 	 */
 	void Sprite::calcPixel( int16_t rx, int16_t ry ) {
-		_getPixelAs8888( (uint8_t*)tilemap->data, _dataOffset, _rc );
+		_getPixelAs8888( (uint8_t*)tilemapData->data, _dataOffset, _rc );
 		_dataOffset += _dataStep;
 		switch (blendMode) {
 			case BlendMode::stamp: {

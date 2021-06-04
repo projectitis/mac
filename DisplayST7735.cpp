@@ -243,9 +243,9 @@ namespace mac{
 		uint16_t l = 1 << _px;
 		while (l--) {
 			i = back->x << _px;
-			while (i < (c + ((l>0)?1:0))) writeData16( convert888to565( back->pixels[ i++ >> _px ] ) );
+			while (i < (c + ((l>0)?1:0))) writeData16( to565( back->pixels[ i++ >> _px ] ) );
 		}
-		writeData16_last( convert888to565( back->pixels[ i >> _px ] ) );
+		writeData16_last( to565( back->pixels[ i >> _px ] ) );
 
 		// Done with complete transaction
 		SPI.endTransaction();
