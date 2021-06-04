@@ -119,7 +119,7 @@ namespace mac{
 		// Reset position
 		position(0,0,1.0,0);
 		// Remove stops
-		if (stops) delete stops[];
+		if (stops) delete[] stops;
 		stops = 0;
 	}
 
@@ -181,7 +181,7 @@ namespace mac{
 		float a = atan2f( -dy, -dx ) - PI/2;
 		_cos = -cosf( a );
 		_sin = -sinf( a );
-		
+
 		// Store edge
 		_x0 = updateArea->x;
 		// Calculate steps
@@ -208,24 +208,30 @@ Serial.printf(" dx=%f dy=%f\n", _dx, _dy);
 	void Gradient::beginLine( int16_t ry ) {
 //Serial.print("\nbeginLine");
 		if (_x == _x2) {
-			_pos = (ry - _y0) / _m + _pos0;
+			_pos = (ry - _y0) / _len + _pos0;
 		}
 		else{
-			float i = _x0 + _a * (ry - _y0);
-			_pos = i / _m + _pos0;
+			float i = _x0 + _cos * (ry - _y0);
+			_pos = i / _len + _pos0;
 		}
 Serial.printf(" %d: pos:%f\n", ry, _pos);
 
 		// Calculate the first stop on this line
-		activeStop = stops;
-		int n = 0;
-		while (activeStop->next) {
-			if (activeStop->next->position > _pos) break;
-			activeStop = activeStop->next;
-			n++;
+		if (_reverse) {
+			int n = numStops;
+			while (n-- > 0) {
+				activeStop = &stops[n];
+				if ((1 - activeStop->position - activeStop->distance) > _pos ) break;
+			}
 		}
-		activeStop->reset( _pos, _steep?_dy:_dx );
-//Serial.printf(" stop:%d\n",n);
+		else {
+			int n = 0;
+			while (n < numStops) {
+				activeStop = &stops[n];
+				if ((activeStop->position + activeStop->distance) > _pos ) break;
+				n++;
+			}
+		}
 	}
 
 	/**

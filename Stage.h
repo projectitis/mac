@@ -118,7 +118,7 @@ namespace mac{
 			/**
 			 * @brief Color for visual debugging
 			 */
-			color888 debugColor = RGB888_IndianRed;
+			color888 debugColor = ARGB8888_IndianRed;
 
 		protected:
 			
