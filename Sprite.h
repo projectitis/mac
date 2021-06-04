@@ -82,7 +82,7 @@ namespace mac{
 			 * @return The new or recycled object
 			 */
 			static Sprite* Create();
-			static Sprite* Create( Tilemap* tilemap, uint16_t tileIndex = 0 );
+			static Sprite* Create( const TilemapData* tilemapData, uint16_t tileIndex = 0 );
 
 			/**
 			 * Type identifier for this object
@@ -104,7 +104,7 @@ namespace mac{
 			 * The tilemap that contains the sprite bitmap data.
 			 * Do not change directly. Use set() to change this.
 			 */
-			Tilemap* tilemap;
+			const TilemapData* tilemapData;
 
 			/**
 			 * The index of the tile within the tilemap.
@@ -131,7 +131,7 @@ namespace mac{
 			 * @param tilemap 	The tilemap to use
 			 * @param tileIndex The index of teh active tile
 			 */
-			virtual void set( Tilemap* tilemap, uint16_t tileIndex = 0 );
+			virtual void set( const TilemapData* tilemapData, uint16_t tileIndex = 0 );
 
 			/**
 			 * prepare to render the next line

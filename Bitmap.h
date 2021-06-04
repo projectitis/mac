@@ -93,7 +93,7 @@ namespace mac{
 		uint32_t width;						// Width of bitmap
 		uint32_t height;					// height of bitmap
 		const uint8_t* data __attribute__ ((aligned (4))); // Data, aligned to 4-byte boundary
-	} Bitmap;
+	} BitmapData;
 	
 	/**
 	 * Holds details of a tile map in flash memory
@@ -107,7 +107,7 @@ namespace mac{
 		uint32_t tileHeight;				// height of each tile in the map
 		uint32_t tileCount;					// Number of tiles in the map
 		uint32_t tileStride;				// Stride of each tile in bytes
-	} Tilemap;
+	} TilemapData;
 
 	/**
 	 *  ######   #####  ######
