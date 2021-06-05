@@ -351,17 +351,7 @@ for file in list(resources):
 				c = 0
 		outstr += '};\n\n'
 		
-		# typedef struct {
-		# 	uint8_t pixelFormat;
-		# 	uint32_t transparentColor;
-		# 	uint32_t dataSize;
-		# 	uint8_t* data;
-		# 	uint32_t tileWidth;
-		# 	uint32_t tileHeight;
-		# 	uint32_t tileCount;
-		# 	uint32_t tileStride;
-		# } Tilemap;
-		outstr += 'const mac::Tilemap '+name+' = {\n'
+		outstr += 'const mac::TilemapData '+name+' = {\n'
 		outstr += '\t.pixelFormat = '+pfCodes[pfmt]+',\n'
 		outstr += '\t.transparentColor = '+trns+',\n'
 		outstr += '\t.dataSize = '+str(tp)+',\n'

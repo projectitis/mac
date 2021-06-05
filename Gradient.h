@@ -219,7 +219,7 @@ namespace mac{
 			float _dy = 0;
 			float _pos = 0;
 
-			GradientStop* activeStop = 0;
+			uint8_t activeStop = 0;
 
 	};
 	

@@ -161,15 +161,14 @@ namespace mac{
 		if (_needsCalc) {
 			_needsCalc = false;
 			uint8_t i = 0;
-			uint8_t n = 1;
-			while (n < numStops) {
-				n = i + 1;
+			uint8_t n = 0;
+			while (n++ < numStops) {
 				stops[i].distance = stops[n].position - stops[i].position;
 				stops[i].dr = (stops[n].r - stops[i].r);
 				stops[i].dg = (stops[n].g - stops[i].g);
 				stops[i].db = (stops[n].b - stops[i].b);
 				stops[i].da = (stops[n].a - stops[i].a);
-				i = n;
+				i++;
 			}
 		}
 
@@ -214,24 +213,20 @@ Serial.printf(" dx=%f dy=%f\n", _dx, _dy);
 			float i = _x0 + _cos * (ry - _y0);
 			_pos = i / _len + _pos0;
 		}
+		if (_reverse){
+			_pos = 1.0 - _pos;
+			_dx = -_dx;
+			_dy = -_dy;
+		}
 Serial.printf(" %d: pos:%f\n", ry, _pos);
 
 		// Calculate the first stop on this line
-		if (_reverse) {
-			int n = numStops;
-			while (n-- > 0) {
-				activeStop = &stops[n];
-				if ((1 - activeStop->position - activeStop->distance) > _pos ) break;
-			}
+		activeStop = 0;
+		while (activeStop < numStops) {
+			if ((stops[activeStop].position + stops[activeStop].distance) > _pos ) break;
+			activeStop++;
 		}
-		else {
-			int n = 0;
-			while (n < numStops) {
-				activeStop = &stops[n];
-				if ((activeStop->position + activeStop->distance) > _pos ) break;
-				n++;
-			}
-		}
+		if (activeStop==numStops) activeStop--;
 	}
 
 	/**
@@ -241,20 +236,20 @@ Serial.printf(" %d: pos:%f\n", ry, _pos);
 	 */
 	void Gradient::calcPixel( int16_t rx, int16_t ry ) {
 //Serial.printf("  %d:", rx);
-		_rc = (((uint8_t)activeStop->r) << 16) | (((uint8_t)activeStop->g) << 8) | (uint8_t)activeStop->b;
-		_ra = activeStop->a;
-		if (activeStop->next) {
+		rc = (((uint8_t)stops[activeStop].r) << 16) | (((uint8_t)stops[activeStop].g) << 8) | (uint8_t)stops[activeStop].b;
+		ra = stops[activeStop].a;
+		if (activeStop < (numStops-1)) {
 			_pos += _steep?_dy:_dx;
 //Serial.printf(" %f", _pos);
-			if (_pos >= activeStop->next->position) {
-				while (activeStop->next && (_pos >= activeStop->next->position)){
-					activeStop = activeStop->next;
+			if (_pos >= stops[activeStop+1].position) {
+				while ((activeStop < (numStops-1)) && (_pos >= stops[activeStop+1].position)){
+					activeStop++;
 //Serial.print(" stop");
 				}
-				activeStop->reset( _pos, _steep?_dy:_dx );
+				//stops[activeStop].reset( _pos, _steep?_dy:_dx );
 			}
 			else if (_pos >= 0.0) {
-				activeStop->step();
+				//stops[activeStop].step();
 			}
 		}
 //Serial.println();
