@@ -78,7 +78,7 @@ namespace mac{
 	 */
 	void Box::beginRender( ClipRect* updateArea ) {
 		DisplayObject::beginRender( updateArea );
-		if (gradient) gradient->beginRender( updateArea );
+		if (gradient) gradient->beginRender( renderBounds );
 	}
 
 	/**

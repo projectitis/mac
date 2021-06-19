@@ -47,43 +47,40 @@ namespace mac{
 	 * @brief A gradient stop
 	 * XXX: Pool/recycle
 	 *
+	 **/
 	class GradientStop {
 		public:
-			GradientStop( color888 color, float alpha, float position );
+			/**
+			 * Memory pool of recycled objects
+			 */
+			static GradientStop* pool;
 
-			void set( color888 color, float alpha, float position );
+			/**
+			 * Create a new object or take one from the pool
+			 * @return The new or recycled object
+			 */
+			static GradientStop* Create();
 
-			void reset( float pos, float gStep );
+			/**
+			 * Return this object to the pool
+			 */
+			void recycle();
 
-			void step();
+			/**
+			 * Reset the object back to default settings
+			 */
+			void reset();
 
-			void calc();
+			/**
+			 * @brief Start the stop :)
+			 */
+			void start( float pos );
 
-			color888 color = 0;
-			float alpha = 1.0;
-			float position = 0;
-			float distance = 0;
-			float dStep = 0;
-
-			GradientStop* next = 0;
-			GradientStop* prev = 0;
-
-			float r;
-			float g;
-			float b;
-			float a;
-			float dr = 0.0;
-			float dg = 0.0;
-			float db = 0.0;
-			float da = 0.0;
-	}; */
-	class GradientStop {
-		public:
 			color888 color = 0;
 			float alpha = 1.0;
 			float position = 0.0;
 			float distance = 0.0;
-			float dStep = 0.0;
+			float step = 0.0;
 			float r = 0.0;
 			float g = 0.0;
 			float b = 0.0;
@@ -92,6 +89,13 @@ namespace mac{
 			float dg = 0.0;
 			float db = 0.0;
 			float da = 0.0;
+
+		protected:
+
+			/**
+			 * Pointer to next object in memory pool of recycled objects
+			 */
+			GradientStop* _poolNext = 0;
 	};
 
 	/**
@@ -193,7 +197,7 @@ namespace mac{
 			/**
 			 * @brief The stops that make up this gradient
 			 */
-			GradientStop* stops = 0;
+			GradientStop** stops = 0;
 
 			/**
 			 * @brief Flag to indicate if stops need recalculating
@@ -209,17 +213,18 @@ namespace mac{
 			float _sin = 0;
 			float _len = 0;
 
-			float _x0 = 0;
-			float _y0 = 0;
-			float _pos0 = 0;
-			float _reverse = false;
-			boolean _steep = false;
+			float x0 = 0;
+			float y0 = 0;
 
-			float _dx = 0;
-			float _dy = 0;
-			float _pos = 0;
+			float pos0 = 0;
+			float reverse = false;
+			boolean steep = false;
 
-			uint8_t activeStop = 0;
+			float dx = 0;
+			float dy = 0;
+			float pos = 0;
+
+			int activeStop = 0;
 
 	};
 	

@@ -16,52 +16,74 @@
 namespace mac{
 
 	/**
-	 * @brief Construct a new Gradient Stop object
-	 * @param color The color
-	 * @param alpha The alpha
-	 * @param position The position
-	 *
-	GradientStop::GradientStop( color888 color, float alpha, float position ) {
-		set( color, alpha, position );
+	 * @brief The resuse pool
+	 */
+	GradientStop* GradientStop::pool = 0;
+
+	/**
+	 * Create a new object or take one from the pool
+	 * @return The new or recycled object
+	 */
+	GradientStop* GradientStop::Create(){
+		GradientStop* g;
+		if (GradientStop::pool){
+			g = GradientStop::pool;
+			GradientStop::pool = g->_poolNext;
+		}
+		else{
+			g = new GradientStop();
+		}
+		return g;
 	}
-	void GradientStop::set( color888 color, float alpha, float position ) {
-		this->color = color;
-		this->alpha = alpha;
-		this->position = position;
-		r = (float)((this->color >> 16) & 0xff);
-		g = (float)((this->color >> 8) & 0xff);
-		b = (float)((this->color >> 0) & 0xff);
-		a = alpha;
+
+	/**
+	 * Return this object to the pool
+	 */
+	void GradientStop::recycle(){
+#ifdef MAC_OBJECT_REUSE
+		this->reset();
+		this->_poolNext = GradientStop::pool;
+		GradientStop::pool = this;
+#else
+		delete this;
+#endif
 	}
-	void GradientStop::reset( float pos, float gStep ) {
-		r = (float)((this->color >> 16) & 0xff);
-		g = (float)((this->color >> 8) & 0xff);
-		b = (float)((this->color >> 0) & 0xff);
-		a = alpha;
-		if (next && (pos > position) && (pos < next->position)) {
-			float dp = (pos - position) / distance;
-			r += dr * dp;
-			g += dg * dp;
-			b += db * dp;
-			a += da * dp;
-			dStep = gStep / distance;
+
+	/**
+	 * Reset the object back to default settings
+	 */
+	void GradientStop::reset(){
+		color = 0;
+		alpha = 1.0;
+		position = 0.0;
+		distance = 0.0;
+		step = 0.0;
+		r = 0.0;
+		g = 0.0;
+		b = 0.0;
+		a = 0.0;
+		dr = 0.0;
+		dg = 0.0;
+		db = 0.0;
+		da = 0.0;
+	}
+
+	/**
+	 * @brief Start the stop :)
+	 */
+	void GradientStop::start( float pos ) {
+		r = (float)((color >> 16) & 0xff);
+		g = (float)((color >> 8) & 0xff);
+		b = (float)((color >> 0) & 0xff);
+		a = this->alpha;
+		if ((pos > position) && (pos< (position+distance))) {
+			float s = (pos-position) * step;
+			r += dr * s;
+			g += dg * s;
+			b += db * s;
+			a += da * s;
 		}
 	}
-	void GradientStop::calc() {
-		if (!next) return;
-		distance = next->position - position;
-		dr = (next->r - r);
-		dg = (next->g - g);
-		db = (next->b - b);
-		da = (next->a - a);
-	}
-	void GradientStop::step() {
-		r += dr * dStep;
-		g += dg * dStep;
-		b += db * dStep;
-		a += da * dStep;
-	}
-	*/
 
 	/**
 	 * @brief The resuse pool
@@ -81,8 +103,10 @@ namespace mac{
 		else{
 			g = new Gradient();
 		}
+		numStops = max(2, numStops); // Ensure at least 2 stops
 		g->numStops = numStops;
-		g->stops = new GradientStop[numStops];
+		g->stops = new GradientStop*[numStops];
+		while (numStops--) g->stops[numStops] = GradientStop::Create();
 		return g;
 	}
 
@@ -119,7 +143,10 @@ namespace mac{
 		// Reset position
 		position(0,0,1.0,0);
 		// Remove stops
-		if (stops) delete[] stops;
+		if (stops) {
+			while (numStops--) stops[numStops]->recycle();
+			delete[] stops;
+		}
 		stops = 0;
 	}
 
@@ -127,6 +154,7 @@ namespace mac{
 	 * @brief Specify the start and end points
 	 */
 	void Gradient::position( float x, float y, float x2, float y2 ) {
+		_needsCalc = true;
 		_x = x;
 		_x2 = x2;
 		_y = y;
@@ -142,13 +170,9 @@ namespace mac{
 	 */
 	Gradient* Gradient::stop( uint8_t index, color888 color, float alpha, float position ) {
 		_needsCalc = true;
-		stops[ index ].color = color;
-		stops[ index ].alpha = alpha;
-		stops[ index ].position = position;
-		stops[ index ].r = (float)((color >> 16) & 0xff);
-		stops[ index ].g = (float)((color >> 8) & 0xff);
-		stops[ index ].b = (float)((color >> 0) & 0xff);
-		stops[ index ].a = alpha;
+		stops[index]->color = color;
+		stops[index]->alpha = alpha;
+		stops[index]->position = position;
 		return this;
 	}
 
@@ -157,47 +181,84 @@ namespace mac{
 	 * @param updateArea The area of the display being updated. Unlike display objects, this must be in LOCAL coordinates
 	 */
 	void Gradient::beginRender( ClipRect* updateArea ) {
+//Serial.printf("beginRender %d,%d %dx%d\n", updateArea->x,updateArea->y, updateArea->width, updateArea->height );
 		// Calculate all stop values
 		if (_needsCalc) {
 			_needsCalc = false;
-			uint8_t i = 0;
+
+			dx = _x2 - _x;
+			dy = _y2 - _y;
+			steep = abs(dy) > abs(dx);
+
+			// Reverse stops if required
 			uint8_t n = 0;
-			while (n++ < numStops) {
-				stops[i].distance = stops[n].position - stops[i].position;
-				stops[i].dr = (stops[n].r - stops[i].r);
-				stops[i].dg = (stops[n].g - stops[i].g);
-				stops[i].db = (stops[n].b - stops[i].b);
-				stops[i].da = (stops[n].a - stops[i].a);
-				i++;
+			if (dx<0) {
+				swap( _x, _x2 );
+				swap( _y, _y2 );
+				dx = -dx;
+				dy = -dy;
+
+				if (!reverse) {
+					reverse = true;
+					GradientStop* t;
+					while (n < (numStops >> 1)) {
+						t = stops[n];
+						stops[n] = stops[numStops-n-1];
+						stops[numStops-n-1] = t;
+						n++;
+					}
+					n = 0;
+				}
 			}
-		}
 
-		// Calculate gradient, magnitude and angles
-		float dx = _x2 - _x;
-		float dy = _y2 - _y;
+			// Calculate stops
+			uint8_t i = 0;
+			n = 1;
+			stops[0]->start( 0 );
+			while (i < numStops-1) {
+				stops[i]->distance = stops[n]->position - stops[i]->position;
+				stops[i]->step = 1.0/stops[i]->distance;
+				stops[n]->start( 0 );
+				stops[i]->dr = (stops[n]->r - stops[i]->r);
+				stops[i]->dg = (stops[n]->g - stops[i]->g);
+				stops[i]->db = (stops[n]->b - stops[i]->b);
+				stops[i]->da = (stops[n]->a - stops[i]->a);
+				i++; n++;
+			}
 
-		_len = sqrtf( dx*dx + dy*dy );
-		float a = atan2f( -dy, -dx ) - PI/2;
-		_cos = -cosf( a );
-		_sin = -sinf( a );
+			// Screen area
+			y0 = updateArea->y;
+			x0 = updateArea->x;
+Serial.printf(" dx:%f dy:%f", dx,dy);
 
-		// Store edge
-		_x0 = updateArea->x;
-		// Calculate steps
-		_dx = (dx==0)?0:1.0 / (float)dx;
-		_dy = (dy==0)?0:1.0 / (float)dy;
-		// Calculate the gradient y value at the update edge
-		_steep = abs(dy) > abs(dx);
-		if (_x == _x2){
-			_y0 = updateArea->y;
-			_pos0 = (_y0 - _y) * _dy;
-		}
-		else {
+			// Calculate gradient angle
+			float a = atan2f( -dy, dx );
 			float m = dy/dx;
-			_y0 = _y + m * (_x0 - _x);
-			_pos0 = (_x0 - _x) * _dx;
+			float ms = dx/dy;
+			float ilen = 1.0 / sqrtf(dx*dx + dy*dy);
+Serial.printf(" a:%fdeg", a);
+
+			// Calculate pos at origin (of updateRect)
+			if (steep) {
+
+
+			}
+			else {
+				pos0 = (x0 - _x) / cosf(a) * ilen;
+Serial.printf(" x0:%f _x:%d pos0:%f", x0, _x, pos0);
+				float py = (_y + (x0 - _x) * m);
+				float y = py - y0;
+Serial.printf(" y:%f", y);
+				float d = sinf(a)*y*ilen;
+				pos0 += d;
+Serial.printf(" d:%f", d);
+				dx = cosf(a) / dx;
+				dy = -tanf(a) * dx;
+Serial.printf(" dx:%f dy:%f", dx);
+			}
+			
 		}
-Serial.printf(" dx=%f dy=%f\n", _dx, _dy);
+Serial.println();
 	}
 
 	/**
@@ -205,28 +266,19 @@ Serial.printf(" dx=%f dy=%f\n", _dx, _dy);
 	 * @param ry The y position in local coordinates
 	 */
 	void Gradient::beginLine( int16_t ry ) {
-//Serial.print("\nbeginLine");
-		if (_x == _x2) {
-			_pos = (ry - _y0) / _len + _pos0;
-		}
-		else{
-			float i = _x0 + _cos * (ry - _y0);
-			_pos = i / _len + _pos0;
-		}
-		if (_reverse){
-			_pos = 1.0 - _pos;
-			_dx = -_dx;
-			_dy = -_dy;
-		}
-Serial.printf(" %d: pos:%f\n", ry, _pos);
+		// Calculate pos offset based on pos0 and dy
+		pos = pos0 + (ry - y0) * dy;
 
 		// Calculate the first stop on this line
 		activeStop = 0;
 		while (activeStop < numStops) {
-			if ((stops[activeStop].position + stops[activeStop].distance) > _pos ) break;
+			if (activeStop == numStops-1) break;
+			if (stops[activeStop+1]->position >= pos){
+				stops[activeStop]->start( pos );
+				break;
+			}
 			activeStop++;
 		}
-		if (activeStop==numStops) activeStop--;
 	}
 
 	/**
@@ -235,28 +287,26 @@ Serial.printf(" %d: pos:%f\n", ry, _pos);
 	 * @param a (out) alpha
 	 */
 	void Gradient::calcPixel( int16_t rx, int16_t ry ) {
-//Serial.printf("  %d:", rx);
-		rc = (((uint8_t)stops[activeStop].r) << 16) | (((uint8_t)stops[activeStop].g) << 8) | (uint8_t)stops[activeStop].b;
-		ra = stops[activeStop].a;
+		if ((rx>=(_x-1)) && (rx<=(_x+1)) && (ry==_y)) rc = 0x0099ff;
+		else if ((ry>=(_y-1)) && (ry<=(_y+1)) && (rx==_x)) rc = 0x0099ff;
+		else if ((rx>=(_x2-1)) && (rx<=(_x2+1)) && (ry==_y2)) rc = 0x0099ff;
+		else if ((ry>=(_y2-1)) && (ry<=(_y2+1)) && (rx==_x2)) rc = 0x0099ff;
+		else if ((pos>=0) && (pos<0.01)) rc = 0xff0000;
+		else if ((pos>0.495) && (pos<0.505)) rc = 0xff0000;
+		else if ((pos>0.99) && (pos<=1.0)) rc = 0xff0000;
+		else rc = (((uint8_t)stops[activeStop]->r) << 16) | (((uint8_t)stops[activeStop]->g) << 8) | (uint8_t)stops[activeStop]->b;
+		ra = stops[activeStop]->a;
 		if (activeStop < (numStops-1)) {
-			_pos += _steep?_dy:_dx;
-//Serial.printf(" %f", _pos);
-			if (_pos >= stops[activeStop+1].position) {
-				while ((activeStop < (numStops-1)) && (_pos >= stops[activeStop+1].position)){
-					activeStop++;
-//Serial.print(" stop");
-				}
-				//stops[activeStop].reset( _pos, _steep?_dy:_dx );
+			pos += dx;
+			while ((activeStop < (numStops-1)) && (pos >= stops[activeStop+1]->position)){
+				activeStop++;
 			}
-			else if (_pos >= 0.0) {
-				//stops[activeStop].step();
-			}
+			stops[activeStop]->start( pos );
 		}
-//Serial.println();
 	}
 
 	void Gradient::skipPixel( int16_t rx, int16_t ry ){
-		_pos += _steep?_dy:_dx;
+		
 	}
 	
 } // namespace
