@@ -329,7 +329,7 @@ for file in list(resources):
 		# Output to file
 		outstr += '#ifndef _TILEMAP_'+name+'_H_\n'
 		outstr += '#define _TILEMAP_'+name+'_H_ 1\n\n'
-		outstr += '#include "Bitmap.h"\n\n'
+		outstr += '#include "graphics/Bitmap.h"\n\n'
 		outstr += '__attribute__((aligned(4))) static const uint8_t '+name+'_data[] = {\n'
 		c = 0
 		tp = 0
