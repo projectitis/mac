@@ -24,7 +24,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */	
+ */
 
 #ifndef _MAC_COLOR8888H_
 #define _MAC_COLOR8888H_ 1
@@ -32,14 +32,14 @@
 #include "Common.h"
 #include "graphics/Color.h"
 
-/**
- * This file is part of the mac (or μac) "Microprocessor App Creator" library.
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
- **/
-namespace mac{
+ /**
+  * This file is part of the mac (or μac) "Microprocessor App Creator" library.
+  * mac is a project that enables creating beautiful and useful apps on the
+  * Teensy microprocessor, but hopefully is generic enough to be ported to other
+  * microprocessor boards. The various libraries that make up mac might also
+  * be useful in other projects.
+  **/
+namespace mac {
 
 	/*
 	* RGB888 colors
@@ -190,7 +190,7 @@ namespace mac{
 
 	/**
 	 * @brief Extract the alpha value from a 32bit color8888 (ARGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit alpha (0-255)
 	 */
@@ -200,27 +200,27 @@ namespace mac{
 
 	/**
 	 * @brief Extract the red channel value from a 32bit color8888 (ARGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit red value (0-255)
 	 */
 	inline uint8_t red( color8888 c ) {
-		return (c >> 16) & 0xff;
+		return ( c >> 16 ) & 0xff;
 	}
 
 	/**
 	 * @brief Extract the green channel value from a 32bit color8888 (ARGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit green value (0-255)
 	 */
 	inline uint8_t green( color8888 c ) {
-		return (c >> 8) & 0xff;
+		return ( c >> 8 ) & 0xff;
 	}
 
 	/**
 	 * @brief Extract the blue channel value from a 32bit color8888 (ARGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit blue value (0-255)
 	 */
@@ -240,8 +240,8 @@ namespace mac{
 		uint8_t g,
 		uint8_t b,
 		float_t a
-	){
-		return (alpha8bit(a) << 24) | (r << 16) | (g << 8) | b;
+	) {
+		return ( alpha8bit( a ) << 24 ) | ( r << 16 ) | ( g << 8 ) | b;
 	}
 
 	/**
@@ -255,8 +255,8 @@ namespace mac{
 		uint8_t r,
 		uint8_t g,
 		uint8_t b
-	){
-		return (r << 16) | (g << 8) | b;
+	) {
+		return ( r << 16 ) | ( g << 8 ) | b;
 	}
 
 	/**
@@ -264,10 +264,10 @@ namespace mac{
 	 * @param	color	The RGB565 color to convert
 	 * @return		The RGB888 color
 	 **/
-	inline color8888 to8888( uint16_t c ){
-		return ((c & 0b1111100000000000) << 8) | ((c & 0b11100000000) << 3)
-			| ((c & 0b11111100000) << 5) | ((c & 0b11000000000) >> 1)
-			| ((c & 0b11111) << 3) | ((c & 0b11100) >> 2);
+	inline color8888 to8888( uint16_t c ) {
+		return ( ( c & 0b1111100000000000 ) << 8 ) | ( ( c & 0b11100000000 ) << 3 )
+			| ( ( c & 0b11111100000 ) << 5 ) | ( ( c & 0b11000000000 ) >> 1 )
+			| ( ( c & 0b11111 ) << 3 ) | ( ( c & 0b11100 ) >> 2 );
 	}
 
 	/**
@@ -275,8 +275,8 @@ namespace mac{
 	 * @param  c 	The grayscale value (0-255)
 	 * @return		The RGB888 color
 	 */
-	inline color8888 to8888( uint8_t c ){
-		return (c << 16) | (c << 8) | c;
+	inline color8888 to8888( uint8_t c ) {
+		return ( c << 16 ) | ( c << 8 ) | c;
 	}
 
 	/**
@@ -284,43 +284,105 @@ namespace mac{
 	 * @param  c 	The mono value (0-1)
 	 * @return		The RGB888 color
 	 */
-	inline color8888 monoTo8888( uint8_t c, color8888 lo = ARGB8888_Black, color8888 hi = ARGB8888_White ){
-		return (c & 0b1)?hi:lo;
+	inline color8888 monoTo8888( uint8_t c, color8888 lo = ARGB8888_Black, color8888 hi = ARGB8888_White ) {
+		return ( c & 0b1 ) ? hi : lo;
 	}
 
 	/**
-	 * Convert HSV to RGB components
-	 * @param  H 	Hue component
-	 * @param  S  	Saturation component
-	 * @param  V 	Value component
-	 * @param  r  	(out) Red
-	 * @param  g 	(out) Green
-	 * @param  b 	(out) Blue
+	 * Convert HSV to an RGB color value
+	 * @param  h 	Hue component (0.0 - 360.0)
+	 * @param  s  	Saturation component (0.0 - 1.0)
+	 * @param  v 	Value component (0.0 - 1.0)
+	 * @return color8888 The resulting color
 	 */
-	inline color8888 to8888( float_t H, float_t S, float_t V ){
-		float_t		p, q, t, ff;
-		int8_t		i;
-		int8_t		r,g,b;
-
-		if (H >= 360.0) H = 0.0;
-		H /= 60.0;
-		i = (int8_t)H;
-		ff = H - i;
-		p = V * (1.0 - S);
-		q = V * (1.0 - (S * ff));
-		t = V * (1.0 - (S * (1.0 - ff)));
-
-		switch(i) {
-			case 0: r = (uint8_t)(V*255.0f); g = (uint8_t)(t*255.0f); b = (uint8_t)(p*255.0f); break;
-			case 1: r = (uint8_t)(q*255.0f); g = (uint8_t)(V*255.0f); b = (uint8_t)(p*255.0f); break;
-			case 2: r = (uint8_t)(p*255.0f); g = (uint8_t)(V*255.0f); b = (uint8_t)(t*255.0f); break;
-			case 3: r = (uint8_t)(p*255.0f); g = (uint8_t)(q*255.0f); b = (uint8_t)(V*255.0f); break;
-			case 4: r = (uint8_t)(t*255.0f); g = (uint8_t)(p*255.0f); b = (uint8_t)(V*255.0f); break;
-			case 5:
-			default:
-				r = (uint8_t)(V*255.0f); g = (uint8_t)(p*255.0f); b = (uint8_t)(q*255.0f); break;
+	inline color8888 to8888( float_t h, float_t s, float_t v ) {
+		int i;
+		float f, p, q, t;
+		float r, g, b;
+		v = alphaClamp( v );
+		s = alphaClamp( s );
+		h = fmod( h, 360.0f );
+		if ( h < 0 ) h = 360.0f + h;
+		if ( s == 0 ) {
+			// achromatic (grey)
+			r = g = b = v;
+			return ( (uint8_t)( r * 255.0f ) << 16 ) | ( (uint8_t)( g * 255.0f ) << 8 ) | (uint8_t)( b * 255.0f );
 		}
-		return (r << 16) | (g << 8) | b;
+		h /= 60;			// sector 0 to 5
+		i = floor( h );
+		f = h - i;			// factorial part of h
+		p = v * ( 1.0f - s );
+		q = v * ( 1.0f - s * f );
+		t = v * ( 1.0f - s * ( 1.0f - f ) );
+		switch ( i ) {
+		case 0:
+			r = v;
+			g = t;
+			b = p;
+			break;
+		case 1:
+			r = q;
+			g = v;
+			b = p;
+			break;
+		case 2:
+			r = p;
+			g = v;
+			b = t;
+			break;
+		case 3:
+			r = p;
+			g = q;
+			b = v;
+			break;
+		case 4:
+			r = t;
+			g = p;
+			b = v;
+			break;
+		default:		// case 5:
+			r = v;
+			g = p;
+			b = q;
+			break;
+		}
+
+		return ( (uint8_t)( r * 255.0f ) << 16 ) | ( (uint8_t)( g * 255.0f ) << 8 ) | (uint8_t)( b * 255.0f );
+	}
+
+	/**
+	 * @brief Convert an 8888 color value to HSV
+	 *
+	 * @param c The color
+	 * @param h (out) Hue
+	 * @param s (out) Saturation
+	 * @param v (out) Value
+	 */
+	inline void toHSV( color8888 c, float_t& h, float_t& s, float_t& v ) {
+		float_t cmin, cmax, delta;
+		float_t r = red( c ) / 255.0f;
+		float_t g = green( c ) / 255.0f;
+		float_t b = blue( c ) / 255.0f;
+		cmin = min( min( r, g ), b );
+		cmax = max( max( r, g ), b );
+		v = cmax;
+		delta = cmax - cmin;
+		if ( cmax != 0 ) s = delta / cmax;
+		else {
+			// r = g = b = 0		// s = 0, v is undefined
+			v = 0;
+			s = 0;
+			h = 0;
+			return;
+		}
+		if ( r == cmax )
+			h = delta == 0 ? 0 : ( g - b ) / delta;		// between yellow & magenta
+		else if ( g == cmax )
+			h = delta == 0 ? 0 : 2 + ( b - r ) / delta;	// between cyan & yellow
+		else
+			h = delta == 0 ? 0 : 4 + ( r - g ) / delta;	// between magenta & cyan
+		h *= 60;						// degrees
+		if ( h < 0 ) h += 360;
 	}
 
 	/**
@@ -330,16 +392,16 @@ namespace mac{
 	 * @param	alpha	Alpha 0-255
 	 * @return       Blended color
 	 */
-	inline color888 blend888( color888 fg, color888 bg, alpha_t alpha ){
+	inline color888 blend888( color888 fg, color888 bg, alpha_t alpha ) {
 		uint8_t a = alpha8bit( alpha );
 		uint32_t rb = fg & 0xff00ff;
-		uint32_t g  = fg & 0x00ff00;
-		rb += ((bg & 0xff00ff) - rb) * a >> 8;
-		g  += ((bg & 0x00ff00) -  g) * a >> 8;
-		return (rb & 0xff00ff) | (g & 0xff00);
+		uint32_t g = fg & 0x00ff00;
+		rb += ( ( bg & 0xff00ff ) - rb ) * a >> 8;
+		g += ( ( bg & 0x00ff00 ) - g ) * a >> 8;
+		return ( rb & 0xff00ff ) | ( g & 0xff00 );
 	}
 	// XXX: fg and bg can have alpha value. premultiply alpha, then blend?
-	inline color8888 blend8888( color8888 fg, color8888 bg, alpha_t alpha ){
+	inline color8888 blend8888( color8888 fg, color8888 bg, alpha_t alpha ) {
 		return blend888( fg, bg, alpha );
 	}
 
@@ -350,9 +412,9 @@ namespace mac{
 	 * @param color  	(out) RB split component
 	 * @param color  	(out) G split component
 	 */
-	inline void prepare888( color888 c, uint32_t& rb, uint32_t& g ){
+	inline void prepare888( color888 c, uint32_t& rb, uint32_t& g ) {
 		rb = c & 0xff00ff;
-		g  = c & 0x00ff00;
+		g = c & 0x00ff00;
 	}
 
 	/**
@@ -364,9 +426,9 @@ namespace mac{
 	 * @param orb  	(out) RB split component
 	 * @param og  	(out) G split component
 	 */
-	inline void prepareRGB( uint8_t r, uint8_t g, uint8_t b, uint32_t& orb, uint32_t& og ){
-		orb = (r << 16) | b;
-		og  = g << 8;
+	inline void prepareRGB( uint8_t r, uint8_t g, uint8_t b, uint32_t& orb, uint32_t& og ) {
+		orb = ( r << 16 ) | b;
+		og = g << 8;
 	}
 
 	/**
@@ -377,55 +439,55 @@ namespace mac{
 	 * @param	alpha		Alpha 0-255 (@see alpha8bit if using 0.0 - 1.0)
 	 * @return       Blended color
 	 */
-	inline color888 blendPrepared888( uint32_t preparedRB, uint32_t preparedG, color888 bg, uint8_t alpha ){
-		preparedRB += ((bg & 0xff00ff) - preparedRB) * alpha >> 8;
-		preparedG  += ((bg & 0x00ff00) -  preparedG) * alpha >> 8;
-		return (preparedRB & 0xff00ff) | (preparedG & 0xff00);
+	inline color888 blendPrepared888( uint32_t preparedRB, uint32_t preparedG, color888 bg, uint8_t alpha ) {
+		preparedRB += ( ( bg & 0xff00ff ) - preparedRB ) * alpha >> 8;
+		preparedG += ( ( bg & 0x00ff00 ) - preparedG ) * alpha >> 8;
+		return ( preparedRB & 0xff00ff ) | ( preparedG & 0xff00 );
 	}
 
 	/**
 	 * @brief Tint a color with another color
-	 * The alpha of the orginal color is preserved 
+	 * The alpha of the orginal color is preserved
 	 * @param c The color to tint
 	 * @param t The color to tint with
 	 * @param amount The amount to tint (0.0 - 1.0)
 	 * @return color8888 The resulting color
 	 */
 	inline color8888 tint( color8888 c, color8888 t, float_t amount ) {
-		amount = alphaClamp(amount);
-		uint8_t R = floor( lerp( red(c), red(t), amount ) );
-		uint8_t G = floor( lerp( green(c), green(t), amount ) );
-		uint8_t B = floor( lerp( blue(c), blue(t), amount ) );
+		amount = alphaClamp( amount );
+		uint8_t R = floor( lerp( red( c ), red( t ), amount ) );
+		uint8_t G = floor( lerp( green( c ), green( t ), amount ) );
+		uint8_t B = floor( lerp( blue( c ), blue( t ), amount ) );
 		return to8888( R, G, B, c >> 24 );
 	}
 
 	/**
 	 * @brief Darken a colour
-	 * The alpha of the orginal color is preserved 
+	 * The alpha of the orginal color is preserved
 	 * @param c The color to darken
 	 * @param amount The amount to darken (0.0 - 1.0)
 	 * @return color8888 The resulting color
 	 */
 	inline color8888 darken( color8888 c, float_t amount ) {
-		amount = 1.0 - alphaClamp(amount);
-		uint8_t R = floor( red(c) * amount );
-		uint8_t G = floor( green(c) * amount );
-		uint8_t B = floor( blue(c) * amount );
+		amount = 1.0 - alphaClamp( amount );
+		uint8_t R = floor( red( c ) * amount );
+		uint8_t G = floor( green( c ) * amount );
+		uint8_t B = floor( blue( c ) * amount );
 		return to8888( R, G, B, c >> 24 );
 	}
 
 	/**
 	 * @brief Lighten a colour
-	 * The alpha of the orginal color is preserved 
+	 * The alpha of the orginal color is preserved
 	 * @param c The color to lighten
 	 * @param amount The amount to lighten (0.0 - 1.0)
 	 * @return color8888 The resulting color
 	 */
 	inline color8888 lighten( color8888 c, float_t amount ) {
-		amount = alphaClamp(amount);
-		uint8_t R = floor( lerp( red(c), 255, amount ) );
-		uint8_t G = floor( lerp( green(c), 255, amount ) );
-		uint8_t B = floor( lerp( blue(c), 255, amount ) );
+		amount = alphaClamp( amount );
+		uint8_t R = floor( lerp( red( c ), 255, amount ) );
+		uint8_t G = floor( lerp( green( c ), 255, amount ) );
+		uint8_t B = floor( lerp( blue( c ), 255, amount ) );
 		return to8888( R, G, B, c >> 24 );
 	}
 
