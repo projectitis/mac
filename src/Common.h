@@ -53,7 +53,7 @@ namespace mac{
 	 * XXX: Implement this flag
 	 * Use DMA for memory operations where possible
 	 */
-	#define MAC_USE_DMA 1
+	#define MAC_USE_DMA 0
 
 	/**
 	 * Define the floating point type to be used by mac

@@ -203,7 +203,7 @@ namespace mac{
 	 */
 	typedef struct InputMapS {
 		ClickType clickType;
-		Event event;
+		uint32_t event;
 		uint16_t threshhold;
 		struct InputMapS* next;
 	} InputMap;
@@ -280,7 +280,7 @@ namespace mac{
 			 * @param  threshhold   If the pin is analogue, the associated threshhold
 			 * @return           The input for chaining
 			 */
-			Input* map( pin pin, PinType pinType, ClickType clickType, Event event, uint16_t threshhold = 0 );
+			Input* map( pin pin, PinType pinType, ClickType clickType, uint32_t event, uint16_t threshhold = 0 );
 
 			/**
 			 * Remove a pin mapping from a pin.

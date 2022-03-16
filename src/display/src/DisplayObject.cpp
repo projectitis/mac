@@ -335,6 +335,55 @@ namespace mac{
 	}
 
 	/**
+	 * @brief Set the origin within the object to predefined position
+	 * @param position The position of the origin
+	 * @param roundToInt If true, will round the x and y cooridnates using floor
+	 */
+	void DisplayObject::origin( OriginType position, boolean roundToInt ) {
+		switch (position) {
+			case OriginType::centerTop:
+			case OriginType::center:
+			case OriginType::centerBottom:
+				_ox = -width()/2;
+				break;
+			case OriginType::rightTop:
+			case OriginType::rightCenter:
+			case OriginType::rightBottom:
+				_ox = -width();
+				break;
+			case OriginType::leftTop:
+			case OriginType::leftCenter:
+			case OriginType::leftBottom:
+			default:
+				_ox = 0;
+				break;
+		}
+		switch (position) {
+			case OriginType::leftCenter:
+			case OriginType::center:
+			case OriginType::rightCenter:
+				_oy = -height()/2;
+				break;
+			case OriginType::leftBottom:
+			case OriginType::centerBottom:
+			case OriginType::rightBottom:
+				_oy = -height();
+				break;
+			case OriginType::leftTop:
+			case OriginType::centerTop:
+			case OriginType::rightTop:
+			default:
+				_oy = 0;
+				break;
+		}
+		if (roundToInt) {
+			_ox = floor(_ox);
+			_oy = floor(_oy);
+		}
+		_dirty = true;
+	}
+
+	/**
 	 * @brief Set the x coordinate
 	 * @param value The x coordinate
 	 */

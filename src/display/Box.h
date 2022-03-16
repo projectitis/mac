@@ -32,6 +32,7 @@
 
 #include "display/DisplayObject.h"
 #include "display/Gradient.h"
+#include "display/LinearGradient.h"
 #include "display/Borders.h"
 
 /**

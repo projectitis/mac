@@ -3,71 +3,71 @@
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  **/
- 
+
 #include "../DisplayILI9341.h"
 #include <SPI.h>
 #include <DMAChannel.h>
 
-/**
- * Define ILI9341 commands
- **/
+ /**
+  * Define ILI9341 commands
+  **/
 typedef enum {
-	NOP			= 0x00,
-	SWRESET		= 0x01,		// Resets the commands and parameters to their S/W Reset default values
-	RDDID		= 0x04,		// Read display identification information (return 24bits)
-	RDDST		= 0x09,		// Read display status 
+	NOP = 0x00,
+	SWRESET = 0x01,		// Resets the commands and parameters to their S/W Reset default values
+	RDDID = 0x04,		// Read display identification information (return 24bits)
+	RDDST = 0x09,		// Read display status 
 
-	SLPIN		= 0x10,		// Enter sleep mode
-	SLPOUT		= 0x11,		// Turns off sleep mode
-	PTLON		= 0x12,		// Turns on partial mode
-	NORON		= 0x13,		// Returns the display to normal mode (aprtial mode off)
+	SLPIN = 0x10,		// Enter sleep mode
+	SLPOUT = 0x11,		// Turns off sleep mode
+	PTLON = 0x12,		// Turns on partial mode
+	NORON = 0x13,		// Returns the display to normal mode (aprtial mode off)
 
-	RDMODE		= 0x0A,		
-	RDMADCTL	= 0x0B,
-	RDPIXFMT	= 0x0C,
-	RDIMGFMT	= 0x0D,
-	RDSELFDIAG	= 0x0F,
+	RDMODE = 0x0A,
+	RDMADCTL = 0x0B,
+	RDPIXFMT = 0x0C,
+	RDIMGFMT = 0x0D,
+	RDSELFDIAG = 0x0F,
 
-	INVOFF		= 0x20,		// Recover from display inversion mode
-	INVON		= 0x21,		// Enter into display inversion mode
-	GAMMASET	= 0x26,		// Select the desired Gamma curve (only 01 is defined)
-	DISPOFF		= 0x28,		// Display off
-	DISPON		= 0x29,		// Display on
+	INVOFF = 0x20,		// Recover from display inversion mode
+	INVON = 0x21,		// Enter into display inversion mode
+	GAMMASET = 0x26,		// Select the desired Gamma curve (only 01 is defined)
+	DISPOFF = 0x28,		// Display off
+	DISPON = 0x29,		// Display on
 
-	CASET		= 0x2A,		// Column Address Set
-	PASET		= 0x2B,		// Page Address Set
-	RAMWR		= 0x2C,		// Memory Write
-	RGBSET		= 0x2D,		// Color Set
-	RAMRD		= 0x2E,		// Memory Read
+	CASET = 0x2A,		// Column Address Set
+	PASET = 0x2B,		// Page Address Set
+	RAMWR = 0x2C,		// Memory Write
+	RGBSET = 0x2D,		// Color Set
+	RAMRD = 0x2E,		// Memory Read
 
-	PTLAR		= 0x30,
-	MADCTL		= 0x36,
-	VSCRSADD	= 0x37,
-	PIXFMT		= 0x3A,
+	PTLAR = 0x30,
+	MADCTL = 0x36,
+	VSCRSADD = 0x37,
+	PIXFMT = 0x3A,
 
-	FRMCTR1		= 0xB1,
-	FRMCTR2		= 0xB2,
-	FRMCTR3		= 0xB3,
-	INVCTR		= 0xB4,
-	DFUNCTR		= 0xB6,
+	FRMCTR1 = 0xB1,
+	FRMCTR2 = 0xB2,
+	FRMCTR3 = 0xB3,
+	INVCTR = 0xB4,
+	DFUNCTR = 0xB6,
 
-	PWCTR1		= 0xC0,		// Power control
-	PWCTR2		= 0xC1,
-	PWCTR3		= 0xC2,
-	PWCTR4		= 0xC3,
-	PWCTR5		= 0xC4,
-	VMCTR1		= 0xC5,		// Set the VCOM voltage
-	VMCTR2		= 0xC7,
+	PWCTR1 = 0xC0,		// Power control
+	PWCTR2 = 0xC1,
+	PWCTR3 = 0xC2,
+	PWCTR4 = 0xC3,
+	PWCTR5 = 0xC4,
+	VMCTR1 = 0xC5,		// Set the VCOM voltage
+	VMCTR2 = 0xC7,
 
-	RDID1		= 0xDA,
-	RDID2		= 0xDB,
-	RDID3 		= 0xDC,
-	RDID4		= 0xDD,
+	RDID1 = 0xDA,
+	RDID2 = 0xDB,
+	RDID3 = 0xDC,
+	RDID4 = 0xDD,
 
-	GMCTRP1		= 0xE0,		// Positive Gamma correction
-	GMCTRN1		= 0xE1,		// Negative Gamma correction
+	GMCTRP1 = 0xE0,		// Positive Gamma correction
+	GMCTRN1 = 0xE1,		// Negative Gamma correction
 
-	IFCTL		= 0xF6		// Interface Control
+	IFCTL = 0xF6		// Interface Control
 } ILI9341_Command;
 
 /**
@@ -77,61 +77,8 @@ typedef enum {
  * microprocessor boards. The various libraries that make up mac might also
  * be useful in other projects.
  **/
-namespace mac{
+namespace mac {
 
-	/**
-	 * Constructor. Note - constructor calls init
-	 * @param	cs		Pin used for Chip Select
-	 * @param	dc		Pin used for Data Control
-	 * @param	rst		Pin used for Reset (optional. 255=unused)
-	 * @param	mosi	Pin used for MOSI communication (data out from master)
-	 * @param	sclk	Pin used for clock
-	 * @param	miso	Pin used for MISO communication (data out from slave)
-	 * @param	width	TFT pixel width
-	 * @param	Height	TFT pixel height
-	 **/
-	DisplayILI9341::DisplayILI9341(
-		DisplaySize sz,
-		uint8_t cs,
-		uint8_t dc,
-		uint8_t rst,
-		uint8_t mosi,
-		uint8_t sclk,
-		uint8_t miso,
-		uint8_t bklt,
-		PixelScale px
-	){
-		_cs   = cs;
-		_dc   = dc;
-		_rst  = rst;
-		_mosi = mosi;
-		_sclk = sclk;
-		_miso = miso;
-		_bklt = bklt;
-		_bkltPWM = false;
-		switch (sz){
-			case displaySize_320x240:
-			default:
-				width    = 320;
-				height   = 240;
-		}
-		pixelFormat = PF_565;
-		_px = px;
-		rect.setSize( width >> _px, height >> _px );
-		region.set( &rect );
-
-		data[0].pixels = new uint32_t[ rect.width ];
-		data[0].y = 0;
-		data[0].x = 0;
-		data[0].x2 = rect.x2;
-		data[1].pixels = new uint32_t[ rect.width ];
-		data[1].y = 0;
-		data[1].x = 0;
-		data[1].x2 = rect.x2;
-		
-		init();
-	}
-	
 	/**
 	 * Initialise the display. Called from the constructor.
 	 * More info here: https://gist.github.com/postmodern/ed6e670999f456ad9f13
@@ -159,133 +106,148 @@ namespace mac{
 		16, 	ILI9341_Command::GMCTRN1, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07,
 				0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F, // Set Gamma
 		3, 		0xb1, 0x00, 0x10, 					// FrameRate Control 119Hz
-		
+
 		2, 		ILI9341_Command::MADCTL, 0x20 | 0x08, // 0x80=MY, 0x40=MX, 0x10=ML, 0x04=MH, 0x20=MV, 0x00=RGB, 0x08=BGR, 
 		0
 	};
-	void DisplayILI9341::init( void ){
-		
+
+	/**
+	 * Constructor. Note - constructor calls init
+	 * @param	cs		Pin used for Chip Select
+	 * @param	dc		Pin used for Data Control
+	 * @param	rst		Pin used for Reset (optional. 255=unused)
+	 * @param	mosi	Pin used for MOSI communication (data out from master)
+	 * @param	sclk	Pin used for clock
+	 * @param	miso	Pin used for MISO communication (data out from slave)
+	 * @param	width	TFT pixel width
+	 * @param	Height	TFT pixel height
+	 **/
+	DisplayILI9341::DisplayILI9341(
+		DisplaySize sz,
+		uint8_t cs,
+		uint8_t dc,
+		uint8_t rst,
+		uint8_t mosi,
+		uint8_t sclk,
+		uint8_t miso,
+		uint8_t bklt,
+		PixelScale px
+	) {
+		_cs = cs;
+		_dc = dc;
+		_rst = rst;
+		_mosi = mosi;
+		_sclk = sclk;
+		_miso = miso;
+		_bklt = bklt;
+		_bkltPWM = false;
+		switch ( sz ) {
+		case displaySize_320x240:
+		default:
+			_hwSize.setSize( 320, 240 );
+		}
+		_pf = PF_565;
+		_px = px;
+		_size.setSize( _hwSize.width >> _px, _hwSize.height >> _px );
+
 		// Set up SPI pins
-		SPI.setMOSI(_mosi);
-		SPI.setMISO(_miso);
-		SPI.setSCK(_sclk);
-		
+		SPI.setMOSI( _mosi );
+		SPI.setMISO( _miso );
+		SPI.setSCK( _sclk );
+
 		SPI.begin();
-		
-		if (SPI.pinIsChipSelect(_cs, _dc)) {
-			_pcs_data = SPI.setCS(_cs);
-			_pcs_command = _pcs_data | SPI.setCS(_dc);
+
+		if ( SPI.pinIsChipSelect( _cs, _dc ) ) {
+			_pcs_data = SPI.setCS( _cs );
+			_pcs_command = _pcs_data | SPI.setCS( _dc );
 		}
 
 		// If the reset feature is used, reset the display.
 		// Reset is active low.
-		if (_rst < 255) {
-			pinMode(_rst, OUTPUT);
-			digitalWrite(_rst, HIGH);
-			delay(5);
-			digitalWrite(_rst, LOW);
-			delay(20);
-			digitalWrite(_rst, HIGH);
-			delay(150);
+		if ( _rst < 255 ) {
+			pinMode( _rst, OUTPUT );
+			digitalWrite( _rst, HIGH );
+			delay( 5 );
+			digitalWrite( _rst, LOW );
+			delay( 20 );
+			digitalWrite( _rst, HIGH );
+			delay( 150 );
 		}
-		
+
 		// Send init commands
-		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
-		const uint8_t *addr = init_commands;
-		while (1) {
+		SPI.beginTransaction( SPISettings( SPICLOCK, MSBFIRST, SPI_MODE0 ) );
+		const uint8_t* addr = init_commands;
+		while ( 1 ) {
 			uint8_t count = *addr++;
-			if (count-- == 0) break;
-			writeCommand(*addr++);
-			while (count-- > 0) {
-				writeData8(*addr++);
+			if ( count-- == 0 ) break;
+			writeCommand( *addr++ );
+			while ( count-- > 0 ) {
+				writeData8( *addr++ );
 			}
 		}
-		writeCommand_last(ILI9341_Command::SLPOUT);    // Exit Sleep
+		writeCommand_last( ILI9341_Command::SLPOUT );    // Exit Sleep
 		SPI.endTransaction();
 
 		// Turn on the display after a delay
-		delay(120); 		
-		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
-		writeCommand_last(ILI9341_Command::DISPON);    // Display on
+		delay( 120 );
+		SPI.beginTransaction( SPISettings( SPICLOCK, MSBFIRST, SPI_MODE0 ) );
+		writeCommand_last( ILI9341_Command::DISPON );    // Display on
 		SPI.endTransaction();
-		
+
 		// Turn on the backlight
-		if (_bklt != 255){
-			pinMode(_bklt, OUTPUT);
+		if ( _bklt != 255 ) {
+			pinMode( _bklt, OUTPUT );
 			backlight( 1.0 );
 		}
+
+		// Ready to send data
+		ready = true;
 	}
 
 	/**
-	 * Destructor
-	 */
-	DisplayILI9341::~DisplayILI9341( void ){
-		delete data[0].pixels;
-		delete data[1].pixels;
-		// XXX: Shut down display?
-	}
-
-	/**
-	 * Update the linebuffer to the display
-	 * @param	continuous	If true, will continuously refresh until stopRefresh is called
-	 **/
-	void DisplayILI9341::flip() {
-
-		// Flip the buffers
-		Display::flip();
-
-// XXX: Use DMA to send data over SPI
-#if MAC_USE_DMA==0
-		// DMA is not being used. Immediately send the back buffer to the display
-		// as an SPI transaction
-
-		// Get reference to the back buffer (ignore uninitialized warning)
-		#pragma GCC diagnostic ignored "-Wuninitialized"
-		LineBufferData* back = &data[ backIndex ];
+	 * @brief Draw data to an area of the display
+	 *
+	 * @param y The y-coordinate of the line (scaled by pixel scale)
+	 * @param x The start x-coordinate (scaled by pixel scale)
+	 * @param x2 The end-x-coordinate, inclusive (scaled by pixel scale)
+	 * @param data Pointer to the pixel data for the line (where x=0)
+	*/
+	void DisplayILI9341::draw( uint16_t y, uint16_t x, uint16_t x2, color888* data ) {
+		// Set not ready
+		ready = false;
 
 		// Begin the transmission to hardware
-		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+		SPI.beginTransaction( SPISettings( SPICLOCK, MSBFIRST, SPI_MODE0 ) );
 
-		// Set the area of the display to write to (a single scan line)
-		setDestinationLine( back );
+		// Set the area of the display to write to
+		writeCommand( ILI9341_Command::CASET ); // Column addr set
+		writeData16( x << _px );
+		writeData16( ( ( x2 + 1 ) << _px ) - 1 );                                                                                    
+
+		writeCommand( ILI9341_Command::PASET ); // Row addr set
+		writeData16( y << _px );
+		writeData16( ( ( y + 1 ) << _px ) - 1 );
 
 		// Tell display we are about to send data
 		writeCommand( ILI9341_Command::RAMWR );
 
-		uint16_t i = back->x << _px;
-		uint16_t c = i + ((back->x2 - back->x + 1) << _px) - 1;
-		uint16_t l = 1 << _px;
-		while (l--) {
-			i = back->x << _px;
-			while (i < (c + ((l>0)?1:0))) writeData16( to565( back->pixels[ i++ >> _px ] ) );
+		// Write pixels. For some reason this SPI implementation requires the final
+		// pixel to be written differently, so we need to keep track of the count
+		int scale = 1 << _px;
+		int count = ( x2 - x + 1 ) * scale * scale;
+		for ( uint16_t py = 0; py < scale; py++ ) {
+			for ( uint16_t px = x; px <= x2; px++ ) {
+				for ( uint16_t p = 0; p < scale; p++ ) {
+					if ( --count ) writeData16( to565( data[px] ) );
+					else writeData16_last( to565( data[px] ) );
+				}
+			}
 		}
-		writeData16_last( to565( back->pixels[ i >> _px ] ) );
-
 		// Done with complete transaction
 		SPI.endTransaction();
 
-#else
-
-	
-
-#endif // MAC_USE_DMA
-
-		// Indicate that drawing has finished
-		ready = 0;
-	}
-
-	/**
-	 * @brief Set the display to draw to the area specified by the supplied data
-	 * @param	data		The properties of the line to draw to the display
-	 */
-	__attribute__((always_inline)) inline void DisplayILI9341::setDestinationLine( LineBufferData* data ) {
-		writeCommand( ILI9341_Command::CASET ); // Column addr set
-		writeData16( data->x << _px );
-		writeData16( ((data->x2 + 1) << _px) - 1 );
-
-		writeCommand( ILI9341_Command::PASET ); // Row addr set
-		writeData16( data->y << _px );
-		writeData16( ((data->y + 1) << _px) - 1 );
+		// Set ready to send data
+		ready = true;
 	}
 
 } // namespace

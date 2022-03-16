@@ -48,9 +48,8 @@ namespace mac{
 	 * in place and continues to listen for future events. If it returns false
 	 * the listener will be removed from the list. 
 	 * @param  void*		Pointer to user data associated with the listener
-	 * @return     true to keep listening, false to remove the listener
 	 */
-	typedef bool (*TweenCallback)(void*);
+	typedef void (*TweenCallback)(void*);
 
 	/**
 	 * Tween item. Holds details of a single tween in a linked list.

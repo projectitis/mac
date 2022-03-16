@@ -81,7 +81,7 @@ namespace mac{
 	 * @param  threshhold   If the pin is analogue, the associated threshhold
 	 * @return           The input for chaining
 	 */
-	Input* Input::map( pin pin, PinType pinType, ClickType clickType, Event event, uint16_t threshhold ){
+	Input* Input::map( pin pin, PinType pinType, ClickType clickType, uint32_t event, uint16_t threshhold ){
 
 		// First unmap the pin/clickType if it exists already
 		unmap( pin, clickType );
@@ -378,8 +378,8 @@ namespace mac{
 			// If we have triggered a ClickType, see if it is mapped (only if active)
 			if ( ( buttonClickType != ClickType::none ) && _active){
 				InputMap* im = ip->mappings;
-				// If the click type is press or click_press, we also need to fire the 'up' events
-				boolean alsoUp = ( buttonClickType == ClickType::press ) || ( buttonClickType == ClickType::click_press );
+				// If the click type is press, click_press or dbl_click, we also need to fire the 'up' events
+				boolean alsoUp = ( buttonClickType == ClickType::press ) || ( buttonClickType == ClickType::click_press ) || ( buttonClickType == ClickType::dbl_click );
 				while (im){
 					// Trigger event for click type
 					if (im->clickType == buttonClickType){

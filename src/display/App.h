@@ -24,7 +24,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */	
+ */
 
 #pragma once
 #ifndef _MAC_APPH_
@@ -36,15 +36,15 @@
 #include "physics/Tween.h"
 #include "input/Input.h"
 
-/**
- * mac (or μac) stands for "Microprocessor App Creator"
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
- **/
-namespace mac{
-	
+ /**
+  * mac (or μac) stands for "Microprocessor App Creator"
+  * mac is a project that enables creating beautiful and useful apps on the
+  * Teensy microprocessor, but hopefully is generic enough to be ported to other
+  * microprocessor boards. The various libraries that make up mac might also
+  * be useful in other projects.
+  **/
+namespace mac {
+
 	/**
 	 * App framework. An app manages:
 	 * 		Input (@see Input.h)
@@ -53,89 +53,94 @@ namespace mac{
 	 * and can optionally manage:
 	 * 		Graphics and display (@see Graphics.h)
 	 */
-	class App: public Listener {
-		
-		public:
+	class App : public Listener {
 
-			/**
-			 * Constructor for app without any graphical elements.
-			 **/
-			App();
+	public:
 
-			/**
-			 * Constructor with display adapter object
-			 * @param	display			A Display instance for the hardware display being used.
-			 **/
-			App( Display* display );
+		/**
+		 * Constructor for app without any graphical elements.
+		 **/
+		App();
 
-			/**
-			 * Destructor
-			 **/
-			~App();
+		/**
+		 * Constructor with display adapter object
+		 * @param	display			A Display instance for the hardware display being used.
+		 **/
+		App( Display* display );
 
-			/**
-			 * The hardware display object
-			 */
-			Display* display;
+		/**
+		 * Destructor
+		 **/
+		~App();
 
-			/**
-			 * The stage for rendering graphics
-			 */
-			Stage* stage;
+		/**
+		 * The hardware display object
+		 */
+		Display* display;
 
-			/**
-			 * Input
-			 **/
-			Input* input;
+		/**
+		 * The drawing buffer object
+		 */
+		LineBuffer* buffer;
 
-			/**
-			 * Listener for messages/events
-			 */
-			Messenger* messenger;
+		/**
+		 * The stage for rendering graphics
+		 */
+		Stage* stage;
 
-			/**
-			 * Tween object for animations
-			 */
-			Tween* tweens;
+		/**
+		 * Input
+		 **/
+		Input* input;
 
-			/**
-			 * Set target FPS for rendering functions. This includes
-			 * tweening and updating the display.
-			 * @param 	fps 	Default 30
-			 */
-			void setRenderFPS( uint16_t fps );
+		/**
+		 * Listener for messages/events
+		 */
+		Messenger* messenger;
 
-			/**
-			 * Update the app
-			 */
-			void update();
+		/**
+		 * Tween object for animations
+		 */
+		Tween* tweens;
 
-			/**
-			 * Initialise serial for debugging messages
-			 * @param boolean If true, wait until serial object is ready (maximum of 2 seconds)
-			 */
-			void serialBegin( boolean waitUntilReady = false );
+		/**
+		 * Set target FPS for rendering functions. This includes
+		 * tweening and updating the display.
+		 * @param 	fps 	Default 30
+		 */
+		void setRenderFPS( uint16_t fps );
 
-		protected:
+		/**
+		 * Update the app
+		 */
+		void update();
 
-			/**
-			 * Called from constructor
-			 */
-			void _init();
+		/**
+		 * Initialise serial for debugging messages
+		 * @param boolean If true, wait until serial object is ready (maximum of 2 seconds)
+		 */
+		void serialBegin( boolean waitUntilReady = false );
 
-			/**
-			 * Timing
-			 */
-			uint32_t _renderDeltaMicrosMax = (1.0/30.0) * 1000000; // 30fps
-			uint32_t renderDeltaMicros = 0;
-			float_t renderDeltaSecs = 0;
-			uint32_t thisMicros;
-			uint32_t lastMicros;
-			uint32_t deltaMicros;
-			float_t deltaSecs;
+	protected:
+
+		/**
+		 * Called from constructor
+		 */
+		void _init();
+
+		/**
+		 * Timing
+		 */
+		uint32_t _renderDeltaMicrosMax = ( 1.0 / 30.0 ) * 1000000; // 30fps
+		uint32_t renderDeltaMicros = 0;
+		float_t renderDeltaSecs = 0;
+		uint32_t thisMicros;
+		uint32_t lastMicros;
+		uint32_t deltaMicros;
+		float_t deltaSecs;
 
 	};
-	
+
 } // namespace
 
 #endif
