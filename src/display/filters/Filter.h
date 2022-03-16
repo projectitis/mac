@@ -39,6 +39,13 @@ namespace mac{
 			 */
 			Filter* next();
 
+			/**
+			 * @brief Add a filter to the end of the list
+			 * 
+			 * @param filter The filter to add
+			 */
+			void add( Filter* filter );
+
 	};
 
 
