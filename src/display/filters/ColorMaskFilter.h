@@ -8,13 +8,14 @@ namespace mac {
 
 	/**
 	 * Color-mask filter
+	 * Makes a specifc color transparent
 	 */
 	class ColorMaskFilter : public Filter {
 	public:
 		/**
 		 * @brief Construct a new Color Mask Filter object
 		 *
-		 * @param color The color to tint with
+		 * @param color The color to mask
 		 */
 		ColorMaskFilter( color888 color );
 
@@ -28,8 +29,10 @@ namespace mac {
 		 */
 		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c ) override;
 
-	protected:
-		color888 _c;
+		/**
+		 * @brief The color being masked
+		 */
+		color888 color = 0;
 
 	};
 
