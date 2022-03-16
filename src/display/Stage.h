@@ -45,6 +45,7 @@
 #include "display/filters/ColorMaskFilter.h"
 #include "display/filters/FuzzyColorMaskFilter.h"
 #include "display/filters/HSVFilter.h"
+#include "display/filters/ShadeFilter.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
