@@ -119,18 +119,26 @@ namespace mac {
 		// Initialise the display to draw only the dirty area
 		buffer->setRegion( renderBounds );
 
+		Filter* filter;
 		DisplayList* head = _displayList->next();
 		DisplayList* next;
 		_renderList = DisplayList::Create( this );
+		float_t localx;
+		float_t localy;
 		for ( uint16_t y = renderBounds->y; y <= renderBounds->y2; y++ ) {
 
 			//Serial.printf("\nStart line y=%d\n", y);
 
-						// For this line, grab the active display objects and add to the render list
-						// in reverse order (stage at the end)
+			// For this line, grab the active display objects and add to the render list
+			// in reverse order (stage at the end)
 			while ( head && ( head->object->globalBounds->y <= y ) ) {
 				_renderList->insertByDepth( head->object );
 				head->object->beginRender( renderBounds );
+				filter = head->object->filters;
+				while (filter) {
+					filter->beginRender( renderBounds );
+					filter = filter->next();
+				}
 				head = head->next();
 			}
 			/* Debug render list
@@ -149,12 +157,23 @@ namespace mac {
 				// Todo precalculate BR corner (x2 and y2) 
 				if ( y > node->object->globalBounds->y2 ) {
 					node->object->endRender();
+					filter = node->object->filters;
+					while (filter) {
+						filter->endRender();
+						filter = filter->next();
+					}
 					next = node->next();
 					node->remove()->recycle();
 					node = next;
 				}
 				else {
-					node->object->beginLine( node->object->globalToLocalY( y ) );
+					localy = node->object->globalToLocalY( y );
+					node->object->beginLine( localy );
+					filter = node->object->filters;
+					while (filter) {
+						filter->beginLine( localy );
+						filter = filter->next();
+					}
 					node = node->next();
 				}
 			}
@@ -175,8 +194,17 @@ namespace mac {
 				node = _renderList->next();
 				while ( node ) {
 					if ( node->object->globalBounds->containsX( x ) ) {
-						node->object->calcPixel( node->object->globalToLocalX( x ), node->object->globalToLocalY( y ) );
+						localx = node->object->globalToLocalX( x );
+						localy = node->object->globalToLocalY( y );
+						node->object->calcPixel( localx, localy );
 						node->object->_ra *= node->object->alpha;
+						// Apply filters
+						filter = node->object->filters;
+						while (filter) {
+							filter->filterPixel( localx, localy, node->object->_ra, node->object->_rc );
+							filter = filter->next();
+						}
+						// Draw to buffer
 						if ( node->object->_ra == 1.0 ) buffer->pixel( node->object->_rc, x );
 						else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra * node->object->alpha ), x );
 					}

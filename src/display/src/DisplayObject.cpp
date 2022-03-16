@@ -66,6 +66,7 @@ namespace mac{
 	 * Reset the object back to default settings
 	 */
 	void DisplayObject::reset(){
+		clearFilters();
 		removeAllChildren();
 		id = 0;
 		_ox = 0.0;
@@ -503,6 +504,15 @@ namespace mac{
 	 */
 	void DisplayObject::globalToLocal( ClipRect* rect ) {
 		rect->translate( -globalBounds->x, -globalBounds->y );
+	}
+
+	void DisplayObject::clearFilters() {
+		Filter* f;
+		while (this->filters) {
+			f = this->filters->next();
+			delete this->filters;
+			this->filters = f;
+		}
 	}
 
 	/**
