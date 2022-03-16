@@ -56,6 +56,21 @@ namespace mac{
 		shape,
 		box,
 	};
+
+	/**
+	 * @brief Origin position type
+	 */
+	enum class OriginType {
+		leftTop,
+		centerTop,
+		rightTop,
+		leftCenter,
+		center,
+		rightCenter,
+		leftBottom,
+		centerBottom,
+		rightBottom,
+	};
 	
 	/**
 	 * The base class for all display objects (@see Stage)
@@ -262,6 +277,13 @@ namespace mac{
 			 * @return float_t The origin y coordinate
 			 */
 			virtual float_t originY();
+
+			/**
+			 * @brief Set the origin within the object to predefined position
+			 * @param position The position of the origin
+			 * @param roundToInt If true, will round the x and y cooridnates using floor
+			 */
+			virtual void origin( OriginType position, boolean roundToInt = false );
 
 			/**
 			 * @brief Set the x coordinate

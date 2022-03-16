@@ -3,22 +3,22 @@
  * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
  * Distributed under the MIT licence
  **/
- 
+
 #include "../App.h"
 
-/**
- * mac (or μac) stands for "Microprocessor App Creator"
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
- **/
-namespace mac{
+ /**
+  * mac (or μac) stands for "Microprocessor App Creator"
+  * mac is a project that enables creating beautiful and useful apps on the
+  * Teensy microprocessor, but hopefully is generic enough to be ported to other
+  * microprocessor boards. The various libraries that make up mac might also
+  * be useful in other projects.
+  **/
+namespace mac {
 
 	/**
 	 * Constructor without any graphical elements.
 	 **/
-	App::App(){
+	App::App() {
 		this->_init();
 	}
 
@@ -26,16 +26,17 @@ namespace mac{
 	 * Constructor with display adapter object
 	 * @param	display			A Display instance for the hardware display being used
 	 **/
-	App::App( Display* display ){
+	App::App( Display* display ) {
 		// Graphics
 		this->display = display;
+		this->buffer = new LineBuffer( this->display );
 		this->_init();
 	}
 
 	/**
 	 * Initialise the app
 	 */
-	void App::_init(){
+	void App::_init() {
 		this->lastMicros = micros();
 
 		this->stage = new Stage();
@@ -43,13 +44,13 @@ namespace mac{
 		this->tweens = new Tween();
 		this->input = new Input( this->messenger );
 	}
-	
+
 	/**
 	 * Destructor
 	 **/
-	App::~App(){
-		if (this->display) delete this->display;
-
+	App::~App() {
+		if ( this->display ) delete this->display;
+		delete this->buffer;
 		delete this->input;
 		delete this->tweens;
 		delete this->messenger;
@@ -60,15 +61,15 @@ namespace mac{
 	 * Limit the update time to this speed or slower
 	 * @param fps  		Maximum FPS for update
 	 */
-	void App::setRenderFPS( uint16_t fps ){
-		if (fps==0) _renderDeltaMicrosMax = 0;
-		else _renderDeltaMicrosMax = (1/(float_t)fps) * 1000000;
+	void App::setRenderFPS( uint16_t fps ) {
+		if ( fps == 0 ) _renderDeltaMicrosMax = 0;
+		else _renderDeltaMicrosMax = ( 1 / (float_t)fps ) * 1000000;
 	}
 
 	/**
 	 * Update the app
 	 */
-	void App::update(){
+	void App::update() {
 		// Update timer
 		thisMicros = micros();
 		deltaMicros = thisMicros - lastMicros;
@@ -84,17 +85,17 @@ namespace mac{
 		// Perform the fps limited functions, which include
 		// tweening and rendering.
 		renderDeltaMicros += deltaMicros;
-		if (renderDeltaMicros >= _renderDeltaMicrosMax){
+		if ( renderDeltaMicros >= _renderDeltaMicrosMax ) {
 			renderDeltaSecs = renderDeltaMicros * 0.000001;
 
 			// Update tweens
 			tweens->update( renderDeltaSecs );
 
 			// Render the stage
-			stage->render( display );
+			stage->render( buffer );
 
 			// User render functions
-			messenger->sendMessage( Event::update_render ); 
+			messenger->sendMessage( Event::update_render );
 
 			renderDeltaMicros -= _renderDeltaMicrosMax;
 		}
@@ -104,15 +105,15 @@ namespace mac{
 		lastMicros = thisMicros;
 	}
 
-	void App::serialBegin( boolean waitUntilReady ){
+	void App::serialBegin( boolean waitUntilReady ) {
 		// Initialise the serial for debugging info
 		Serial.begin( 9600 );
-		if (waitUntilReady){
-			for (uint8_t i=0; i<20; i++){
+		if ( waitUntilReady ) {
+			for ( uint8_t i = 0; i < 20; i++ ) {
 				delay( 100 );
-				if (Serial) break;
+				if ( Serial ) break;
 			}
 		}
 	}
-	
+
 } // namespace

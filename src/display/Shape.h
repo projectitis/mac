@@ -71,7 +71,7 @@ namespace mac{
 			void reset();
 
 			/**
-			 * @brief Provide the points that define teh shape
+			 * @brief Provide the points that define the shape
 			 * If the first and last points are different, the are automatically joined
 			 * 
 			 * @param points An array of points

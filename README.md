@@ -6,22 +6,28 @@ Microprocessor App Creator (μac, or mac) is a project that enables rapid creati
 
 This project has a software component (the libraries) and a hardware component (a Teensy-based handheld). As well as the software, eventually the plans/schematics will be released to enable you to build your own Teensy-based handheld that will run applications developed using mac.
 
-## DEVELOPER NOTES 2021-03-4
+## DEVELOPER NOTES 2022-03-16
 ### TODO next
+- Radial gradient
+- Sprite stamping
+- Masks
+- Filters (tint, hue, saturation)
 - Sprite animation
 - Box class enhancements (border)
 - Attempt to measure RAM usage
 
-## Current status
- - **2021-05-25** Completely refactored to stage and display list approach (like Flash)
- - **2021-04-27** Completely rewritten to convert framebuffer to linebuffer
+## Chnage history
+ - **2022-03-16** Working linear gradient.
+ - **2022-03-10** Refactored line buffer and display implementation.
+ - **2021-09-19** Reorganised codebase into subfolders.
+ - **2021-05-25** Completely refactored to stage and display list approach (like Flash).
+ - **2021-04-27** Completely rewritten to convert framebuffer to linebuffer.
  - **2019-04-14** Many bitmap and vector features implemented. Working on GUI components.
  - **2018-04-24** Very much a work in progress. Only display components currently implemented.
 
 ## Prerequisites
 
 Only tested on Teensy 3.6 but should work on T3.5 and other lower-memory teensy devices.
-
 
 #### Minimum requirements:
 
@@ -38,19 +44,19 @@ The library uses a linebuffer (double-buffered) for rendering graphics to the sc
 
 mac has lofty goals. The mac project has the following planned components:
 
- -  Display adapters
+-  Display adapters
 	 - **ILI9341 4-wire SPI (100%)**
 	 - **Support for many pixel formats from 24bit color down to 1-bit mono (100%)**
 	 - **Line buffer implementation for very low memory consumption (100%)**
 	 - **Pixel scaling (1x1, 2x2, 4x4 and 8x8 pixels) (100%)**
 	 - Double-buffered DMA support for faster rendering (20%)
 	 - Vertical sync/Tearing Effect (TE) support (0%)
- - Graphics
-     - **Stage and display list based graphics engine**
-     - **Tilemap-based sprites (100%)**
-	 - Sprite animation (10%)
-	 - Fast antialiased vector drawing: Thin lines, Triangles, Complex ploygons, Thick lines
- - XM audio player
+- Graphics
+    - **Stage and display list based graphics engine**
+    - **Tilemap-based sprites (100%)**
+	- Sprite animation (10%)
+	- Fast antialiased vector drawing: Thin lines, Triangles, Complex polygons, Thick lines
+- XM audio player
 	 - Loading and playback - (90% - errors. Only very few mods work)
 	 - Loading and saving to SD card (0%)
 - GUI

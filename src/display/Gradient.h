@@ -71,9 +71,9 @@ namespace mac{
 			void reset();
 
 			/**
-			 * @brief Start the stop :)
+			 * @brief update the stop
 			 */
-			void start( float_t pos );
+			void update( float_t pos );
 
 			color888 color = 0;
 			float_t alpha = 1.0;
@@ -103,36 +103,23 @@ namespace mac{
 	class Gradient: public IDrawable {
 		
 		public:
-			/**
-			 * Memory pool of recycled objects
-			 */
-			static Gradient* pool;
-
-			/**
-			 * Create a new object or take one from the pool
-			 * @return The new or recycled object
-			 */
-			static Gradient* Create( uint8_t numStops );
-
-			/**
-			 * Return this object to the pool
-			 */
-			void recycle();
-
-			/**
-			 * Reset the object back to default settings
-			 */
-			void reset();
 
 			/**
 			 * @brief Construct a new Gradient object
+			 * 
+			 * @param numStops The number of stops. Must be at least 2
 			 */
-			Gradient();
+			Gradient( uint8_t numStops = 2 );
 
 			/**
 			 * @brief Destroy the Gradient object
 			 */
 			virtual ~Gradient();
+
+			/**
+			 * @brief Removes all stops and sets default position
+			 */
+			void reset();
 
 			/**
 			 * @brief Specify the start and end points
@@ -150,26 +137,20 @@ namespace mac{
 			Gradient* stop( uint8_t index, color888 color, float_t alpha, float_t position );
 
 			/**
-			 * @brief Begin the render sweep for the current frame
-			 * @param updateArea The area of the display being updated
+			 * @brief Reverse the stops
+			 *  
 			 */
-			void beginRender( ClipRect* updateArea );
-
-			/**
-			 * prepare to render the next line
-			 * @param ry The y position in local coordinates
-			 */
-			void beginLine( int16_t ry );
+			void reverse();
 
 			/**
 			 * Read a pixel
 			 * @param rx The x position in local coordinates
 			 * @param ry The y position in local coordinates
 			 */
-			void calcPixel( int16_t rx, int16_t ry );
-
-
-			void skipPixel( int16_t rx, int16_t ry );
+			virtual void calcPixel( int16_t rx, int16_t ry ){
+				rc = 0;
+				ra = 1.0;
+			}
 
 			/**
 			 * @brief The color value result of calcPixel
@@ -184,47 +165,41 @@ namespace mac{
 		protected:
 
 			/**
-			 * Pointer to next object in memory pool of recycled objects
-			 */
-			Gradient* _poolNext = 0;
-
-			/**
 			 * @brief The number of stops
 			 */
-			uint8_t numStops = 0;
+			uint8_t _numStops = 0;
+
+			/**
+			 * @brief The active stop (while rendering)
+			 */
+			int _activeStop = 0;
 
 			/**
 			 * @brief The stops that make up this gradient
 			 */
-			GradientStop** stops = 0;
+			GradientStop** _stops = 0;
 
 			/**
 			 * @brief Flag to indicate if stops need recalculating
 			 */
-			boolean _needsCalc = true;
+			bool _needsCalc = true;
+
+			/**
+			 * @brief Flag to indicate whether the stops are reversed
+			 */
+			bool _reverse = false;
 
 			float_t _x = 0;
 			float_t _y = 0;
 			float_t _x2 = 0;
 			float_t _y2 = 0;
 
-			float_t _cos = 0;
-			float_t _sin = 0;
-			float_t _len = 0;
+			float_t _y0 = 0;
 
-			float_t x0 = 0;
-			float_t y0 = 0;
-
-			float_t pos0 = 0;
-			float_t reverse = false;
-			boolean steep = false;
-
-			float_t dx = 0;
-			float_t dy = 0;
-			float_t pos = 0;
-
-			int activeStop = 0;
-
+			float_t _pos0 = 0;
+			float_t _pos = 0;
+			float_t _dx = 0;
+			float_t _dy = 0;
 	};
 	
 } // namespace
