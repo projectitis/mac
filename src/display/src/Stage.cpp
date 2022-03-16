@@ -198,23 +198,15 @@ namespace mac {
 						localy = node->object->globalToLocalY( y );
 						node->object->calcPixel( localx, localy );
 						node->object->_ra *= node->object->alpha;
-						if (node->object->_ra > 0) {
-							filter = node->object->filters;
-							while (filter) {
-								filter->filterPixel( localx, localy, node->object->_ra, node->object->_rc );
-								filter = filter->next();
-							}
-							// Draw to buffer
-							if ( node->object->_ra == 1.0 ) buffer->pixel( node->object->_rc, x );
-							else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra * node->object->alpha ), x );
+						// Apply filters
+						filter = node->object->filters;
+						while (filter) {
+							filter->filterPixel( localx, localy, node->object->_ra, node->object->_rc );
+							filter = filter->next();
 						}
-						else{
-							filter = node->object->filters;
-							while (filter) {
-								filter->skipPixel( localx, localy );
-								filter = filter->next();
-							}
-						}
+						// Draw to buffer
+						if ( node->object->_ra == 1.0 ) buffer->pixel( node->object->_rc, x );
+						else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra * node->object->alpha ), x );
 					}
 					node = node->next();
 				}
