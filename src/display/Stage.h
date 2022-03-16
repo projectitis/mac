@@ -32,13 +32,14 @@
 
 #include "display/DisplayList.h"
 #include "display/LineBuffer.h"
-
- // Include all display object types
+ // Display object types
 #include "display/DisplayObject.h"
 #include "display/Sprite.h"
 #include "display/Text.h"
 #include "display/Shape.h"
 #include "display/Box.h"
+// Gradients
+#include "display/LinearGradient.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"

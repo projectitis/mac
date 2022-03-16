@@ -31,6 +31,7 @@
 #define _MAC_DISPLAYOBJECTH_ 1
 
 #include "geom/ClipRect.h"
+#include "display/Filter.h"
 #include "display/IDrawable.h"
 #include "display/Messenger.h"
 #include "physics/Tween.h"
@@ -376,6 +377,16 @@ namespace mac{
 			 * Check if object is dirty
 			 */
 			boolean isDirty();
+
+			/**
+			 * @brief Filters to apply during rendering
+			 */
+			Filter* filters = nullptr;
+
+			/**
+			 * @brief Clear all filters
+			 */
+			void clearFilters();
 
 			/**
 			 * @brief Begin the render sweep for the current frame
