@@ -40,6 +40,8 @@
 #include "display/Box.h"
 // Gradients
 #include "display/LinearGradient.h"
+// Filters
+#include "display/filters/TintFilter.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
