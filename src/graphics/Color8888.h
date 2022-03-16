@@ -59,7 +59,7 @@ namespace mac{
 		ARGB8888_IndianRed = 0xffcd5c5c,
 		ARGB8888_Crimson = 0xffdc143c,
 		ARGB8888_Firebrick = 0xffb22222,
-		ARGB8888_ARGB8888_DarkRed = 0xff8b0000,
+		ARGB8888_DarkRed = 0xff8b0000,
 		ARGB8888_Red = 0xffff0000,
 		ARGB8888_OrangeRed = 0xffff4500,
 		ARGB8888_Tomato = 0xffff6347,
