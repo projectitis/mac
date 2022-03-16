@@ -31,7 +31,7 @@
 #define _MAC_DISPLAYOBJECTH_ 1
 
 #include "geom/ClipRect.h"
-#include "display/Filter.h"
+#include "display/filters/Filter.h"
 #include "display/IDrawable.h"
 #include "display/Messenger.h"
 #include "physics/Tween.h"
