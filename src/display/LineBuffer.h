@@ -1,8 +1,9 @@
 #pragma once
-#ifndef _MAC_CONTEXTH_
-#define _MAC_CONTEXTH_ 1
+#ifndef _MAC_LINEBUFFERH_
+#define _MAC_LINEBUFFERH_ 1
 
 #include "Common.h"
+#include "display/LineBufferData.h"
 #include "display/Display.h"
 #include "geom/ClipRect.h"
 #include "graphics/Bitmap.h"
@@ -10,25 +11,12 @@
 namespace mac {
 
 	/**
-	 * Holds the pixel data and state of the line buffer. There
-	 * are two of these - one for the front and one for the back.
+	 * @brief Two most common line buffer heights
 	 */
-	typedef struct {
-
-		// The pixel data as 32bit words. There is a storage overhead of 1 byte
-		// per pixel, but this is made up for by the faster math this allows.
-		uint32_t* pixels;
-
-		// The y coord of the linebuffer
-		uint16_t y;
-
-		// The start x coord (normally 0)
-		uint16_t x;
-
-		// The end x coord (normally width-1)
-		uint16_t x2;
-
-	} LineBufferData;
+	enum LineBufferHeight{
+		fullFramebuffer = 0,
+		singleLine = 1
+	};
 
 	/**
 	 * Line Buffer
@@ -39,9 +27,10 @@ namespace mac {
 		/**
 		 * @brief Construct a new Line Buffer object
 		 *
-		 * @param display
+		 * @param	display			A Display instance for the hardware display being used.
+		 * @param	bufferHeight	The height of the line buffer, in lines. Default = 1. Full framebuffer = 0.
 		 */
-		LineBuffer( Display* display );
+		LineBuffer( Display* display, int bufferHeight = 1 );
 
 		/**
 		 * @brief Destroy the Line Buffer object
@@ -62,10 +51,14 @@ namespace mac {
 		void resetRegion();
 
 		/**
-		 * Flip the front and back buffers, and trigger the drawing of the back buffer
-		 * to the display. Moves the front buffer to the next line.
+		 * @brief Advance the buffer to the next line and flush to hardware if necessary
+		 * The buffer is advanced to the next line. If the buffer is filled or the end of
+		 * the drawing region is reached, the buffers are flipped and the pixels are
+		 * flushed to the hardware. Setting flush to true will also flip and flush the
+		 * buffer, even if it is not full.
+		 * @param flush If true will flush the buffer to the hardware even if not full
 		 */
-		void flip();
+		void flip( bool flush = false );
 
 		/**
 		 * Fill the current line with a color. Respects region
@@ -81,7 +74,7 @@ namespace mac {
 		 * @param  x 	The X coordinate
 		 */
 		inline void pixel( color888 c, int16_t x ) {
-			_data[_frontIndex].pixels[x] = c;
+			_data[_frontIndex].pixels[_yOffset + x] = c;
 		}
 
 		/**
@@ -90,7 +83,7 @@ namespace mac {
 		 * @return 		The color (pixel) in RGB 888 format
 		 */
 		inline color888 pixel( int16_t x ) {
-			return _data[_frontIndex].pixels[x];
+			return _data[_frontIndex].pixels[_yOffset + x];
 		}
 
 		/**
@@ -100,7 +93,7 @@ namespace mac {
 		 * @param  x 	The X coordinate
 		 */
 		inline void blend( color888 c, alpha_t a, int16_t x ) {
-			_data[_frontIndex].pixels[x] = blend888( _data[_frontIndex].pixels[x], c, alpha8bit( a ) );
+			_data[_frontIndex].pixels[_yOffset + x] = blend888( _data[_frontIndex].pixels[_yOffset + x], c, alpha8bit( a ) );
 		}
 
 		/**
@@ -110,7 +103,7 @@ namespace mac {
 		 * @param  x 	The X coordinate
 		 */
 		inline void blend( color888 c, uint8_t a, int16_t x ) {
-			_data[_frontIndex].pixels[x] = blend888( _data[_frontIndex].pixels[x], c, a );
+			_data[_frontIndex].pixels[_yOffset + x] = blend888( _data[_frontIndex].pixels[_yOffset + x], c, a );
 		}
 
 		/**
@@ -122,27 +115,47 @@ namespace mac {
 	protected:
 
 		/**
-		 * Pointer to the pixel data
+		 * @brief Pointer to the pixel data
 		 */
 		LineBufferData _data[2];
 
 		/**
-		 * Index to the active (front) data buffer for reading and writing
+		 * @brief Index to the active (front) data buffer for reading and writing
 		 */
 		uint8_t _frontIndex = 0;
 
 		/**
-		 * Index to the active data buffer for transfering to the hardware. I.e: `lineBuff->data[ lineBuff->backIndex ][ x ]`
+		 * @brief Index to the active data buffer for transfering to the hardware. I.e: `lineBuff->data[ lineBuff->backIndex ][ x ]`
 		 */
 		uint8_t _backIndex = 1;
 
 		/**
-		 * Reference to the display
+		 * @brief Height of the line buffer in lines
+		 */
+		uint16_t _bufferHeight = 1;
+
+		/**
+		 * @brief Width of the line buffer in pixels
+		 */
+		uint16_t _bufferWidth = 0;
+
+		/**
+		 * @brief Currently active line
+		 */
+		uint16_t _y = 0;
+
+		/**
+		 * @brief Pixel offset of current line
+		 */
+		uint16_t _yOffset = 0;
+
+		/**
+		 * @brief Reference to the display
 		 */
 		Display* _display;
 
 		/**
-		 * Rect describing the drawing region (scaled to pixelscale)
+		 * @brief Rect describing the drawing region (scaled to pixelscale)
 		 */
 		ClipRect _region;
 	};

@@ -207,12 +207,9 @@ namespace mac {
 	/**
 	 * @brief Draw data to an area of the display
 	 *
-	 * @param y The y-coordinate of the line (scaled by pixel scale)
-	 * @param x The start x-coordinate (scaled by pixel scale)
-	 * @param x2 The end-x-coordinate, inclusive (scaled by pixel scale)
-	 * @param data Pointer to the pixel data for the line (where x=0)
+	 * @param buffer The line buffer to draw
 	*/
-	void DisplayILI9341::draw( uint16_t y, uint16_t x, uint16_t x2, color888* data ) {
+	void DisplayILI9341::draw( LineBufferData& buffer ) {
 		// Set not ready
 		ready = false;
 
@@ -221,12 +218,12 @@ namespace mac {
 
 		// Set the area of the display to write to
 		writeCommand( ILI9341_Command::CASET ); // Column addr set
-		writeData16( x << _px );
-		writeData16( ( ( x2 + 1 ) << _px ) - 1 );                                                                                    
+		writeData16( buffer.rect.x << _px );
+		writeData16( ( ( buffer.rect.x2 + 1 ) << _px ) - 1 );                                                                                    
 
 		writeCommand( ILI9341_Command::PASET ); // Row addr set
-		writeData16( y << _px );
-		writeData16( ( ( y + 1 ) << _px ) - 1 );
+		writeData16( buffer.rect.y << _px );
+		writeData16( ( ( buffer.rect.y2 + 1 ) << _px ) - 1 );
 
 		// Tell display we are about to send data
 		writeCommand( ILI9341_Command::RAMWR );
@@ -234,14 +231,18 @@ namespace mac {
 		// Write pixels. For some reason this SPI implementation requires the final
 		// pixel to be written differently, so we need to keep track of the count
 		int scale = 1 << _px;
-		int count = ( x2 - x + 1 ) * scale * scale;
-		for ( uint16_t py = 0; py < scale; py++ ) {
-			for ( uint16_t px = x; px <= x2; px++ ) {
-				for ( uint16_t p = 0; p < scale; p++ ) {
-					if ( --count ) writeData16( to565( data[px] ) );
-					else writeData16_last( to565( data[px] ) );
+		int count = buffer.rect.width * scale * buffer.rect.height * scale;
+		int lineOffset = 0;
+		for ( uint16_t y = buffer.rect.y; y <= buffer.rect.y2; y++ ) {
+			for ( uint16_t i = 0; i < scale; i++ ) {
+				for ( uint16_t x = buffer.rect.x; x <= buffer.rect.x2; x++ ) {
+					for ( uint16_t j = 0; j < scale; j++ ) {
+						if ( --count ) writeData16( to565( buffer.pixels[lineOffset + x] ) );
+						else writeData16_last( to565( buffer.pixels[lineOffset + x] ) );
+					}
 				}
 			}
+			lineOffset += _size.width;
 		}
 		// Done with complete transaction
 		SPI.endTransaction();

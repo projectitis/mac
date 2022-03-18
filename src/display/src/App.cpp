@@ -1,41 +1,18 @@
-/**
- * App framework for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
-
 #include "../App.h"
 
- /**
-  * mac (or μac) stands for "Microprocessor App Creator"
-  * mac is a project that enables creating beautiful and useful apps on the
-  * Teensy microprocessor, but hopefully is generic enough to be ported to other
-  * microprocessor boards. The various libraries that make up mac might also
-  * be useful in other projects.
-  **/
 namespace mac {
 
-	/**
-	 * Constructor without any graphical elements.
-	 **/
 	App::App() {
 		this->_init();
 	}
 
-	/**
-	 * Constructor with display adapter object
-	 * @param	display			A Display instance for the hardware display being used
-	 **/
-	App::App( Display* display ) {
+	App::App( Display* display, int bufferHeight ) {
 		// Graphics
 		this->display = display;
-		this->buffer = new LineBuffer( this->display );
+		this->buffer = new LineBuffer( this->display, bufferHeight );
 		this->_init();
 	}
 
-	/**
-	 * Initialise the app
-	 */
 	void App::_init() {
 		this->lastMicros = micros();
 
@@ -45,9 +22,6 @@ namespace mac {
 		this->input = new Input( this->messenger );
 	}
 
-	/**
-	 * Destructor
-	 **/
 	App::~App() {
 		if ( this->display ) delete this->display;
 		delete this->buffer;
@@ -57,18 +31,11 @@ namespace mac {
 		delete this->stage;
 	}
 
-	/**
-	 * Limit the update time to this speed or slower
-	 * @param fps  		Maximum FPS for update
-	 */
 	void App::setRenderFPS( uint16_t fps ) {
 		if ( fps == 0 ) _renderDeltaMicrosMax = 0;
 		else _renderDeltaMicrosMax = ( 1 / (float_t)fps ) * 1000000;
 	}
 
-	/**
-	 * Update the app
-	 */
 	void App::update() {
 		// Update timer
 		thisMicros = micros();
