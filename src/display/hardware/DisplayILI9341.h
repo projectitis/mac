@@ -96,12 +96,9 @@ namespace mac {
 		/**
 		 * @brief Draw data to an area of the display
 		 *
-		 * @param y The y-coordinate of the line (scaled by pixel scale)
-		 * @param x The start x-coordinate (scaled by pixel scale)
-		 * @param x2 The end-x-coordinate, inclusive (scaled by pixel scale)
-		 * @param data Pointer to the pixel data for the line (where x=0)
+		 * @param buffer The line buffer to draw (buffer is scaled by pixel scale)
 		*/
-		void draw( uint16_t y, uint16_t x, uint16_t x2, color888* data );
+		void draw( LineBufferData& buffer );
 
 	protected:
 

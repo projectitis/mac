@@ -3,6 +3,7 @@
 #define _MAC_DISPLAYH_ 1
 
 #include "Common.h"
+#include "display/LineBufferData.h"
 #include "geom/ClipRect.h"
 #include "graphics/Bitmap.h"
 
@@ -47,22 +48,18 @@ namespace mac {
 		virtual ~Display( void ) {}
 
 		/**
-		 * @brief Draw a (partial) line of data to the display
+		 * @brief Draw a buffer of pixel data to the display
 		 *
 		 * Each display must override this method. The example below provides a
-		 * template of the steps required to implement the draw method. The key
-		 * line that actually writes pixel data to the display is commented out.
+		 * template of the steps required to implement the draw method.
 		 * @see DisplayILI9341 for a full implementation using 4-wire SPI
 		 *
 		 * It is always assumed that all inputs are valid, and no checking or
 		 * clipping needs to occur
 		 *
-		 * @param y The y-coordinate of the line (scaled by pixel scale)
-		 * @param x The start x-coordinate (scaled by pixel scale)
-		 * @param x2 The end-x-coordinate, inclusive (scaled by pixel scale)
-		 * @param data Pointer to the pixel data for the line (where x=0)
+		 * @param buffer The line buffer to draw (buffer is scaled by pixel scale)
 		 */
-		virtual void draw( uint16_t y, uint16_t x, uint16_t x2, color888* data ) {
+		virtual void draw( LineBufferData& buffer ) {
 
 			// (1) Set ready flag to indicate we are not ready for the next draw call yet.
 			// Note that this is not really required for syncronous methods (like this example)
@@ -78,10 +75,10 @@ namespace mac {
 			// (3) Hardware will first usually require the user to specify the screen area to draw to
 			/*
 			setDestinationArea(
-				x << _px,						// top-left x
-				y << _py,						// top-left y
-				((data->x2 + 1) << _px) - 1,	// bottom-right x
-				((data->y + 1) << _px) - 1		// bottom-right y
+				buffer.rect.x << _px,						// top-left x
+				buffer.rect.y << _py,						// top-left y
+				((buffer.rect.x2 + 1) << _px) - 1,			// bottom-right x
+				((buffer.rect.y2 + 1) << _px) - 1			// bottom-right y
 			);
 			*/
 
@@ -99,13 +96,17 @@ namespace mac {
 			// Colours are always provided in 888 format (0x00000000RRRRRRRRGGGGGGGGBBBBBBBB). Use
 			// the conversion functions for the hardware's colour. For example to565
 			/*
-			int scale = ( 1 << _px );
-			for ( uint16_t py = 0; py < scale; py++ ) {
-				for ( uint16_t px = x; px <= x2; px++ ) {
-					for ( uint16_t p = x; p < scale; p++ ) {
-						sendPixel( to565( data[px] ) );
+			int scale = 1 << _px;
+			int lineOffset = buffer.rect.y * _size.width;
+			for ( uint16_t y = buffer.rect.y; y <= buffer.rect.y2; y++ ) {
+				for ( uint16_t yi = 0; yi < scale; yi++ ) {
+					for ( uint16_t x = buffer.rect.x; x <= buffer.rect.x2; x++ ) {
+						for ( uint16_t xi = 0; xi < scale; xi++ ) {
+							sendPixel( to565( buffer.pixels[lineOffset + x] ) );
+						}
 					}
 				}
+				lineOffset += _size.width;
 			}
 			*/
 
