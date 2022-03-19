@@ -2,8 +2,6 @@
 
 namespace mac {
 
-	Stage* Stage::pool = nullptr;
-
 	Stage::Stage() {
 		_dirtyBounds = new ClipRect();
 		id = 0;
