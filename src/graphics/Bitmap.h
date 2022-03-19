@@ -1,31 +1,3 @@
-/**
- * Bitmap, Tilemap and general color helper functions
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- *
- * MIT LICENCE
- * -----------
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */	
-
 #pragma once
 #ifndef _MAC_BITMAPH_
 #define _MAC_BITMAPH_ 1
@@ -36,30 +8,32 @@
 #include "graphics/Color565.h"
 
 /**
- * This file is part of the mac (or μac) "Microprocessor App Creator" library.
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
+ * Bitmap and tilemap
+
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project for creating beautiful and useful
+ * apps on various microprocessor boards.
+ *
+ * mac is distributed under the MIT licence
  **/
-namespace mac{
-	
+namespace mac {
+
 	/**
 	 * Pixel formats
 	 **/
 	typedef enum {
-		PF_UNKNOWN 			= 0,
-		PF_565 				= 1,	//  RGB 565		5 bits red, 6 bits green, 5 bits blue
-		PF_4444 			= 2,	// ARGB 4444	4 bits alpha, 4 bits each color channel (16 bits total)
-		PF_6666 			= 3,	// ARGB 6666	6 bits alpha, 6 bits each color channel (24 bits total)
-		PF_8565 			= 4,	// ARGB 8565	565 with leading 8-bit alpha (24 bits total)
-		PF_888				= 5,	//  RGB 888		24-bit color, no alpha
-		PF_8888				= 6,	// ARGB 8888	32-bit color with leading b-bit alpha
-		PF_INDEXED			= 7,	// 				Indexed color (0-255)
-		PF_MONO				= 8,	// 				Mono (on/off) color
-		PF_GRAYSCALE8		= 9,	// 				256 levels of gray (intensity)
-		PF_GRAYSCALE4 		= 10,	//				16 levels of gray (intensity)
-		PF_GRAYSCALE2 		= 11	//				4 levels of gray (intensity)
+		PF_UNKNOWN = 0,
+		PF_565 = 1,	//  RGB 565		5 bits red, 6 bits green, 5 bits blue
+		PF_4444 = 2,	// ARGB 4444	4 bits alpha, 4 bits each color channel (16 bits total)
+		PF_6666 = 3,	// ARGB 6666	6 bits alpha, 6 bits each color channel (24 bits total)
+		PF_8565 = 4,	// ARGB 8565	565 with leading 8-bit alpha (24 bits total)
+		PF_888 = 5,	//  RGB 888		24-bit color, no alpha
+		PF_8888 = 6,	// ARGB 8888	32-bit color with leading b-bit alpha
+		PF_INDEXED = 7,	// 				Indexed color (0-255)
+		PF_MONO = 8,	// 				Mono (on/off) color
+		PF_GRAYSCALE8 = 9,	// 				256 levels of gray (intensity)
+		PF_GRAYSCALE4 = 10,	//				16 levels of gray (intensity)
+		PF_GRAYSCALE2 = 11	//				4 levels of gray (intensity)
 	} PixelFormat;
 
 	/**
@@ -92,9 +66,9 @@ namespace mac{
 		uint32_t dataSize;					// The total number of bytes in the data
 		uint32_t width;						// Width of bitmap
 		uint32_t height;					// height of bitmap
-		const uint8_t* data __attribute__ ((aligned (4))); // Data, aligned to 4-byte boundary
+		const uint8_t* data __attribute__( ( aligned( 4 ) ) ); // Data, aligned to 4-byte boundary
 	} BitmapData;
-	
+
 	/**
 	 * Holds details of a tile map in flash memory
 	 **/
@@ -102,7 +76,7 @@ namespace mac{
 		PixelFormat pixelFormat;			// The format of each pixel
 		uint32_t transparentColor;			// For non-alpha pixel formats, the color to treat as fully transparent. Usually fuchsia.
 		uint32_t dataSize;					// The total number of bytes in the data
-		const uint8_t* data __attribute__ ((aligned (4))); // Data, aligned to 4-byte boundary
+		const uint8_t* data __attribute__( ( aligned( 4 ) ) ); // Data, aligned to 4-byte boundary
 		uint32_t tileWidth;					// Width of each tile in the map
 		uint32_t tileHeight;				// height of each tile in the map
 		uint32_t tileCount;					// Number of tiles in the map
@@ -116,17 +90,17 @@ namespace mac{
 	 *      ##  ##  ##      ##
 	 *  #####    ####   #####
 	 */
-	
-	/*
-	 * ### BITMAP ACCESS
-	 */
 
-	/**
-	 * The following functions get a pixel from a bitmap and convert to RGB565 and 5-bit alpha.
-	 * Use these functions if you are using the fast alpha-blending function below that requires
-	 * 5-bit alpha (0-31). If you are using libraries that require 8-bit alpha, use the ...as8565
-	 * functions instead.
-	 */
+	 /*
+	  * ### BITMAP ACCESS
+	  */
+
+	  /**
+	   * The following functions get a pixel from a bitmap and convert to RGB565 and 5-bit alpha.
+	   * Use these functions if you are using the fast alpha-blending function below that requires
+	   * 5-bit alpha (0-31). If you are using libraries that require 8-bit alpha, use the ...as8565
+	   * functions instead.
+	   */
 	void get565as5565( uint8_t* p, uint16_t& c, uint8_t& a );
 	void get4444as5565( uint8_t* p, uint16_t& c, uint8_t& a );
 	void get6666as5565( uint8_t* p, uint16_t& c, uint8_t& a );
@@ -139,7 +113,7 @@ namespace mac{
 	/**
 	 * Accessor function type to get pixels in 5565 format
 	 */
-	typedef void (*access5565)( uint8_t*, uint16_t&, uint8_t& );
+	typedef void ( *access5565 )( uint8_t*, uint16_t&, uint8_t& );
 
 	/**
 	 * Use getAccessor5565 on a tilemap to choose the correct data access function.
@@ -161,7 +135,7 @@ namespace mac{
 	/**
 	 * Use getAccessor8565 on a tilemap to choose the correct data access function.
 	 */
-	typedef void (*access8565)( uint8_t*, uint16_t&, uint8_t& );
+	typedef void ( *access8565 )( uint8_t*, uint16_t&, uint8_t& );
 	access8565 getAccessor8565( PixelFormat pixelFormat );
 
 	/**
@@ -179,7 +153,7 @@ namespace mac{
 	/**
 	 * Use getAccessorARGB on a tilemap to choose the correct data access function.
 	 */
-	typedef void (*accessARGB)( uint8_t*, uint8_t&, uint8_t&, uint8_t&, uint8_t& );
+	typedef void ( *accessARGB )( uint8_t*, uint8_t&, uint8_t&, uint8_t&, uint8_t& );
 	accessARGB getAccessorARGB( PixelFormat pixelFormat );
 
 	/**
@@ -203,9 +177,9 @@ namespace mac{
 	/**
 	 * Use getAccessor8888 on a tilemap to choose the correct data access function.
 	 */
-	typedef void (*access8888)( uint8_t*, uint32_t, uint32_t& );
+	typedef void ( *access8888 )( uint8_t*, uint32_t, uint32_t& );
 	access8888 getAccessor8888( PixelFormat pixelFormat );
-	
+
 } // ns
 
 #endif

@@ -9,14 +9,17 @@ This project has a software component (the libraries) and a hardware component (
 ## DEVELOPER NOTES 2022-03-16
 ### TODO next
 - Radial gradient
-- Sprite stamping
 - Masks
-- Filters (tint, hue, saturation)
+- Sprite stamping
 - Sprite animation
+- Sprite rotation
 - Box class enhancements (border)
+- Simple vector rendering
 - Attempt to measure RAM usage
+- ESP32 support
 
-## Chnage history
+## Change history
+ - **2022-03-17** Filters (tint, HSV, colormask, lighten/darken) and variable height framebuffer
  - **2022-03-16** Working linear gradient.
  - **2022-03-10** Refactored line buffer and display implementation.
  - **2021-09-19** Reorganised codebase into subfolders.

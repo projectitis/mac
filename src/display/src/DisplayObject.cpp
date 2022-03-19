@@ -1,24 +1,11 @@
-/**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
- 
 #include "../DisplayObject.h"
 
-/**
- * mac (or μac) stands for "Microprocessor App Creator"
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
- **/
-namespace mac{
+namespace mac {
 
 	/**
 	 * Constructor
 	 */
-	DisplayObject::DisplayObject(){
+	DisplayObject::DisplayObject() {
 		globalBounds = new ClipRect();
 		_localBounds = new ClipRect();
 		cleanBounds = new ClipRect();
@@ -28,7 +15,7 @@ namespace mac{
 	/**
 	 * Destructor
 	 **/
-	DisplayObject::~DisplayObject(){
+	DisplayObject::~DisplayObject() {
 		reset();
 		delete renderBounds;
 		delete cleanBounds;
@@ -37,35 +24,9 @@ namespace mac{
 	}
 
 	/**
-	 * Pool getter
-	 */
-	DisplayObject** DisplayObject::_getPool(){
-		return 0;
-	}
-
-	/**
-	 * Return this object to the pool
-	 */
-	void DisplayObject::recycle(){
-#ifdef MAC_OBJECT_REUSE
-		this->reset();
-		DisplayObject** pool = _getPool();
-		if (pool==0){
-			delete this;
-		}
-		else{
-			this->_poolNext = *pool;
-			*pool = this;
-		}
-#else
-		delete this;
-#endif
-	}
-
-	/**
 	 * Reset the object back to default settings
 	 */
-	void DisplayObject::reset(){
+	void DisplayObject::reset() {
 		clearFilters();
 		removeAllChildren();
 		id = 0;
@@ -74,8 +35,8 @@ namespace mac{
 		_dirty = true;
 		_visible = true;
 		_active = true;
-		width(0);
-		height(0);
+		width( 0 );
+		height( 0 );
 		globalBounds->clear();
 		_localBounds->clear();
 		cleanBounds->clear();
@@ -91,7 +52,7 @@ namespace mac{
 	 * Get the visibility of an object
 	 * @return boolean The visibility
 	 */
-	boolean DisplayObject::visible(){
+	boolean DisplayObject::visible() {
 		return _visible;
 	}
 
@@ -107,20 +68,20 @@ namespace mac{
 	 * Return true if there is a parent
 	 */
 	boolean DisplayObject::hasParent() {
-		return (_parent != 0);
+		return ( _parent != 0 );
 	}
 
 	/**
 	 * Add a child to the list
 	 */
-	void DisplayObject::addChild( DisplayObject* child ){
-//Serial.println("DisplayObject::addChild");
-		if (!_children){
+	void DisplayObject::addChild( DisplayObject* child ) {
+		//Serial.println("DisplayObject::addChild");
+		if ( !_children ) {
 			_children = child;
 			child->_parent = this;
 			child->_next = 0;
 		}
-		else{
+		else {
 			_childrenTop->add( child );
 		}
 		_childrenTop = child;
@@ -130,21 +91,21 @@ namespace mac{
 	 * Remove a child from the list
 	 * @param 	child 		The widget to remove
 	 */
-	void DisplayObject::removeChild( DisplayObject* child ){
-		if (!_children) return;
+	void DisplayObject::removeChild( DisplayObject* child ) {
+		if ( !_children ) return;
 		DisplayObject* displayObject = _children;
-		while (displayObject){
-			if (displayObject == child){
-				if (displayObject->_next){
+		while ( displayObject ) {
+			if ( displayObject == child ) {
+				if ( displayObject->_next ) {
 					displayObject->_next->_prev = displayObject->_prev;
 				}
-				if (displayObject->_prev){
+				if ( displayObject->_prev ) {
 					displayObject->_prev->_next = displayObject->_next;
 				}
-				if (_children==displayObject){
+				if ( _children == displayObject ) {
 					_children = displayObject->_next;
 				}
-				if (_childrenTop==displayObject){
+				if ( _childrenTop == displayObject ) {
 					_childrenTop = displayObject->_prev;
 				}
 				displayObject->_parent = 0;
@@ -159,21 +120,21 @@ namespace mac{
 	 * Remove a child from the list by ID
 	 * @param 	id 		The ID of the widget to remove
 	 */
-	void DisplayObject::removeChild( uint32_t id ){
-		if (!_children) return;
+	void DisplayObject::removeChild( uint32_t id ) {
+		if ( !_children ) return;
 		DisplayObject* displayObject = _children;
-		while (displayObject){
-			if (displayObject->id == id){
-				if (displayObject->_next){
+		while ( displayObject ) {
+			if ( displayObject->id == id ) {
+				if ( displayObject->_next ) {
 					displayObject->_next->_prev = displayObject->_prev;
 				}
-				if (displayObject->_prev){
+				if ( displayObject->_prev ) {
 					displayObject->_prev->_next = displayObject->_next;
 				}
-				if (_children==displayObject){
+				if ( _children == displayObject ) {
 					_children = displayObject->_next;
 				}
-				if (_childrenTop==displayObject){
+				if ( _childrenTop == displayObject ) {
 					_childrenTop = displayObject->_prev;
 				}
 				displayObject->_parent = 0;
@@ -187,14 +148,14 @@ namespace mac{
 	/**
 	 * Remove all children from the list
 	 */
-	void DisplayObject::removeAllChildren( boolean free ){
-		if (!_children) return;
+	void DisplayObject::removeAllChildren( boolean free ) {
+		if ( !_children ) return;
 		DisplayObject* displayObject = _children;
 		DisplayObject* nextDisplayObject;
-		while (displayObject){
+		while ( displayObject ) {
 			nextDisplayObject = displayObject->next();
-			if (free) delete displayObject;
-			else{
+			if ( free ) delete displayObject;
+			else {
 				displayObject->_parent = 0;
 				displayObject->_next = 0;
 				displayObject->_prev = 0;
@@ -209,19 +170,19 @@ namespace mac{
 	/**
 	 * Return the first child
 	 */
-	DisplayObject* DisplayObject::firstChild(){
+	DisplayObject* DisplayObject::firstChild() {
 		return _children;
 	}
 
 	/**
 	 * Return the first child
 	 */
-	DisplayObject* DisplayObject::lastChild(){
+	DisplayObject* DisplayObject::lastChild() {
 		DisplayObject* displayObject = _children;
 		DisplayObject* nextDisplayObject;
-		while (displayObject){
+		while ( displayObject ) {
 			nextDisplayObject = displayObject->next();
-			if (!nextDisplayObject) return displayObject;
+			if ( !nextDisplayObject ) return displayObject;
 			displayObject = nextDisplayObject;
 		}
 		return 0;
@@ -231,11 +192,11 @@ namespace mac{
 	 * Return a child from the list by ID
 	 * @param 	id 		The ID of the widget
 	 */
-	DisplayObject* DisplayObject::getChild( uint32_t id ){
-		if (!_children) return 0;
+	DisplayObject* DisplayObject::getChild( uint32_t id ) {
+		if ( !_children ) return 0;
 		DisplayObject* displayObject = _children;
-		while (displayObject){
-			if (displayObject->id == id) return displayObject;
+		while ( displayObject ) {
+			if ( displayObject->id == id ) return displayObject;
 			displayObject = displayObject->next();
 		}
 		return 0;
@@ -244,10 +205,10 @@ namespace mac{
 	/**
 	 * Return the number of children
 	 */
-	uint32_t DisplayObject::numChildren(){
+	uint32_t DisplayObject::numChildren() {
 		uint32_t count = 0;
 		DisplayObject* displayObject = _children;
-		while (displayObject){
+		while ( displayObject ) {
 			count++;
 			displayObject = displayObject->next();
 		}
@@ -257,33 +218,33 @@ namespace mac{
 	/**
 	 * Return true if there are children
 	 */
-	boolean DisplayObject::hasChildren(){
+	boolean DisplayObject::hasChildren() {
 		return (boolean)_children;
 	}
 
 	/**
 	 * Get next sibling in the list
 	 */
-	DisplayObject* DisplayObject::next( void ){
+	DisplayObject* DisplayObject::next( void ) {
 		return _next;
 	}
 
 	/**
 	 * Get previous sibling in the list
 	 */
-	DisplayObject* DisplayObject::prev( void ){
+	DisplayObject* DisplayObject::prev( void ) {
 		return _prev;
 	}
 
 	/**
 	 * Add or insert a sibling after this one
 	 */
-	void DisplayObject::add( DisplayObject* sibling ){
-		if (_next){
+	void DisplayObject::add( DisplayObject* sibling ) {
+		if ( _next ) {
 			_next->_prev = sibling;
 			sibling->_next = _next;
 		}
-		else{
+		else {
 			sibling->_next = 0;
 		}
 		_next = sibling;
@@ -294,10 +255,10 @@ namespace mac{
 	/**
 	 * Update and render the display object
 	 */
-	void DisplayObject::update( float_t dt ){
-		if (!_children) return;
+	void DisplayObject::update( float_t dt ) {
+		if ( !_children ) return;
 		DisplayObject* displayObject = _children;
-		while (displayObject){
+		while ( displayObject ) {
 			displayObject->update( dt );
 			displayObject = displayObject->next();
 		}
@@ -341,11 +302,11 @@ namespace mac{
 	 * @param roundToInt If true, will round the x and y cooridnates using floor
 	 */
 	void DisplayObject::origin( OriginType position, boolean roundToInt ) {
-		switch (position) {
+		switch ( position ) {
 			case OriginType::centerTop:
 			case OriginType::center:
 			case OriginType::centerBottom:
-				_ox = -width()/2;
+				_ox = -width() / 2;
 				break;
 			case OriginType::rightTop:
 			case OriginType::rightCenter:
@@ -359,11 +320,11 @@ namespace mac{
 				_ox = 0;
 				break;
 		}
-		switch (position) {
+		switch ( position ) {
 			case OriginType::leftCenter:
 			case OriginType::center:
 			case OriginType::rightCenter:
-				_oy = -height()/2;
+				_oy = -height() / 2;
 				break;
 			case OriginType::leftBottom:
 			case OriginType::centerBottom:
@@ -377,9 +338,9 @@ namespace mac{
 				_oy = 0;
 				break;
 		}
-		if (roundToInt) {
-			_ox = floor(_ox);
-			_oy = floor(_oy);
+		if ( roundToInt ) {
+			_ox = floor( _ox );
+			_oy = floor( _oy );
 		}
 		_dirty = true;
 	}
@@ -421,7 +382,7 @@ namespace mac{
 	 * @param value The new width
 	 */
 	void DisplayObject::width( float_t value ) {
-		_localBounds->setWidth( (value > 0)?value:0 );
+		_localBounds->setWidth( ( value > 0 ) ? value : 0 );
 		dirty();
 	}
 
@@ -437,7 +398,7 @@ namespace mac{
 	 * @param value The new height
 	 */
 	void DisplayObject::height( float_t value ) {
-		_localBounds->setHeight( (value > 0)?value:0 );
+		_localBounds->setHeight( ( value > 0 ) ? value : 0 );
 		dirty();
 	}
 
@@ -452,7 +413,7 @@ namespace mac{
 	 * Set self to dirty
 	 */
 	void DisplayObject::dirty() {
-		if (_visible) _dirty = true;
+		if ( _visible ) _dirty = true;
 	}
 
 	/**
@@ -464,7 +425,7 @@ namespace mac{
 
 	/**
 	 * @brief Set the global position of the display object
-	 * 
+	 *
 	 * @param x The global X position
 	 * @param y The global Y position
 	 */
@@ -479,27 +440,27 @@ namespace mac{
 
 	/**
 	 * @brief Convert a global X coordinate to a local coord
-	 * 
+	 *
 	 * @param x The global X coordinate
 	 * @return float_t The local X coordinate
 	 */
 	float_t DisplayObject::globalToLocalX( float_t x ) {
-		return x - (float_t)(globalBounds->x);
+		return x - (float_t)( globalBounds->x );
 	}
 
 	/**
 	 * @brief Convert a global Y coordinate to a local coord
-	 * 
+	 *
 	 * @param x The global Y coordinate
 	 * @return float_t The local Y coordinate
 	 */
 	float_t DisplayObject::globalToLocalY( float_t y ) {
-		return y - (float_t)(globalBounds->y);
+		return y - (float_t)( globalBounds->y );
 	}
 
 	/**
 	 * @brief Convert a rect in global coordinates to local coordinates
-	 * 
+	 *
 	 * @param rect (out) The rext with global coordinate
 	 */
 	void DisplayObject::globalToLocal( ClipRect* rect ) {
@@ -508,7 +469,7 @@ namespace mac{
 
 	void DisplayObject::clearFilters() {
 		Filter* f;
-		while (this->filters) {
+		while ( this->filters ) {
 			f = this->filters->next();
 			delete this->filters;
 			this->filters = f;
@@ -525,5 +486,5 @@ namespace mac{
 		renderBounds->clip( globalBounds );
 		globalToLocal( renderBounds );
 	}
-	
+
 } // namespace

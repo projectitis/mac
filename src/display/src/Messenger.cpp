@@ -1,24 +1,11 @@
-/**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
- 
 #include "../Messenger.h"
 
-/**
- * mac (or μac) stands for "Microprocessor App Creator"
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
- **/
-namespace mac{
+namespace mac {
 
 	/**
 	 * Create the listener item
 	 */
-	ListenerItem::ListenerItem( uint32_t event, Listener* listener, void* messageData ){
+	ListenerItem::ListenerItem( uint32_t event, Listener* listener, void* messageData ) {
 		this->event = event;
 		this->listener = listener;
 		this->messageData = messageData;
@@ -27,7 +14,7 @@ namespace mac{
 	/**
 	 * Create the timer item
 	 */
-	TimerItem::TimerItem( uint32_t event, float_t triggerTime, Listener* listener, void* messageData ) : ListenerItem( event, listener, messageData ){
+	TimerItem::TimerItem( uint32_t event, float_t triggerTime, Listener* listener, void* messageData ) : ListenerItem( event, listener, messageData ) {
 		this->triggerTime = triggerTime;
 		this->currentTime = 0;
 	}
@@ -35,21 +22,21 @@ namespace mac{
 	/**
 	 * Add an event listener
 	 */
-	void Messenger::addListener( uint32_t event, Listener* listener, void* callbackData ){
+	void Messenger::addListener( uint32_t event, Listener* listener, void* callbackData ) {
 		ListenerItem* item = new ListenerItem( event, listener, callbackData );
-		if (_listeners) _listeners->before( item );
+		if ( _listeners ) _listeners->before( item );
 		_listeners = item;
 	}
 
 	/**
 	 * Remove an event listener
 	 */
-	void Messenger::removeListener( uint32_t event, Listener* listener ){
+	void Messenger::removeListener( uint32_t event, Listener* listener ) {
 		ListenerItem* item = _listeners;
 		ListenerItem* tempItem;
-		while (item){
+		while ( item ) {
 			// Remove item if event matches
-			if ((item->event == event) && (item->listener == listener)){
+			if ( ( item->event == event ) && ( item->listener == listener ) ) {
 				tempItem = item;
 				item = (ListenerItem*)item->remove();
 				delete tempItem;
@@ -66,12 +53,12 @@ namespace mac{
 	/**
 	 * Remove all listeners for a specific event
 	 */
-	void Messenger::removeListenersForEvent( uint32_t event ){
+	void Messenger::removeListenersForEvent( uint32_t event ) {
 		ListenerItem* item = _listeners;
 		ListenerItem* tempItem;
-		while (item){
+		while ( item ) {
 			// Remove item if event matches
-			if (item->event == event){
+			if ( item->event == event ) {
 				tempItem = item;
 				item = (ListenerItem*)item->remove();
 				delete tempItem;
@@ -88,21 +75,21 @@ namespace mac{
 	/**
 	 * Add a timer
 	 */
-	void Messenger::addTimer( uint32_t event, float_t triggerTime, Listener* listener, void* callbackData ){
+	void Messenger::addTimer( uint32_t event, float_t triggerTime, Listener* listener, void* callbackData ) {
 		TimerItem* item = new TimerItem( event, triggerTime, listener, callbackData );
-		if (_timers) _timers->before( item );
+		if ( _timers ) _timers->before( item );
 		_timers = item;
 	}
 
 	/**
 	 * Remove a timer
 	 */
-	void Messenger::removeTimer( uint32_t event, Listener* listener ){
+	void Messenger::removeTimer( uint32_t event, Listener* listener ) {
 		TimerItem* item = _timers;
 		TimerItem* tempItem;
-		while (item){
+		while ( item ) {
 			// Remove item if event matches
-			if ((item->event == event) && (item->listener == listener)){
+			if ( ( item->event == event ) && ( item->listener == listener ) ) {
 				tempItem = item;
 				item = (TimerItem*)item->remove();
 				delete tempItem;
@@ -119,12 +106,12 @@ namespace mac{
 	/**
 	 * Remove all timers for a specific event
 	 */
-	void Messenger::removeTimersForEvent( uint32_t event ){
+	void Messenger::removeTimersForEvent( uint32_t event ) {
 		TimerItem* item = _timers;
 		TimerItem* tempItem;
-		while (item){
+		while ( item ) {
 			// Remove item if event matches
-			if (item->event == event){
+			if ( item->event == event ) {
 				tempItem = item;
 				item = (TimerItem*)item->remove();
 				delete tempItem;
@@ -141,23 +128,23 @@ namespace mac{
 	/**
 	 * Trigger an event
 	 */
-	void Messenger::sendMessage( uint32_t event ){
+	void Messenger::sendMessage( uint32_t event ) {
 		ListenerItem* item = _listeners;
 		ListenerItem* tempItem;
 		boolean res;
-		while (item){
+		while ( item ) {
 			// Fire the event
-			if (item->event == event){
+			if ( item->event == event ) {
 				// Make listener listen
 				res = item->listener->listen( event, item->messageData );
 				// Remove this listener
-				if (!res){
+				if ( !res ) {
 					tempItem = item;
 					item = (ListenerItem*)item->remove();
 					delete tempItem;
 				}
 				// Or move to the next one
-				else{
+				else {
 					item = (ListenerItem*)item->next();
 				}
 			}
@@ -171,25 +158,25 @@ namespace mac{
 	/**
 	 * Update timers
 	 */
-	void Messenger::update( float_t dt ){
+	void Messenger::update( float_t dt ) {
 		TimerItem* item = _timers;
 		TimerItem* tempItem;
 		boolean res;
-		while (item){
+		while ( item ) {
 			// Update the timer
 			item->currentTime += dt;
 			// Fire the event
-			if (item->currentTime >= item->triggerTime){
+			if ( item->currentTime >= item->triggerTime ) {
 				// Make listener listen
 				res = item->listener->listen( item->event, item->messageData );
 				// Remove this listener
-				if (!res){
+				if ( !res ) {
 					tempItem = item;
 					item = (TimerItem*)item->remove();
 					delete tempItem;
 				}
 				// Or update time and move to the next one
-				else{
+				else {
 					item->currentTime -= item->triggerTime;
 					item = (TimerItem*)item->next();
 				}
@@ -200,5 +187,5 @@ namespace mac{
 			}
 		}
 	}
-	
+
 } // namespace

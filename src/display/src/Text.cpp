@@ -1,24 +1,6 @@
-/**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
-
 #include "../Text.h"
 
- /**
-  * mac (or μac) stands for "Microprocessor App Creator"
-  * mac is a project that enables creating beautiful and useful apps on the
-  * Teensy microprocessor, but hopefully is generic enough to be ported to other
-  * microprocessor boards. The various libraries that make up mac might also
-  * be useful in other projects.
-  **/
 namespace mac {
-
-	/**
-	 * @brief Instantiate the pool for object re-use
-	 */
-	DisplayObject* Text::pool = 0;
 
 	/**
 	 * @brief Construct a new Text object
@@ -37,35 +19,13 @@ namespace mac {
 	}
 
 	/**
-	 * @brief Pool getter
-	 */
-	DisplayObject** Text::_getPool() {
-		return &Text::pool;
-	}
-
-	/**
-	 * @brief Create a new object or take one from the pool
-	 * @return The new or recycled object
-	 */
-	Text* Text::Create() {
-		return (Text*)DisplayObject::Create<Text>();
-	}
-
-	/**
 	 * @brief Create a new object by passing in a font definition, or take one from the pool
 	 * @return The new or recycled object
 	 */
 	Text* Text::Create( packedbdf_t* font ) {
-		Text* object = (Text*)DisplayObject::Create<Text>();
+		Text* object = MemoryPool<Text>::Create();
 		object->font( font );
 		return object;
-	}
-
-	/**
-	 * @brief Reset the object back to default settings
-	 */
-	void Text::reset() {
-		DisplayObject::reset();
 	}
 
 	/**

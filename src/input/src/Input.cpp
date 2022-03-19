@@ -1,25 +1,12 @@
-/**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
- 
 #include "../Input.h"
 
-/**
- * mac (or μac) stands for "Microprocessor App Creator"
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
- **/
-namespace mac{
+namespace mac {
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 */
-	Input::Input( Messenger* messenger ){
+	Input::Input( Messenger* messenger ) {
 		_messenger = messenger;
 	}
 
@@ -29,17 +16,17 @@ namespace mac{
 	 * pins that should be specified when calling this method.
 	 * @param mode 		The input mode
 	 */
-	void Input::setMode( InputType mode, pin p1, pin p2, pin p3, pin p4, pin p5, pin p6 ){
+	void Input::setMode( InputType mode, pin p1, pin p2, pin p3, pin p4, pin p5, pin p6 ) {
 		unmapAll();
 		_mode = mode;
-		switch (mode){
-			case mac::InputType::button1:
-				map( p1, mac::PinType::digital, mac::ClickType::click, mac::Event::input_next );
-				map( p1, mac::PinType::digital, mac::ClickType::dbl_click, mac::Event::input_action );
-				map( p1, mac::PinType::digital, mac::ClickType::hold, mac::Event::input_back );
-				break;
-			default:
-				break;
+		switch ( mode ) {
+		case mac::InputType::button1:
+			map( p1, mac::PinType::digital, mac::ClickType::click, mac::Event::input_next );
+			map( p1, mac::PinType::digital, mac::ClickType::dbl_click, mac::Event::input_action );
+			map( p1, mac::PinType::digital, mac::ClickType::hold, mac::Event::input_back );
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -51,7 +38,7 @@ namespace mac{
 	 * @param left  Pin to use for left
 	 * @param right Pin to use for right
 	 */
-	void Input::setJoyPins( pin up, pin down, pin left, pin right ){
+	void Input::setJoyPins( pin up, pin down, pin left, pin right ) {
 
 	}
 
@@ -63,7 +50,7 @@ namespace mac{
 	 * @param left  Pin to use for left
 	 * @param right Pin to use for right
 	 */
-	void Input::setDPadPins( pin up, pin down, pin left, pin right ){
+	void Input::setDPadPins( pin up, pin down, pin left, pin right ) {
 
 	}
 
@@ -81,24 +68,24 @@ namespace mac{
 	 * @param  threshhold   If the pin is analogue, the associated threshhold
 	 * @return           The input for chaining
 	 */
-	Input* Input::map( pin pin, PinType pinType, ClickType clickType, uint32_t event, uint16_t threshhold ){
+	Input* Input::map( pin pin, PinType pinType, ClickType clickType, uint32_t event, uint16_t threshhold ) {
 
 		// First unmap the pin/clickType if it exists already
 		unmap( pin, clickType );
-		 
+
 		// First find pin
 		InputPin* ip = _pins;
-		while (ip){
-			if (ip->pin == pin) break;
+		while ( ip ) {
+			if ( ip->pin == pin ) break;
 			ip = ip->next;
 		}
 		// if pin doesn't exist, create it and add it
-		if (!ip || (ip->pin!=pin)){
+		if ( !ip || ( ip->pin != pin ) ) {
 			ip = new InputPin();
 			ip->pin = pin;
 			ip->pinType = pinType;
 			ip->state = mac::PinState::psRest;
-			pinMode(pin, INPUT);
+			pinMode( pin, INPUT );
 
 			ip->next = _pins;
 			_pins = ip;
@@ -122,24 +109,24 @@ namespace mac{
 	 * @param 	ClickType 	The click type to unmap. If 0 will unmap all clickTypes for pin
 	 * @return     The input for chaining
 	 */
-	Input* Input::unmap( pin pin, ClickType clickType ){
+	Input* Input::unmap( pin pin, ClickType clickType ) {
 		InputPin* ip = _pins;
-		while (ip){
-			if (ip->pin == pin){
+		while ( ip ) {
+			if ( ip->pin == pin ) {
 				InputMap* im = ip->mappings;
 				InputMap* im_prev = 0;
-				while (im){
+				while ( im ) {
 					InputMap* im_next = im->next;
-					if (( clickType == ClickType::none ) || ( im->clickType == clickType )){
-						if (im_prev) im_prev->next = im->next;
+					if ( ( clickType == ClickType::none ) || ( im->clickType == clickType ) ) {
+						if ( im_prev ) im_prev->next = im->next;
 						delete im;
 					}
-					else{
+					else {
 						im_prev = im;
 					}
 					im = im_next;
 				}
-				if ( clickType == ClickType::none ){
+				if ( clickType == ClickType::none ) {
 					delete ip;
 				}
 				break;
@@ -153,15 +140,15 @@ namespace mac{
 	 * Remove all pin mappings
 	 * @return     The input for chaining
 	 */
-	Input* Input::unmapAll(){
+	Input* Input::unmapAll() {
 		InputPin* ip = _pins;
-		while (ip){
+		while ( ip ) {
 			InputPin* ip_next = ip->next;
 			InputMap* im = ip->mappings;
-//Serial.printf("Unmapping pin %d\n", ip->pin);
-			while (im){
+			//Serial.printf("Unmapping pin %d\n", ip->pin);
+			while ( im ) {
 				InputMap* im_next = im->next;
-//Serial.printf("  Click type %d\n", im->clickType);
+				//Serial.printf("  Click type %d\n", im->clickType);
 				delete im;
 				im = im_next;
 			}
@@ -173,220 +160,220 @@ namespace mac{
 
 	/**
 	 * Set the active state of the Input object. If false will not fire input events, but will
-	 * still process pins when update() is called. 
+	 * still process pins when update() is called.
 	 * @param 	state 	true if active, false if not active
 	 */
-	void Input::setActive( boolean state ){
+	void Input::setActive( boolean state ) {
 		_active = state;
 	}
 
 	/**
 	 * Update inputs
 	 */
-	void Input::update( float_t dt ){
+	void Input::update( float_t dt ) {
 		InputPin* ip = _pins;
 		int buttonState;
 		ClickType buttonClickType;
-		while (ip){
-			buttonState = digitalRead(ip->pin);
+		while ( ip ) {
+			buttonState = digitalRead( ip->pin );
 			buttonClickType = mac::ClickType::none;
 
 			// Process digital pin
-			if (ip->pinType == mac::PinType::digital){
+			if ( ip->pinType == mac::PinType::digital ) {
 
 				// State based
-				switch (ip->state){
+				switch ( ip->state ) {
 
 					// Button is resting
-					case mac::PinState::psRest:
-						if (buttonState==HIGH){
-							ip->state = mac::PinState::psDown1DB;
-							ip->time = 0;
-						}
-						break;
+				case mac::PinState::psRest:
+					if ( buttonState == HIGH ) {
+						ip->state = mac::PinState::psDown1DB;
+						ip->time = 0;
+					}
+					break;
 
 					// Button debouncing for first push
-					case mac::PinState::psDown1DB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==HIGH){
-								buttonClickType = mac::ClickType::down;
-								ip->state = mac::PinState::psDown1;
-								ip->time = 0;
-							}
-							else{
-								ip->state = mac::PinState::psRest; // cancel
-							}
+				case mac::PinState::psDown1DB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == HIGH ) {
+							buttonClickType = mac::ClickType::down;
+							ip->state = mac::PinState::psDown1;
+							ip->time = 0;
 						}
-						break;
+						else {
+							ip->state = mac::PinState::psRest; // cancel
+						}
+					}
+					break;
 
 					// Button down for first click
-					case mac::PinState::psDown1:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_HOLD){
-							ip->state = mac::PinState::psHold;
-							buttonClickType = mac::ClickType::hold;
+				case mac::PinState::psDown1:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_HOLD ) {
+						ip->state = mac::PinState::psHold;
+						buttonClickType = mac::ClickType::hold;
+					}
+					else if ( buttonState == LOW ) {
+						if ( ip->time < TIME_PRESS ) {
+							ip->state = mac::PinState::psUp1DB;
+							ip->time = 0;
 						}
-						else if (buttonState==LOW){
-							if (ip->time < TIME_PRESS){
-								ip->state = mac::PinState::psUp1DB;
-								ip->time = 0;
-							}
-							else{
-								ip->state = mac::PinState::psPress1DB;
-								ip->time = 0;
-							}
+						else {
+							ip->state = mac::PinState::psPress1DB;
+							ip->time = 0;
 						}
-						break;
+					}
+					break;
 
 					// Button held on first push
-					case mac::PinState::psHold:
-						if (buttonState==LOW){
-							ip->state = mac::PinState::psLastDB;
-							ip->time = 0;
-						}
-						break;
+				case mac::PinState::psHold:
+					if ( buttonState == LOW ) {
+						ip->state = mac::PinState::psLastDB;
+						ip->time = 0;
+					}
+					break;
 
 					// Button debouncing for first release
-					case mac::PinState::psUp1DB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==LOW){
-								buttonClickType = mac::ClickType::up;
-								ip->state = mac::PinState::psUp1;
-								ip->time = 0;
-							}
-							else{
-								ip->state = mac::PinState::psRest; // cancel
-							}
-						}
-						break;
-
-					// Button debouncing for first release
-					case mac::PinState::psUp1:
-						ip->time += dt;
-						if (buttonState==HIGH){
-							ip->state = mac::PinState::psDown2DB;
+				case mac::PinState::psUp1DB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == LOW ) {
+							buttonClickType = mac::ClickType::up;
+							ip->state = mac::PinState::psUp1;
 							ip->time = 0;
 						}
-						else if (ip->time >= Input::TIME_DBLCLICK){
-							ip->state = mac::PinState::psRest;
-							buttonClickType = mac::ClickType::click;
+						else {
+							ip->state = mac::PinState::psRest; // cancel
 						}
-						break;
+					}
+					break;
+
+					// Button debouncing for first release
+				case mac::PinState::psUp1:
+					ip->time += dt;
+					if ( buttonState == HIGH ) {
+						ip->state = mac::PinState::psDown2DB;
+						ip->time = 0;
+					}
+					else if ( ip->time >= Input::TIME_DBLCLICK ) {
+						ip->state = mac::PinState::psRest;
+						buttonClickType = mac::ClickType::click;
+					}
+					break;
 
 					// Button debouncing for first press release
-					case mac::PinState::psPress1DB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==LOW){
-								buttonClickType = mac::ClickType::press;
-								ip->state = mac::PinState::psRest;
-							}
-							else{
-								// XXX: Maybe go back to down1 as if release never happened?
-								ip->state = mac::PinState::psRest; // cancel
-							}
+				case mac::PinState::psPress1DB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == LOW ) {
+							buttonClickType = mac::ClickType::press;
+							ip->state = mac::PinState::psRest;
 						}
-						break;
+						else {
+							// XXX: Maybe go back to down1 as if release never happened?
+							ip->state = mac::PinState::psRest; // cancel
+						}
+					}
+					break;
 
 					// Button debouncing for second push
-					case mac::PinState::psDown2DB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==HIGH){
-								buttonClickType = mac::ClickType::down;
-								ip->state = mac::PinState::psDown2;
-								ip->time = 0;
-							}
-							else{
-								ip->state = mac::PinState::psRest; // cancel
-							}
+				case mac::PinState::psDown2DB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == HIGH ) {
+							buttonClickType = mac::ClickType::down;
+							ip->state = mac::PinState::psDown2;
+							ip->time = 0;
 						}
-						break;
+						else {
+							ip->state = mac::PinState::psRest; // cancel
+						}
+					}
+					break;
 
 					// Button down for second click
-					case mac::PinState::psDown2:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_HOLD){
-							ip->state = mac::PinState::psHold;
-							buttonClickType = mac::ClickType::click_hold;
+				case mac::PinState::psDown2:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_HOLD ) {
+						ip->state = mac::PinState::psHold;
+						buttonClickType = mac::ClickType::click_hold;
+					}
+					else if ( buttonState == LOW ) {
+						if ( ip->time < TIME_PRESS ) {
+							ip->state = mac::PinState::psUp2DB;
+							ip->time = 0;
 						}
-						else if (buttonState==LOW){
-							if (ip->time < TIME_PRESS){
-								ip->state = mac::PinState::psUp2DB;
-								ip->time = 0;
-							}
-							else{
-								ip->state = mac::PinState::psPress2DB;
-								ip->time = 0;
-							}
+						else {
+							ip->state = mac::PinState::psPress2DB;
+							ip->time = 0;
 						}
-						break;
+					}
+					break;
 
 					// Button debouncing for first release
-					case mac::PinState::psUp2DB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==LOW){
-								buttonClickType = mac::ClickType::dbl_click;
-								ip->state = mac::PinState::psRest;
-							}
-							else{
-								// XXX: Maybe return to down2 as if LOW was never detected?
-								ip->state = mac::PinState::psRest; // cancel
-							}
+				case mac::PinState::psUp2DB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == LOW ) {
+							buttonClickType = mac::ClickType::dbl_click;
+							ip->state = mac::PinState::psRest;
 						}
-						break;
+						else {
+							// XXX: Maybe return to down2 as if LOW was never detected?
+							ip->state = mac::PinState::psRest; // cancel
+						}
+					}
+					break;
 
 					// Button debouncing for second press release
-					case mac::PinState::psPress2DB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==LOW){
-								buttonClickType = mac::ClickType::click_press;
-								ip->state = mac::PinState::psRest;
-							}
-							else{
-								// XXX: Maybe go back to down2 as if release never happened?
-								ip->state = mac::PinState::psRest; // cancel
-							}
+				case mac::PinState::psPress2DB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == LOW ) {
+							buttonClickType = mac::ClickType::click_press;
+							ip->state = mac::PinState::psRest;
 						}
-						break;
+						else {
+							// XXX: Maybe go back to down2 as if release never happened?
+							ip->state = mac::PinState::psRest; // cancel
+						}
+					}
+					break;
 
 					// Button debouncing for return to rest
-					case mac::PinState::psLastDB:
-						ip->time += dt;
-						if (ip->time >= Input::TIME_DEBOUNCE){
-							if (buttonState==LOW){
-								buttonClickType = mac::ClickType::up;
-								ip->state = mac::PinState::psRest;
-								ip->time = 0;
-							}
+				case mac::PinState::psLastDB:
+					ip->time += dt;
+					if ( ip->time >= Input::TIME_DEBOUNCE ) {
+						if ( buttonState == LOW ) {
+							buttonClickType = mac::ClickType::up;
+							ip->state = mac::PinState::psRest;
+							ip->time = 0;
 						}
-						break;
+					}
+					break;
 				}
 
 			}
 
 			// Process analogue pin
-			else{
+			else {
 
 
 			}
 
 			// If we have triggered a ClickType, see if it is mapped (only if active)
-			if ( ( buttonClickType != ClickType::none ) && _active){
+			if ( ( buttonClickType != ClickType::none ) && _active ) {
 				InputMap* im = ip->mappings;
 				// If the click type is press, click_press or dbl_click, we also need to fire the 'up' events
 				boolean alsoUp = ( buttonClickType == ClickType::press ) || ( buttonClickType == ClickType::click_press ) || ( buttonClickType == ClickType::dbl_click );
-				while (im){
+				while ( im ) {
 					// Trigger event for click type
-					if (im->clickType == buttonClickType){
+					if ( im->clickType == buttonClickType ) {
 						_messenger->sendMessage( im->event );
 					}
 					// Trigger event for alternative click type
-					if (alsoUp && (im->clickType == mac::ClickType::up)){
+					if ( alsoUp && ( im->clickType == mac::ClickType::up ) ) {
 						_messenger->sendMessage( im->event );
 					}
 					im = im->next;
@@ -395,5 +382,5 @@ namespace mac{
 			ip = ip->next;
 		}
 	}
-	
+
 } // namespace

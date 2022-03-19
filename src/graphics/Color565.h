@@ -1,31 +1,3 @@
-/**
- * 32bit color8888 (ARGB) and 24bit color888 (RGB) helper functions
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- *
- * MIT LICENCE
- * -----------
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */	
-
 #ifndef _MAC_COLOR565H_
 #define _MAC_COLOR565H_ 1
 
@@ -33,13 +5,15 @@
 #include "graphics/Color.h"
 
 /**
- * This file is part of the mac (or μac) "Microprocessor App Creator" library.
- * mac is a project that enables creating beautiful and useful apps on the
- * Teensy microprocessor, but hopefully is generic enough to be ported to other
- * microprocessor boards. The various libraries that make up mac might also
- * be useful in other projects.
+ * 16-bit color 565 functions
+
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project for creating beautiful and useful
+ * apps on various microprocessor boards.
+ *
+ * mac is distributed under the MIT licence
  **/
-namespace mac{
+namespace mac {
 
 	/*
 	* RGB565 colors
@@ -190,42 +164,42 @@ namespace mac{
 
 	/**
 	 * @brief Extract the red channel value from a 16bit color565 (RGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit red value (0-255)
 	 */
 	inline uint8_t red( color565 c ) {
-		return ((c >> 8) & 0b11111000) | ((c >> 13) & 0b111);
+		return ( ( c >> 8 ) & 0b11111000 ) | ( ( c >> 13 ) & 0b111 );
 	}
 
 	/**
 	 * @brief Extract the green channel value from a 32bit color8888 (ARGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit green value (0-255)
 	 */
 	inline uint8_t green( color565 c ) {
-		return ((c >> 3) & 0b11111100) | ((c >> 9) & 0b11);
+		return ( ( c >> 3 ) & 0b11111100 ) | ( ( c >> 9 ) & 0b11 );
 	}
 
 	/**
 	 * @brief Convert RGB565 color to grayscale and return a single 5-bit channel value
-	 * 
+	 *
 	 * @param c 			The color
 	 * @return uint8_t 		The grayscale channel color (0-31)
 	 */
 	inline uint8_t gray( color565 c ) {
-		return (((c>>11) & 0x1F) + ((c>>5) & 0x3F) + (c & 0x1F)) >> 2;
+		return ( ( ( c >> 11 ) & 0x1F ) + ( ( c >> 5 ) & 0x3F ) + ( c & 0x1F ) ) >> 2;
 	}
 
 	/**
 	 * @brief Extract the blue channel value from a 32bit color8888 (ARGB) value
-	 * 
+	 *
 	 * @param c The color
 	 * @return uint8_t The 8-bit blue value (0-255)
 	 */
 	inline uint8_t blue( color565 c ) {
-		return ((c << 3) & 0b11111000) | ((c >> 2) & 0b111);
+		return ( ( c << 3 ) & 0b11111000 ) | ( ( c >> 2 ) & 0b111 );
 	}
 
 	/**
@@ -234,8 +208,8 @@ namespace mac{
 	 * @param	g		Green component
 	 * @param	b		Blue component
 	 **/
-	inline color565 to565( uint8_t r, uint8_t g, uint8_t b ){
-		return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	inline color565 to565( uint8_t r, uint8_t g, uint8_t b ) {
+		return ( ( r & 0xF8 ) << 8 ) | ( ( g & 0xFC ) << 3 ) | ( b >> 3 );
 	}
 
 	/**
@@ -245,8 +219,8 @@ namespace mac{
 	 * @param	b		Blue component
 	 * @param	a		Alpha component
 	 **/
-	inline color8565 to8565( uint8_t r, uint8_t g, uint8_t b, uint8_t a ){
-		return (a << 16) | ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	inline color8565 to8565( uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
+		return ( a << 16 ) | ( ( r & 0xF8 ) << 8 ) | ( ( g & 0xFC ) << 3 ) | ( b >> 3 );
 	}
 
 	/**
@@ -256,8 +230,8 @@ namespace mac{
 	 * @param	b		Blue component
 	 * @param	a		Alpha component
 	 **/
-	inline color5565 to5565( uint8_t r, uint8_t g, uint8_t b, uint8_t a ){
-		return ((a & 0xF8 ) << 13) | ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	inline color5565 to5565( uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
+		return ( ( a & 0xF8 ) << 13 ) | ( ( r & 0xF8 ) << 8 ) | ( ( g & 0xFC ) << 3 ) | ( b >> 3 );
 	}
 
 	/**
@@ -265,9 +239,9 @@ namespace mac{
 	 * @param	colour		The ARGB 32-bit colour
 	 * @param	alpha 		(out) The 8-bit alpha (0-255)
 	 **/
-	inline color565 to565a8( color8888 c, uint8_t &alpha ){
-		alpha = c>>24;
-		return ((c >> 8) & 0xF800) | ((c >> 5) & 0x07E0) | ((c >> 3) & 0x1F);
+	inline color565 to565a8( color8888 c, uint8_t& alpha ) {
+		alpha = c >> 24;
+		return ( ( c >> 8 ) & 0xF800 ) | ( ( c >> 5 ) & 0x07E0 ) | ( ( c >> 3 ) & 0x1F );
 	}
 
 	/**
@@ -275,33 +249,33 @@ namespace mac{
 	 * @param	c			The ARGB 32-bit colour
 	 * @param	alpha 		(out) The 5-bit alpha (0-31)
 	 **/
-	inline color565 to565a5( color8888 c, uint8_t &alpha ){
-		alpha = c>>27;
-		return ((c >> 8) & 0xF800) | ((c >> 5) & 0x07E0) | ((c >> 3) & 0x1F);
+	inline color565 to565a5( color8888 c, uint8_t& alpha ) {
+		alpha = c >> 27;
+		return ( ( c >> 8 ) & 0xF800 ) | ( ( c >> 5 ) & 0x07E0 ) | ( ( c >> 3 ) & 0x1F );
 	}
 
 	/**
 	 * Convert ARGB 32bit to RGB565 16bit format
 	 * @param	c			The RGB 24-bit colour (alpha is ignored)
 	 **/
-	inline color565 to565( color888 c ){
-		return ((c >> 8) & 0xF800) | ((c >> 5) & 0x07E0) | ((c >> 3) & 0x1F);
+	inline color565 to565( color888 c ) {
+		return ( ( c >> 8 ) & 0xF800 ) | ( ( c >> 5 ) & 0x07E0 ) | ( ( c >> 3 ) & 0x1F );
 	}
 
 	/**
 	 * Convert grayscale 8-bit to RGB565 16-bit format
 	 * @param	c			The grayscale color (0-255)
 	 **/
-	inline color565 to565( uint8_t c ){
-		return ((c & 0xF8) << 8) | ((c & 0xFC) << 3) | ((c & 0xF8) >> 3);
+	inline color565 to565( uint8_t c ) {
+		return ( ( c & 0xF8 ) << 8 ) | ( ( c & 0xFC ) << 3 ) | ( ( c & 0xF8 ) >> 3 );
 	}
 
 	/**
 	 * Convert mono 1-bit to RGB565 16-bit format
 	 * @param	c			The mono color (0,1)
 	 **/
-	inline color565 monoTo565( uint8_t c ){
-		return (c & 0b1)?RGB565_White:RGB565_Black;
+	inline color565 monoTo565( uint8_t c ) {
+		return ( c & 0b1 ) ? RGB565_White : RGB565_Black;
 	}
 
 	/**
@@ -310,55 +284,55 @@ namespace mac{
 	 * @param  S  	Saturation component
 	 * @param  V 	Value component
 	 */
-	inline color565 to565( float_t H, float_t S, float_t V ){
+	inline color565 to565( float_t H, float_t S, float_t V ) {
 		float_t		p, q, t, ff;
 		int8_t		i;
-		float_t		r,g,b;
+		float_t		r, g, b;
 
-		if (H >= 360.0) H = 0.0;
+		if ( H >= 360.0 ) H = 0.0;
 		H /= 60.0;
 		i = (int8_t)H;
 		ff = H - i;
-		p = V * (1.0 - S);
-		q = V * (1.0 - (S * ff));
-		t = V * (1.0 - (S * (1.0 - ff)));
+		p = V * ( 1.0 - S );
+		q = V * ( 1.0 - ( S * ff ) );
+		t = V * ( 1.0 - ( S * ( 1.0 - ff ) ) );
 
-		switch(i) {
-			case 0: r = V; g = t; b = p; break;
-			case 1: r = q; g = V; b = p; break;
-			case 2: r = p; g = V; b = t; break;
-			case 3: r = p; g = q; b = V; break;
-			case 4: r = t; g = p; b = V; break;
-			case 5:
-			default:
-				r = V; g = p; b = q; break;
+		switch ( i ) {
+		case 0: r = V; g = t; b = p; break;
+		case 1: r = q; g = V; b = p; break;
+		case 2: r = p; g = V; b = t; break;
+		case 3: r = p; g = q; b = V; break;
+		case 4: r = t; g = p; b = V; break;
+		case 5:
+		default:
+			r = V; g = p; b = q; break;
 		}
 
-		return ((uint8_t)(r * 31.0f) << 11) | ((uint8_t)(g * 63.0f) << 5) | (uint8_t)(b * 31.0f);
+		return ( (uint8_t)( r * 31.0f ) << 11 ) | ( (uint8_t)( g * 63.0f ) << 5 ) | (uint8_t)( b * 31.0f );
 	}
 
 	/**
 	 * @brief Convert RGB565 color to grayscale in same format
-	 * 
+	 *
 	 * @param c 			The color
 	 * @return color565 	The grayscale color
 	 */
 	inline color565 to565gs( color565 c ) {
-		uint8_t g = (((c>>11) & 0x1F) + ((c>>5) & 0x3F) + (c & 0x1F)) >> 2;
-		return (g << 11) + (g << 6) + g;
+		uint8_t g = ( ( ( c >> 11 ) & 0x1F ) + ( ( c >> 5 ) & 0x3F ) + ( c & 0x1F ) ) >> 2;
+		return ( g << 11 ) + ( g << 6 ) + g;
 	}
 
 	/*
 	 * ### ALPHA BLENDING
 	 */
 
-	/**
-	 * Calculate the pre-multiplied value of an RGB565 color for fast blending
-	 * @param c  	RGB565 color
-	 * @return The prepared color
-	 */
-	inline uint32_t prepare565( color565 c ){
-		return (((uint32_t)c | ((uint32_t)c << 16)) & 0b00000111111000001111100000011111);
+	 /**
+	  * Calculate the pre-multiplied value of an RGB565 color for fast blending
+	  * @param c  	RGB565 color
+	  * @return The prepared color
+	  */
+	inline uint32_t prepare565( color565 c ) {
+		return ( ( (uint32_t)c | ( (uint32_t)c << 16 ) ) & 0b00000111111000001111100000011111 );
 	}
 
 	/**
@@ -366,8 +340,8 @@ namespace mac{
 	 * @param c  	RGB888 color
 	 * @return The prepared color
 	 */
-	inline uint32_t prepare565( color888 c ){
-		return ((c & 0xF80000) >> 8) | ((c & 0xFC00) << 11) | ((c & 0xF8) >> 3);
+	inline uint32_t prepare565( color888 c ) {
+		return ( ( c & 0xF80000 ) >> 8 ) | ( ( c & 0xFC00 ) << 11 ) | ( ( c & 0xF8 ) >> 3 );
 	}
 
 	/**
@@ -377,19 +351,19 @@ namespace mac{
 	 * @param b  		Blue color component
 	 * @return The prepared color
 	 */
-	inline uint32_t prepare565( uint8_t r, uint8_t g, uint8_t b ){
-		return ((r & 0xF8) << 8) | ((g & 0xFC) << 19) | ((b & 0xF8) >> 3);
+	inline uint32_t prepare565( uint8_t r, uint8_t g, uint8_t b ) {
+		return ( ( r & 0xF8 ) << 8 ) | ( ( g & 0xFC ) << 19 ) | ( ( b & 0xF8 ) >> 3 );
 	}
 
 	/**
 	 * Calculate the pre-multiplied value of alpha for fast blending. Converts to range 0-31
 	 * @param alpha  	Alpha value 0-255
 	 */
-	inline uint8_t alpha5bit( uint8_t a ){
+	inline uint8_t alpha5bit( uint8_t a ) {
 		return a >> 3;
 	}
-	inline uint8_t alpha5bit( alpha_t a ){
-		return (uint8_t)( alphaClamp(a) * 31 );
+	inline uint8_t alpha5bit( alpha_t a ) {
+		return (uint8_t)( alphaClamp( a ) * 31 );
 	}
 
 	/**
@@ -398,11 +372,11 @@ namespace mac{
 	 * @param	bg		Color to draw over in RGB565 (16bit)
 	 * @param	a		Alpha 0 - 31. If in range 0-255, @see blend565a8
 	 **/
-	inline color565 blend565a5( uint32_t fg, uint32_t bg, uint8_t a ){
-		bg = (bg | (bg << 16)) & 0b00000111111000001111100000011111;
-		fg = (fg | (fg << 16)) & 0b00000111111000001111100000011111;
-		uint32_t result = ((((fg - bg) * a) >> 5) + bg) & 0b00000111111000001111100000011111;
-		return (color565)((result >> 16) | result); // contract result
+	inline color565 blend565a5( uint32_t fg, uint32_t bg, uint8_t a ) {
+		bg = ( bg | ( bg << 16 ) ) & 0b00000111111000001111100000011111;
+		fg = ( fg | ( fg << 16 ) ) & 0b00000111111000001111100000011111;
+		uint32_t result = ( ( ( ( fg - bg ) * a ) >> 5 ) + bg ) & 0b00000111111000001111100000011111;
+		return (color565)( ( result >> 16 ) | result ); // contract result
 	}
 
 	/**
@@ -411,12 +385,12 @@ namespace mac{
 	 * @param	bg		Color to draw over in RGB565 (16bit)
 	 * @param	a		Alpha 0 - 255. If in range 0-31, @see blend565a5
 	 **/
-	inline color565 blend565a8( uint32_t fg, uint32_t bg, uint8_t a ){
+	inline color565 blend565a8( uint32_t fg, uint32_t bg, uint8_t a ) {
 		a = alpha5bit( a );
-		bg = (bg | (bg << 16)) & 0b00000111111000001111100000011111;
-		fg = (fg | (fg << 16)) & 0b00000111111000001111100000011111;
-		uint32_t result = ((((fg - bg) * a) >> 5) + bg) & 0b00000111111000001111100000011111;
-		return (color565)((result >> 16) | result); // contract result
+		bg = ( bg | ( bg << 16 ) ) & 0b00000111111000001111100000011111;
+		fg = ( fg | ( fg << 16 ) ) & 0b00000111111000001111100000011111;
+		uint32_t result = ( ( ( ( fg - bg ) * a ) >> 5 ) + bg ) & 0b00000111111000001111100000011111;
+		return (color565)( ( result >> 16 ) | result ); // contract result
 	}
 
 	/**
@@ -426,10 +400,10 @@ namespace mac{
 	 * @param  a      		Alpha (5-bit 0-31. @see alpha5bit if using 0.0 - 1.0)
 	 * @return            	The blended color
 	 */
-	inline color565 blendPrepared5565( uint32_t preparedFg, uint32_t bg, uint8_t a ){
-		bg = (bg | (bg << 16)) & 0b00000111111000001111100000011111;
-		uint32_t result = ((((preparedFg - bg) * a) >> 5) + bg) & 0b00000111111000001111100000011111;
-		return (color565)((result >> 16) | result); // contract result
+	inline color565 blendPrepared5565( uint32_t preparedFg, uint32_t bg, uint8_t a ) {
+		bg = ( bg | ( bg << 16 ) ) & 0b00000111111000001111100000011111;
+		uint32_t result = ( ( ( ( preparedFg - bg ) * a ) >> 5 ) + bg ) & 0b00000111111000001111100000011111;
+		return (color565)( ( result >> 16 ) | result ); // contract result
 	}
 
 	/**
@@ -441,10 +415,10 @@ namespace mac{
 	 * @return color565 The resulting color
 	 */
 	inline color565 tint( color565 c, color565 t, float_t amount ) {
-		amount = alphaClamp(amount);
-		uint8_t R = floor( lerp( red(c), red(t), amount ) );
-		uint8_t G = floor( lerp( green(c), green(t), amount ) );
-		uint8_t B = floor( lerp( blue(c), blue(t), amount ) );
+		amount = alphaClamp( amount );
+		uint8_t R = floor( lerp( red( c ), red( t ), amount ) );
+		uint8_t G = floor( lerp( green( c ), green( t ), amount ) );
+		uint8_t B = floor( lerp( blue( c ), blue( t ), amount ) );
 		return to565( R, G, B );
 	}
 
@@ -456,10 +430,10 @@ namespace mac{
 	 * @return color565 The resulting color
 	 */
 	inline color565 darken( color565 c, float_t amount ) {
-		amount = 1.0 - alphaClamp(amount);
-		uint8_t R = floor( red(c) * amount );
-		uint8_t G = floor( green(c) * amount );
-		uint8_t B = floor( blue(c) * amount );
+		amount = 1.0 - alphaClamp( amount );
+		uint8_t R = floor( red( c ) * amount );
+		uint8_t G = floor( green( c ) * amount );
+		uint8_t B = floor( blue( c ) * amount );
 		return to565( R, G, B );
 	}
 
@@ -471,10 +445,10 @@ namespace mac{
 	 * @return color565 The resulting color
 	 */
 	inline color565 lighten( color565 c, float_t amount ) {
-		amount = alphaClamp(amount);
-		uint8_t R = floor( lerp( red(c), 255, amount ) );
-		uint8_t G = floor( lerp( green(c), 255, amount ) );
-		uint8_t B = floor( lerp( blue(c), 255, amount ) );
+		amount = alphaClamp( amount );
+		uint8_t R = floor( lerp( red( c ), 255, amount ) );
+		uint8_t G = floor( lerp( green( c ), 255, amount ) );
+		uint8_t B = floor( lerp( blue( c ), 255, amount ) );
 		return to565( R, G, B );
 	}
 

@@ -1,25 +1,15 @@
 #include "../Box.h"
 
-namespace mac{
-
-	DisplayObject* Box::pool = 0;
-
-	DisplayObject** Box::_getPool(){
-		return &Box::pool;
-	}
-
-	Box* Box::Create(){
-		return (Box*)DisplayObject::Create<Box>();
-	}
+namespace mac {
 
 	Box* Box::Create( int16_t x, int16_t y, int16_t w, int16_t h ) {
-		Box* box = (Box*)DisplayObject::Create<Box>();
+		Box* box = MemoryPool<Box>::Create();
 		box->set( x, y, w, h );
 		return box;
 	}
 
 	Box* Box::Create( ClipRect* rect ) {
-		Box* box = (Box*)DisplayObject::Create<Box>();
+		Box* box = MemoryPool<Box>::Create();
 		box->set( rect->x, rect->y, rect->width, rect->height );
 		return box;
 	}
@@ -28,12 +18,12 @@ namespace mac{
 		borders = new Borders();
 	}
 
-	Box::~Box(){
+	Box::~Box() {
 		delete borders;
-		if (gradient) delete gradient;
+		if ( gradient ) delete gradient;
 	}
 
-	void Box::reset(){
+	void Box::reset() {
 		DisplayObject::reset();
 	}
 
@@ -47,15 +37,15 @@ namespace mac{
 
 	void Box::beginRender( ClipRect* updateArea ) {
 		DisplayObject::beginRender( updateArea );
-		if (gradient) gradient->beginRender( renderBounds );
+		if ( gradient ) gradient->beginRender( renderBounds );
 	}
 
 	void Box::beginLine( int16_t ry ) {
-		if (gradient) gradient->beginLine( ry );
+		if ( gradient ) gradient->beginLine( ry );
 	}
 
 	void Box::calcPixel( int16_t rx, int16_t ry ) {
-		if (gradient) {
+		if ( gradient ) {
 			gradient->calcPixel( rx, ry );
 			_ra = gradient->ra;
 			_rc = gradient->rc;
@@ -63,11 +53,11 @@ namespace mac{
 		else {
 			_ra = 1;
 			_rc = color;
-		}	
+		}
 	}
 
 	void Box::skipPixel( int16_t rx, int16_t ry ) {
-		if (gradient) gradient->skipPixel( rx, ry );
+		if ( gradient ) gradient->skipPixel( rx, ry );
 	}
-	
+
 } // namespace
