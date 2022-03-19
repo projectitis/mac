@@ -159,8 +159,6 @@ namespace mac {
 							filter = filter->next();
 						}
 
-
-
 						// Draw to buffer
 						if ( node->object->_ra == 1.0 ) buffer->pixel( node->object->_rc, x );
 						else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra ), x );
