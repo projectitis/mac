@@ -4,6 +4,13 @@
 
 #include "Filter.h"
 
+/**
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project for creating beautiful and useful
+ * apps on various microprocessor boards.
+ *
+ * mac is distributed under the MIT licence
+ **/
 namespace mac {
 
 	/**
@@ -34,7 +41,7 @@ namespace mac {
 		 * @param value The amount
 		 */
 		void amount( float_t value ) {
-			_a = (value < -1.0)? -1.0 : (value > 1.0)? 1.0 : value;
+			_a = ( value < -1.0 ) ? -1.0 : ( value > 1.0 ) ? 1.0 : value;
 		}
 
 		/**

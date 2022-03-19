@@ -4,6 +4,13 @@
 
 #include "Filter.h"
 
+/**
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project for creating beautiful and useful
+ * apps on various microprocessor boards.
+ *
+ * mac is distributed under the MIT licence
+ **/
 namespace mac {
 
 	/**
@@ -31,7 +38,7 @@ namespace mac {
 
 		/**
 		 * @brief Change the mask color
-		 * 
+		 *
 		 * @param color The mask color
 		 */
 		void color( color8888 color ) {
@@ -42,7 +49,7 @@ namespace mac {
 
 		/**
 		 * @brief Get the mask color
-		 * 
+		 *
 		 * @return color888 The mask color
 		 */
 		color8888 color() {

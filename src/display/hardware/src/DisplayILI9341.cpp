@@ -1,16 +1,10 @@
-/**
- * Display library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
-
 #include "../DisplayILI9341.h"
 #include <SPI.h>
 #include <DMAChannel.h>
 
- /**
-  * Define ILI9341 commands
-  **/
+/**
+ * Define ILI9341 commands
+ **/
 typedef enum {
 	NOP = 0x00,
 	SWRESET = 0x01,		// Resets the commands and parameters to their S/W Reset default values
@@ -142,9 +136,9 @@ namespace mac {
 		_bklt = bklt;
 		_bkltPWM = false;
 		switch ( sz ) {
-		case displaySize_320x240:
-		default:
-			_hwSize.setSize( 320, 240 );
+			case displaySize_320x240:
+			default:
+				_hwSize.setSize( 320, 240 );
 		}
 		_pf = PF_565;
 		_px = px;
@@ -219,7 +213,7 @@ namespace mac {
 		// Set the area of the display to write to
 		writeCommand( ILI9341_Command::CASET ); // Column addr set
 		writeData16( buffer.rect.x << _px );
-		writeData16( ( ( buffer.rect.x2 + 1 ) << _px ) - 1 );                                                                                    
+		writeData16( ( ( buffer.rect.x2 + 1 ) << _px ) - 1 );
 
 		writeCommand( ILI9341_Command::PASET ); // Row addr set
 		writeData16( buffer.rect.y << _px );

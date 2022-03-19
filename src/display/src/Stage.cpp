@@ -1,62 +1,18 @@
-/**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- **/
-
 #include "../Stage.h"
 
- /**
-  * mac (or μac) stands for "Microprocessor App Creator"
-  * mac is a project that enables creating beautiful and useful apps on the
-  * Teensy microprocessor, but hopefully is generic enough to be ported to other
-  * microprocessor boards. The various libraries that make up mac might also
-  * be useful in other projects.
-  **/
 namespace mac {
 
-	DisplayObject* Stage::pool = 0;
+	Stage* Stage::pool = nullptr;
 
-	/**
-	 * Construct a new Stage object
-	 */
 	Stage::Stage() {
 		_dirtyBounds = new ClipRect();
 		id = 0;
 	}
 
-	/**
-	 * Destroy the Stage object
-	 */
 	Stage::~Stage() {
 		delete _dirtyBounds;
 	}
 
-	/**
-	 * Pool getter
-	 */
-	DisplayObject** Stage::_getPool() {
-		return &Stage::pool;
-	}
-
-	/**
-	 * Create a new object or take one from the pool
-	 * @return The new or recycled object
-	 */
-	Stage* Stage::Create() {
-		return (Stage*)DisplayObject::Create<Stage>();
-	}
-
-	/**
-	 * Reset the object back to default settings
-	 */
-	void Stage::reset() {
-		DisplayObject::reset();
-	}
-
-	/**
-	 * Update the display object
-	 */
 	void Stage::update( float_t dt ) {
 		// Update self
 
@@ -64,9 +20,6 @@ namespace mac {
 		DisplayObject::update( dt );
 	}
 
-	/**
-	 * Render all display objects
-	 */
 	void Stage::render( LineBuffer* buffer ) {
 		//Serial.println("Stage::render");
 
@@ -135,7 +88,7 @@ namespace mac {
 				_renderList->insertByDepth( head->object );
 				head->object->beginRender( renderBounds );
 				filter = head->object->filters;
-				while (filter) {
+				while ( filter ) {
 					filter->beginRender( renderBounds );
 					filter = filter->next();
 				}
@@ -158,7 +111,7 @@ namespace mac {
 				if ( y > node->object->globalBounds->y2 ) {
 					node->object->endRender();
 					filter = node->object->filters;
-					while (filter) {
+					while ( filter ) {
 						filter->endRender();
 						filter = filter->next();
 					}
@@ -170,7 +123,7 @@ namespace mac {
 					localy = node->object->globalToLocalY( y );
 					node->object->beginLine( localy );
 					filter = node->object->filters;
-					while (filter) {
+					while ( filter ) {
 						filter->beginLine( localy );
 						filter = filter->next();
 					}
@@ -194,19 +147,25 @@ namespace mac {
 				node = _renderList->next();
 				while ( node ) {
 					if ( node->object->globalBounds->containsX( x ) ) {
+
+						// Calculate color and alpha 
 						localx = node->object->globalToLocalX( x );
 						localy = node->object->globalToLocalY( y );
 						node->object->calcPixel( localx, localy );
 						node->object->_ra *= node->object->alpha;
+
 						// Apply filters
 						filter = node->object->filters;
-						while (filter) {
+						while ( filter ) {
 							filter->filterPixel( localx, localy, node->object->_ra, node->object->_rc );
 							filter = filter->next();
 						}
+
+
+
 						// Draw to buffer
 						if ( node->object->_ra == 1.0 ) buffer->pixel( node->object->_rc, x );
-						else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra * node->object->alpha ), x );
+						else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra ), x );
 					}
 					node = node->next();
 				}
@@ -222,42 +181,26 @@ namespace mac {
 		_dirty = false;
 	}
 
-	/**
-	 * Set the background color
-	 * @param bgColor The background color
-	 */
 	void Stage::backgroundColor( color888 bgColor ) {
 		_backgroundColor = bgColor;
 	}
 
-	/**
-	 * Get the background color
-	 * @return color The background color
-	 */
 	color888 Stage::backgroundColor() {
 		return _backgroundColor;
 	}
 
-	/**
-	 * Step recursively through all children. Calculate the relative depth of
-	 * children, and insert into the display list.
-	 * @param buffer The pixel buffer
-	 * @param children The children to add
-	 * @param px The global x coordinate of the parent
-	 * @param py The global y coordinate of the parent
-	 */
 	void Stage::_traverse( LineBuffer* buffer, DisplayObject* child, boolean forceDirty, float_t px, float_t py ) {
 		// Step all children
 		while ( child ) {
+
+			// Force dirty?
+			if ( forceDirty ) child->dirty();
 
 			// If not visible and not dirty, skip to next child
 			if ( ( !child->visible() || ( child->alpha <= 0 ) ) && !child->isDirty() ) {
 				child = child->next();
 				continue;
 			}
-
-			// Force dirty?
-			if ( forceDirty ) child->dirty();
 
 			// Get child to calculate global bounds
 			child->globalPos( px, py );
@@ -292,10 +235,6 @@ namespace mac {
 		}
 	}
 
-	/**
-	 * Clear a DisplayList
-	 * @param list The list to recycle
-	 */
 	void Stage::_recycleList( DisplayList* list ) {
 		DisplayList* next = list;
 		while ( list ) {

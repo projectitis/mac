@@ -1,45 +1,18 @@
-/**
- * GUI library for "mac/μac"
- * Author: Peter "Projectitis" Vullings <peter@projectitis.com>
- * Distributed under the MIT licence
- *
- * MIT LICENCE
- * -----------
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 #pragma once
 #ifndef _MAC_IDRAWABLEH_
 #define _MAC_IDRAWABLEH_ 1
 
 #include "Common.h"
 #include "geom/ClipRect.h"
+#include "graphics/Color.h"
 
- /**
-  * mac (or μac) stands for "Microprocessor App Creator"
-  * mac is a project that enables creating beautiful and useful apps on the
-  * Teensy microprocessor, but hopefully is generic enough to be ported to other
-  * microprocessor boards. The various libraries that make up mac might also
-  * be useful in other projects.
-  **/
+/**
+ * mac (or μac) stands for "Microprocessor App Creator"
+ * mac is a project for creating beautiful and useful
+ * apps on various microprocessor boards.
+ *
+ * mac is distributed under the MIT licence
+ **/
 namespace mac {
 
 	/**
@@ -86,19 +59,10 @@ namespace mac {
 		 * @param rx The current X position in local coordinates
 		 * @param ry The current Y position in local coordinates
 		 */
-		virtual void calcPixel( int16_t rx, int16_t ry ) {}
-
-		/**
-		 * @brief Calculate the pixel to be rendered at the current position as a mask
-		 * Any display object can be used as a mask. In this case calcMaskPixel is called instead of
-		 * calcPixel. The function only needs to calculate alpha, as the color value is ignored
-		 * when used as a mask. Although it is possible to simply call calcPixel, a more efficient
-		 * implementaton may be possible if only alpha is calculated.
-		 *
-		 * @param rx The current X position in local coordinates
-		 * @param ry The current Y position in local coordinates
-		 */
-		virtual void calcMaskPixel( int16_t rx, int16_t ry ) {}
+		virtual void calcPixel( int16_t rx, int16_t ry ) {
+			_rc = 0;
+			_ra = 0.0;
+		}
 
 		/**
 		 * @brief Skip the pixel at the current position
@@ -116,6 +80,17 @@ namespace mac {
 		 * @see beginRender
 		 */
 		virtual void endRender() {}
+
+	protected:
+		/**
+		 * @brief The color from the previous call to calcPixel
+		 */
+		color888 _rc;
+
+		/**
+		 * @brief The alpha from the previous call to calcPixel
+		 */
+		float_t _ra;
 
 	}; // class
 

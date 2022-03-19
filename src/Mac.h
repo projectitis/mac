@@ -8,12 +8,12 @@
  * @license https://choosealicense.com/licenses/mit/
  *
  * mac (or μac) stands for "Microprocessor App Creator"
- * mac is a project that enables creating beautiful and
- * useful apps on various microprocessor boards.
+ * mac is a project for creating beautiful and useful
+ * apps on various microprocessor boards.
  *
  * Version 0.2 supports
  *      Teensy
- * 
+ *
  * Planned support for
  *      ESP32 (via Arduino)
  */
@@ -30,7 +30,5 @@
 #include "display/App.h"
 #include "display/Stage.h"
 #include "display/hardware/DisplayILI9341.h"
-  //#include "display/hardware/DisplayST7735.h"
-  //#include "display/hardware/DisplayST7789.h"
 
 #endif
