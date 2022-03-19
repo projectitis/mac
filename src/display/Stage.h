@@ -34,11 +34,6 @@ namespace mac {
 	class Stage : public DisplayObject {
 	public:
 		/**
-		 * Memory pool of recycled objects
-		 */
-		static Stage* pool;
-
-		/**
 		 * Construct a new Stage object
 		 */
 		Stage();

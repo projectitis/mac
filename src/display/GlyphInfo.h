@@ -49,11 +49,6 @@ namespace mac {
 		void reset();
 
 		/**
-		 * Recycle back to the pool
-		 */
-		void recycle();
-
-		/**
 		 * @brief Set the glyph to a new character and position
 		 *
 		 * @param c 	The character code
@@ -98,21 +93,10 @@ namespace mac {
 		uint32_t width;
 
 		/**
-		 * Return the next item
-		 */
-		GlyphInfo* next();
-
-		/**
 		 * Inserts a glyph into the list into sorted order by x position
 		 * @param glyph The glyph to insert
 		 */
 		void insert( GlyphInfo* glyph );
-
-		/**
-		 * Remove the current node from the list
-		 * @return The removed node (self)
-		 */
-		GlyphInfo* remove();
 
 	};
 
