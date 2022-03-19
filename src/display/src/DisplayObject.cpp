@@ -35,6 +35,8 @@ namespace mac {
 		_dirty = true;
 		_visible = true;
 		_active = true;
+		mask = MaskType::none;
+		_hasMask = false;
 		width( 0 );
 		height( 0 );
 		globalBounds->clear();
@@ -481,10 +483,14 @@ namespace mac {
 	* @param updateArea The area of the display being updated
 	*/
 	void DisplayObject::beginRender( ClipRect* updateArea ) {
+		Serial.println("DisplayObject::beginRender");
 		_dirty = false;
 		renderBounds->set( updateArea );
+		Serial.println("  updateArea set");
 		renderBounds->clip( globalBounds );
+		Serial.println("  globalBounds set");
 		globalToLocal( renderBounds );
+		Serial.println("  globalToLocal set");
 	}
 
 } // namespace

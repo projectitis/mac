@@ -26,6 +26,7 @@ namespace mac {
 		 * Create a new object or take one from the pool
 		 * @return The new or recycled object
 		 */
+		static Box* Create();
 		static Box* Create( int16_t x, int16_t y, int16_t w, int16_t h );
 		static Box* Create( ClipRect* rect );
 
@@ -61,38 +62,38 @@ namespace mac {
 		/**
 		 * Gradient. If set, will be used instead of color
 		 */
-		Gradient* gradient;
+		Gradient* gradient = nullptr;
 
 		/**
 		 * @brief Borders of the box
 		 */
-		Borders* borders;
+		Borders* borders = nullptr;
 
 		/**
 		 * @brief Begin the render sweep for the current frame
 		 * @param updateArea The area of the display being updated
 		 */
-		void beginRender( ClipRect* updateArea );
+		void beginRender( ClipRect* updateArea ) override;
 
 		/**
 		 * prepare to render the next line
 		 * @param ry The y position in local coordinates
 		 */
-		void beginLine( int16_t ry );
+		void beginLine( int16_t ry ) override;
 
 		/**
 		 * Read a pixel
 		 * @param rx The x position in local coordinates
 		 * @param ry The y position in local coordinates
 		 */
-		void calcPixel( int16_t rx, int16_t ry );
+		void calcPixel( int16_t rx, int16_t ry ) override;
 
 		/**
 		 * Skip a pixel
 		 * @param rx The x position in local coordinates
 		 * @param ry The y position in local coordinates
 		 */
-		void skipPixel( int16_t rx, int16_t ry );
+		void skipPixel( int16_t rx, int16_t ry ) override;
 
 	};
 

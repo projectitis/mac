@@ -122,13 +122,43 @@ namespace mac {
 		 * children, and insert into the display list.
 		 * @param children The children to add
 		 */
-		void _traverse( LineBuffer* buffer, DisplayObject* child, boolean forceDirty, float_t px, float_t py );
+
+		 /**
+		  * @brief Traverse through display objects and insert into display list
+		  *
+		  * @param buffer 		The buffer (for accessing display size)
+		  * @param child 		The display object to process
+		  * @param forceDirty	True to force the child to be redrawn
+		  * @param px			The x-coordinate
+		  * @param py			The y-coordinate
+		  * @param isMask		True to force the child to be processed as a mask
+		  */
+		void _traverse( LineBuffer* buffer, DisplayObject* child, boolean forceDirty, float_t px, float_t py, boolean isMask );
 
 		/**
 		 * Clear a DisplayList
 		 * @param list The list to recycle
 		 */
 		void _recycleList( DisplayList* list );
+
+		/**
+		 * @brief Helper to begin rendering an object
+		 * @param object The display object
+		 */
+		void _beginRender( DisplayObject* object );
+
+		/**
+		 * @brief Helper to begin rendering a line on an object
+		 * @param object The display object
+		 * @param y		 The y-coordinate of the line in global space
+		 */
+		void _beginLine( DisplayObject* object, uint16_t y );
+
+		/**
+		 * @brief Helper to end rendering an object
+		 * @param object The display object
+		 */
+		void _endRender( DisplayObject* object );
 
 	};
 
