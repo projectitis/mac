@@ -2,14 +2,13 @@
 
 ![mac logo](/logo.png?raw=true "mac")
 
-Microprocessor App Creator (μac, or mac) is a project that enables rapid creation of graphical apps on the Teensy microprocessor, but hopefully is generic enough to be ported to other microprocessor boards in the future. The various individual libraries that make up mac (such as display and drawing libraries) might also be useful in other projects.
+Microprocessor App Creator (μac, or mac) is an SDK for rapid development of graphical apps on the Teensy microprocessor, but hopefully is generic enough to be ported to other microprocessor boards in the future. The various individual libraries that make up mac (such as display and drawing libraries) might also be useful in other projects.
 
-This project has a software component (the libraries) and a hardware component (a Teensy-based handheld). As well as the software, eventually the plans/schematics will be released to enable you to build your own Teensy-based handheld that will run applications developed using mac.
+This project has a software component (the libraries) and a future hardware component (a Teensy-based handheld). As with the software, the plans/schematics will be released to enable you to build your own Teensy-based handheld that will run applications developed using mac.
 
-## DEVELOPER NOTES 2022-03-16
+## DEVELOPER NOTES 2022-03-19
 ### TODO next
 - Radial gradient
-- Masks
 - Sprite stamping
 - Sprite animation
 - Sprite rotation
@@ -19,6 +18,9 @@ This project has a software component (the libraries) and a hardware component (
 - ESP32 support
 
 ## Change history
+ - **2022-03-19** Added masks (and inverse masks)
+ - **2022-03-18** Refactored memory pooling and linked lists to use templates classes
+ - **2022-03-18** Added ability to set any size buffer (from single line to full frame)
  - **2022-03-17** Filters (tint, HSV, colormask, lighten/darken) and variable height framebuffer
  - **2022-03-16** Working linear gradient.
  - **2022-03-10** Refactored line buffer and display implementation.
@@ -57,6 +59,7 @@ mac has lofty goals. The mac project has the following planned components:
 - Graphics
     - **Stage and display list based graphics engine**
     - **Tilemap-based sprites (100%)**
+	- **Linear gradients at any angle with up to 255 stops (100%)**
 	- Sprite animation (10%)
 	- Fast antialiased vector drawing: Thin lines, Triangles, Complex polygons, Thick lines
 - XM audio player
