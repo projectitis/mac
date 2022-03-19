@@ -17,6 +17,8 @@ namespace mac {
 		this->lastMicros = micros();
 
 		this->stage = new Stage();
+		this->stage->width( this->display->width() );
+		this->stage->height( this->display->height() );
 		this->messenger = new Messenger();
 		this->tweens = new Tween();
 		this->input = new Input( this->messenger );

@@ -2,6 +2,10 @@
 
 namespace mac {
 
+	Box* Box::Create() {
+		return MemoryPool<Box>::Create();
+	}
+
 	Box* Box::Create( int16_t x, int16_t y, int16_t w, int16_t h ) {
 		Box* box = MemoryPool<Box>::Create();
 		box->set( x, y, w, h );

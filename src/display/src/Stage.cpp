@@ -32,7 +32,7 @@ namespace mac {
 		else _dirtyBounds->clear();
 		_displayListDepth = 0;
 		_displayList = DisplayList::Create( this );
-		if ( _children ) _traverse( buffer, _children, _dirty, 0, 0 );
+		if ( _children ) _traverse( buffer, _children, _dirty, 0, 0, _children->mask != MaskType::none );
 
 		// Calculate the updated area of ths display
 		renderBounds->set( _dirtyBounds );
@@ -48,23 +48,24 @@ namespace mac {
 		}
 
 		/* Debug display list and render bounds
-		Serial.println("DisplayList");
+		Serial.println( "DisplayList" );
 		DisplayList* debugNode = _displayList->next();
-		while (debugNode) {
+		while ( debugNode ) {
 			Serial.printf(
-				"  ID %d: %d,%d %dx%d (d=%d) (n=%d)\n",
+				"  ID %d: %d,%d %dx%d (d=%d) (m=%d,%d)\n",
 				debugNode->object->id,
 				debugNode->object->globalBounds->x,
 				debugNode->object->globalBounds->y,
 				debugNode->object->globalBounds->width,
 				debugNode->object->globalBounds->height,
 				debugNode->object->depth,
-				debugNode->next()?debugNode->next()->object->id:0
+				(debugNode->object->mask != MaskType::none),
+				debugNode->object->_hasMask
 			);
 			debugNode = debugNode->next();
 		}
-		Serial.println("Render bounds");
-		Serial.printf("  %d,%d %dx%d\n", renderBounds->x,renderBounds->y, renderBounds->width,renderBounds->height );
+		Serial.println( "Render bounds" );
+		Serial.printf( "  %d,%d %dx%d\n", renderBounds->x, renderBounds->y, renderBounds->width, renderBounds->height );
 		*/
 
 		// Initialise the display to draw only the dirty area
@@ -84,19 +85,20 @@ namespace mac {
 			// in reverse order (stage at the end)
 			while ( head && ( head->object->globalBounds->y <= y ) ) {
 				_renderList->insertByDepth( head->object );
-				head->object->beginRender( renderBounds );
-				filter = head->object->filters;
-				while ( filter ) {
-					filter->beginRender( renderBounds );
-					filter = filter->next();
-				}
+				_beginRender( head->object );
 				head = head->next();
 			}
 			/* Debug render list
-			Serial.println("RenderList\n");
+			Serial.println( "RenderList\n" );
 			DisplayList* list = _renderList;
-			while (list) {
-				Serial.printf("  ID:%d at y=%d, x=%d (%dx%d) with d=%d\n", list->object->id, int16_t(list->object->y()), int16_t(list->object->x()), int16_t(list->object->width()), int16_t(list->object->height()), list->object->depth );
+			while ( list ) {
+				Serial.printf( "  ID:%d at y=%d, x=%d (%dx%d) with d=%d is masked %d\n",
+					list->object->id,
+					int16_t( list->object->y() ), int16_t( list->object->x() ),
+					int16_t( list->object->width() ), int16_t( list->object->height() ),
+					list->object->depth,
+					list->object->_hasMask
+				);
 				list = list->next();
 			} */
 
@@ -107,24 +109,13 @@ namespace mac {
 			while ( node ) {
 				// Todo precalculate BR corner (x2 and y2) 
 				if ( y > node->object->globalBounds->y2 ) {
-					node->object->endRender();
-					filter = node->object->filters;
-					while ( filter ) {
-						filter->endRender();
-						filter = filter->next();
-					}
+					_endRender( node->object );
 					next = node->next();
 					node->remove()->recycle();
 					node = next;
 				}
 				else {
-					localy = node->object->globalToLocalY( y );
-					node->object->beginLine( localy );
-					filter = node->object->filters;
-					while ( filter ) {
-						filter->beginLine( localy );
-						filter = filter->next();
-					}
+					_beginLine( node->object, y );
 					node = node->next();
 				}
 			}
@@ -159,6 +150,29 @@ namespace mac {
 							filter = filter->next();
 						}
 
+						// Calculate masking
+						if ( node->object->_hasMask ) {
+							DisplayObject* child = node->object->firstChild();
+							float_t ma = 0;
+							while ( child ) {
+								if ( child->mask != MaskType::none && child->visible() ) {
+									if ( ( child->alpha > 0 ) && child->globalBounds->contains( x, y ) ) {
+										localx = child->globalToLocalX( x );
+										localy = child->globalToLocalY( y );
+										child->calcPixel( localx, localy );
+										if (child->mask == MaskType::inverse) child->_ra = 1 - child->_ra;
+										child->_ra *= child->alpha;
+										ma = ( 1 - child->_ra ) * ma + child->_ra;
+									}
+									else if (child->mask == MaskType::inverse) {
+										ma = 1;
+									}
+								}
+								child = child->next();
+							}
+							node->object->_ra *= ma;
+						}
+
 						// Draw to buffer
 						if ( node->object->_ra == 1.0 ) buffer->pixel( node->object->_rc, x );
 						else if ( node->object->_ra > 0 ) buffer->blend( node->object->_rc, alphaClamp( node->object->_ra ), x );
@@ -177,6 +191,69 @@ namespace mac {
 		_dirty = false;
 	}
 
+	void Stage::_beginRender( DisplayObject* object ) {
+		// Process object
+		object->beginRender( renderBounds );
+		// Process filters
+		Filter* filter = object->filters;
+		while ( filter ) {
+			filter->beginRender( renderBounds );
+			filter = filter->next();
+		}
+		// Process masks
+		if ( object->_hasMask ) {
+			DisplayObject* child = object->firstChild();
+			while ( child ) {
+				if ( child->mask != MaskType::none && child->visible() ) {
+					_beginRender( child );
+				}
+				child = child->next();
+			}
+		}
+	}
+
+	void Stage::_beginLine( DisplayObject* object, uint16_t y ) {
+		// Process object
+		object->beginLine( object->globalToLocalY( y ) );
+		// Process filters
+		Filter* filter = object->filters;
+		while ( filter ) {
+			filter->beginLine( y );
+			filter = filter->next();
+		}
+		// Process masks
+		if ( object->_hasMask ) {
+			DisplayObject* child = object->firstChild();
+			while ( child ) {
+				if ( child->mask != MaskType::none && child->visible() ) {
+					_beginLine( child, y );
+				}
+				child = child->next();
+			}
+		}
+	}
+
+	void Stage::_endRender( DisplayObject* object ) {
+		// Process object
+		object->endRender();
+		// Process filters
+		Filter* filter = object->filters;
+		while ( filter ) {
+			filter->endRender();
+			filter = filter->next();
+		}
+		// Process masks
+		if ( object->_hasMask ) {
+			DisplayObject* child = object->firstChild();
+			while ( child ) {
+				if ( child->mask != MaskType::none && child->visible() ) {
+					_endRender( child );
+				}
+				child = child->next();
+			}
+		}
+	}
+
 	void Stage::backgroundColor( color888 bgColor ) {
 		_backgroundColor = bgColor;
 	}
@@ -185,15 +262,20 @@ namespace mac {
 		return _backgroundColor;
 	}
 
-	void Stage::_traverse( LineBuffer* buffer, DisplayObject* child, boolean forceDirty, float_t px, float_t py ) {
+	void Stage::_traverse( LineBuffer* buffer, DisplayObject* child, boolean forceDirty, float_t px, float_t py, boolean isMask ) {
 		// Step all children
 		while ( child ) {
+
+			// Mask
+			if ( child->mask != MaskType::none && child->visible() ) {
+				child->parent()->_hasMask = true;
+			}
 
 			// Force dirty?
 			if ( forceDirty ) child->dirty();
 
 			// If not visible and not dirty, skip to next child
-			if ( ( !child->visible() || ( child->alpha <= 0 ) ) && !child->isDirty() ) {
+			else if ( ( !child->visible() || ( child->alpha <= 0 ) ) && !child->isDirty() ) {
 				child = child->next();
 				continue;
 			}
@@ -206,8 +288,8 @@ namespace mac {
 				_dirtyBounds->grow( child->cleanBounds );
 			}
 
-			// Check if on the display
-			if ( child->globalBounds->overlaps( &buffer->rect ) ) {
+			// Check if on the display and is not a mask
+			if ( child->globalBounds->overlaps( &buffer->rect ) && child->mask == MaskType::none && !isMask ) {
 
 				// Calculate depth
 				child->depth = ++_displayListDepth;
@@ -224,7 +306,7 @@ namespace mac {
 			}
 
 			// Recurse
-			if ( child->hasChildren() ) _traverse( buffer, child->firstChild(), child->isDirty(), child->globalBounds->x - child->_ox, child->globalBounds->y - child->_oy );
+			if ( child->hasChildren() ) _traverse( buffer, child->firstChild(), child->isDirty(), child->globalBounds->x - child->_ox, child->globalBounds->y - child->_oy, isMask || child->mask != MaskType::none );
 
 			// Next sibling
 			child = child->next();
@@ -235,6 +317,7 @@ namespace mac {
 		DisplayList* next = list;
 		while ( list ) {
 			next = list->next();
+			list->object->_hasMask = false;
 			list->recycle();
 			list = next;
 		}

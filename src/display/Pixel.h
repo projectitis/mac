@@ -28,7 +28,7 @@ namespace mac {
         /**
          * @brief Recycle the pixel list
          */
-        void recycle() override;
+        void recycle() override;                                         
 
         /**
          * Create a new object or take one from the pool

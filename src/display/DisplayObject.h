@@ -35,6 +35,15 @@ namespace mac {
 	};
 
 	/**
+	 * @brief Type of masking
+	 */
+	enum class MaskType {
+		none,
+		mask,
+		inverse,
+	};
+
+	/**
 	 * The base class for all display objects (@see Stage)
 	 */
 	class DisplayObject : public Listener, public IDrawable {
@@ -58,7 +67,7 @@ namespace mac {
 		/**
 		 * ID of the object. Implementation specific.
 		 */
-		uint32_t id;
+		uint32_t id = 0;
 
 		/**
 		 * Listener for events
@@ -101,7 +110,7 @@ namespace mac {
 		/**
 		 * If true, this display object will mask objects below it
 		 */
-		boolean mask = false;
+		MaskType mask = MaskType::none;
 
 		/**
 		 * Set the Visibility of the object
@@ -353,6 +362,11 @@ namespace mac {
 		 * Animation flag. If false, object does not animate.
 		 */
 		boolean _animate = false;
+
+		/**
+		 * Masked flag. If true, this display object is masked.
+		 */
+		boolean _hasMask = false;
 
 		/**
 		 * X offset of origin
