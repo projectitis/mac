@@ -46,7 +46,7 @@ namespace mac {
 		/**
 		 * Return this object to the pool
 		 */
-		void recycle() {
+		virtual void recycle() {
 			#ifdef MAC_OBJECT_REUSE
 			this->reset();
 			this->_poolNext = _pool;
