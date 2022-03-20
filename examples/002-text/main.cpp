@@ -3,8 +3,8 @@
 
 using namespace mac;
 
-App *app;
-Text *text;
+App* app;
+Text* text;
 
 void setup() {
 	// Create a new application
@@ -19,7 +19,7 @@ void setup() {
 
 	// Create a text object usiing the "Pixel6" font
 	text = Text::Create( (packedbdf_t*)&PixelSix008 );
-	text->text( (char*)F("All children, except one, grow up. They soon know that they will grow up, and the way Wendy knew was this."));
+	text->text( (char*)F( "All children, except one, grow up. They soon know that they will grow up, and the way Wendy knew was this." ) );
 	text->width( 80 );
 	text->x( 40 );
 	text->y( 10 );
@@ -28,7 +28,7 @@ void setup() {
 	app->stage->addChild( text );
 }
 
-void loop(){
+void loop() {
 	// Call update as often as possible
 	app->update();
 }
