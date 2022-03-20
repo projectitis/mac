@@ -2,10 +2,10 @@
 
 using namespace mac;
 
-App *app;
-Sprite *base;
-Sprite *sprite;
-Text *text;
+App* app;
+Sprite* base;
+Sprite* sprite;
+Text* text;
 Box* box;
 
 LinearGradient* gradient;
@@ -16,12 +16,12 @@ float_t angle = 0;
 
 // Runs on every render cycle. Spins the gradient around
 // in a circle and changes it's size.
-boolean onRenderFrame( uint32_t event, void* data ){
+boolean onRenderFrame( uint32_t event, void* data ) {
 	angle += 0.05;
-	if (angle > (M_PI*2)) angle -= M_PI*2;
-	float_t r = 40 + 20 * cosf(angle * 5);
- 	float_t c = cosf(angle) * r;
-	float_t s = sinf(angle) * r;
+	if ( angle > ( M_PI * 2 ) ) angle -= M_PI * 2;
+	float_t r = 40 + 20 * cosf( angle * 5 );
+	float_t c = cosf( angle ) * r;
+	float_t s = sinf( angle ) * r;
 	gradient->position(
 		70 - c, 50 + s,
 		70 + c, 50 - s
@@ -46,21 +46,21 @@ void setup() {
 	box = Box::Create();
 	app->stage->addChild( box );
 	box->id = 22;
-	box->x(10);
-	box->y(10);
-	box->width(140);
-	box->height(100);
+	box->x( 10 );
+	box->y( 10 );
+	box->width( 140 );
+	box->height( 100 );
 
 	// Create a gradient and add 6 stops for a rainbox effect. The 
 	// gradient is applied to the box.
-	gradient = LinearGradient::Create(6);
+	gradient = LinearGradient::Create( 6 );
 	gradient->stop( 0, ARGB8888_Red, 1.0, 0.0 )
 		->stop( 1, ARGB8888_Orange, 1.0, 0.2 )
 		->stop( 2, ARGB8888_Yellow, 1.0, 0.4 )
 		->stop( 3, ARGB8888_Green, 1.0, 0.6 )
 		->stop( 4, ARGB8888_Indigo, 1.0, 0.8 )
 		->stop( 5, ARGB8888_Violet, 1.0, 1.0 );
-	gradient->position( 70,10, 70,90 );
+	gradient->position( 70, 10, 70, 90 );
 	box->gradient = gradient;
 
 	// Listen for the update_render event. This runs the 'onRenderFrame' function on
@@ -68,6 +68,6 @@ void setup() {
 	app->messenger->addListener( Event::update_render, new CallbackListener( onRenderFrame ) );
 }
 
-void loop(){
+void loop() {
 	app->update();
 }

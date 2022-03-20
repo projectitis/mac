@@ -23,15 +23,15 @@ void setup() {
 	// Set background color
 	app->stage->backgroundColor( ARGB8888_White );
 
-	uint16_t w = floor(app->stage->width()/2) - 10;
-	uint16_t h = floor(app->stage->height()) - 20;
+	uint16_t w = floor( app->stage->width() / 2 ) - 10;
+	uint16_t h = floor( app->stage->height() ) - 20;
 
 	// On the left we will add an orange box and mask it
 	// with the Asterix sprite. Only the part of the box
 	// under the mask (under Asterix) should be drawn.
 	box = Box::Create();
 	box->set( 10, 10, w, h );
-	app->stage->addChild(box);
+	app->stage->addChild( box );
 	box->color = ARGB8888_Orange;
 	box->id = 1;
 
@@ -48,7 +48,7 @@ void setup() {
 	// be drawn, but all other parts will.
 	box2 = Box::Create();
 	box2->set( w + 10, 10, w, h );
-	app->stage->addChild(box2);
+	app->stage->addChild( box2 );
 	box2->color = ARGB8888_IndianRed;
 	box2->id = 2;
 

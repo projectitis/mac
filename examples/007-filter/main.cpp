@@ -25,11 +25,11 @@ boolean onRenderFrame( uint32_t event, void* data ) {
 	asterixSprite1->dirty(); // Forces the sprite to redraw
 
 	a += da;
-	if ( a > 1 ){
+	if ( a > 1 ) {
 		a = 1;
 		da = -da;
 	}
-	else if (a < 0) {
+	else if ( a < 0 ) {
 		a = 0;
 		da = -da;
 	}

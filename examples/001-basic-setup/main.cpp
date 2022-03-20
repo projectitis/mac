@@ -2,7 +2,7 @@
 
 using namespace mac;
 
-App *app;
+App* app;
 
 void setup() {
 	// Create a new application
@@ -16,7 +16,7 @@ void setup() {
 	app->stage->backgroundColor( ARGB8888_SaddleBrown );
 }
 
-void loop(){
+void loop() {
 	// Call update as often as possible
 	app->update();
 }
