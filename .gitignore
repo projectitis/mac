@@ -2,3 +2,6 @@
 resources/*
 !resources/README.md
 building/
+
+# Ignore IDE files
+.vscode

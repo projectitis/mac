@@ -16,7 +16,7 @@ namespace mac {
 	/**
 	 * Fuzzy color-mask filter
 	 */
-	class FuzzyColorMaskFilter : public Filter {
+	class FuzzyColorMaskFilter : public Filter, public MemoryPool<Filter> {
 	public:
 		/**
 		 * @brief Construct a new Fuzzy Color Mask Filter object
@@ -24,7 +24,12 @@ namespace mac {
 		 * @param color The color to tint with
 		 * @param threshhold The threshhold for matching thecolor (0.0 = exact, 1.0 = maximum variation)
 		 */
-		FuzzyColorMaskFilter( color8888 color, float_t threshhold );
+		FuzzyColorMaskFilter( color8888 color, float_t threshhold ) {
+			_r = red( color );
+			_g = green( color );
+			_b = blue( color );
+			_t = alphaClamp( threshhold );
+		}
 
 		/**
 		 * @brief Apply the filter to the specified pixel
@@ -34,7 +39,9 @@ namespace mac {
 		 * @param a (in/out) The alpha value of the pixel being filtered
 		 * @param c (in/out) The color value of the pixel being filtered
 		 */
-		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c ) override;
+		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c ) override {
+			if ( ( diff( red( c ), _r ) <= _t ) && ( diff( green( c ), _g ) <= _t ) && ( diff( blue( c ), _b ) <= _t ) ) a = 0;
+		}
 
 		/**
 		 * @brief Change the mask color
@@ -71,6 +78,16 @@ namespace mac {
 		 * @return float_t
 		 */
 		float_t threshhold() { return _t; }
+
+		/**
+		 * @brief Reset filter back to defaults
+		 */
+		void reset() override {
+			_r = 0;
+			_g = 0;
+			_b = 0;
+			_t = 0;
+		}
 
 	protected:
 		uint8_t _r;
