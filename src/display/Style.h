@@ -58,8 +58,8 @@ namespace mac {
 		/**
 		 * Icon bitmaps
 		 */
-		const Tilemap* controls = &guiControls;
-		const Tilemap* icons = &guiIcons;
+		const TilemapData* controls = &guiControls;
+		const TilemapData* icons = &guiIcons;
 
 		/**
 		 * Icon colors
