@@ -21,6 +21,14 @@ namespace mac {
 		*property = from;
 	}
 
+	TweenItem* TweenItem::remove(){
+		TweenItem* next = LinkedList<TweenItem>::next();
+		LinkedList<TweenItem>::remove();
+		_next = nullptr;
+		_prev = nullptr;
+		return next;
+	}
+
 	/**
 	 * Add an Tween
 	 */
@@ -40,12 +48,13 @@ namespace mac {
 			// Remove item if property matches
 			if ( item->property == property ) {
 				removedItem = item;
-				item = (TweenItem*)item->remove();
+				item = removedItem->remove();
+				if (removedItem == _tweens) _tweens = item;
 				delete removedItem;
 			}
 			// Move to next
 			else {
-				item = (TweenItem*)item->next();
+				item = item->next();
 			}
 		}
 	}
@@ -61,17 +70,18 @@ namespace mac {
 			item->current += dt;
 			if ( item->current > item->seconds ) item->current = item->seconds;
 			// Calculate value
-			*item->property = item->from + item->change * item->ease( item->current * item->seconds_inv );
-			// If tween is done, trigger callback then remove it
+			*(item->property) = item->from + item->change * item->ease( item->current * item->seconds_inv );
+			// If tween is done, remove it then trigger callback
 			if ( item->current == item->seconds ) {
-				if ( item->callback ) item->callback( item->callbackData );
 				removedItem = item;
-				item = (TweenItem*)item->remove();
+				item = removedItem->remove();
+				if (removedItem == _tweens) _tweens = item;
+				if ( removedItem->callback ) removedItem->callback( removedItem->callbackData );
 				delete removedItem;
 			}
 			// Move to next
 			else {
-				item = (TweenItem*)item->next();
+				item = item->next();
 			}
 		}
 	}

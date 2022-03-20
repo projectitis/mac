@@ -32,6 +32,12 @@ namespace mac {
 	public:
 		TweenItem( float_t* property, float_t from, float_t to, float_t seconds, EasingFunction ease, TweenCallback callback, void* callbackData );
 
+		/**
+		 * @brief Removes the tween item and returns the next one in the list
+		 * @return TweenItem* The next tween item
+		 */
+		TweenItem* remove();
+
 		float_t* property;
 
 		float_t from;
@@ -65,7 +71,7 @@ namespace mac {
 		void update( float_t dt );
 
 	private:
-		TweenItem* _tweens = 0;
+		TweenItem* _tweens = nullptr;
 
 	};
 

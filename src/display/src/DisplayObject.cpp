@@ -483,14 +483,10 @@ namespace mac {
 	* @param updateArea The area of the display being updated
 	*/
 	void DisplayObject::beginRender( ClipRect* updateArea ) {
-		Serial.println("DisplayObject::beginRender");
 		_dirty = false;
 		renderBounds->set( updateArea );
-		Serial.println("  updateArea set");
 		renderBounds->clip( globalBounds );
-		Serial.println("  globalBounds set");
 		globalToLocal( renderBounds );
-		Serial.println("  globalToLocal set");
 	}
 
 } // namespace

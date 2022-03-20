@@ -65,12 +65,12 @@ namespace mac {
 		/**
 		 * @brief Rect describing the graphical bounds of the glyph
 		 */
-		ClipRect* bounds;
+		ClipRect* bounds = nullptr;
 
 		/**
 		 * @brief Pointer to the character data
 		 */
-		const uint8_t* charData = 0;
+		const uint8_t* charData = nullptr;
 
 		/**
 		 * @brief Pointer to the current line of character data
@@ -90,7 +90,7 @@ namespace mac {
 		/**
 		 * @brief Width of the glyph (to next character)
 		 */
-		uint32_t width;
+		uint32_t width = 0;
 
 		/**
 		 * Inserts a glyph into the list into sorted order by x position

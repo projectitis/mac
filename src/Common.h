@@ -41,7 +41,7 @@ namespace mac {
 		* Define the floating point type to be used by mac
 		* Possible: float (default), double
 		*/
-	#ifdef MAC_USE_DOUBLE
+	#if MAC_USE_DOUBLE
 	typedef double float_t;
 	#else
 	typedef float float_t;
