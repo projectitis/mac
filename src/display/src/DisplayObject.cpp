@@ -473,7 +473,7 @@ namespace mac {
 		Filter* f;
 		while ( this->filters ) {
 			f = this->filters->next();
-			delete this->filters;
+			this->filters->recycle();
 			this->filters = f;
 		}
 	}

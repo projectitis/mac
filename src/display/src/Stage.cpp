@@ -160,11 +160,11 @@ namespace mac {
 										localx = child->globalToLocalX( x );
 										localy = child->globalToLocalY( y );
 										child->calcPixel( localx, localy );
-										if (child->mask == MaskType::inverse) child->_ra = 1 - child->_ra;
+										if ( child->mask == MaskType::inverse ) child->_ra = 1 - child->_ra;
 										child->_ra *= child->alpha;
 										ma = ( 1 - child->_ra ) * ma + child->_ra;
 									}
-									else if (child->mask == MaskType::inverse) {
+									else if ( child->mask == MaskType::inverse ) {
 										ma = 1;
 									}
 								}

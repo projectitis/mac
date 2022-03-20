@@ -16,7 +16,7 @@ namespace mac {
 	/**
 	 * Hue Saturation Value filter
 	 */
-	class HSVFilter : public Filter {
+	class HSVFilter : public Filter, public MemoryPool<Filter> {
 
 	public:
 		/**
@@ -26,7 +26,11 @@ namespace mac {
 		 * @param s The saturation shift (is in the range 0.0 to 1.0 after the shift)
 		 * @param v The value shift (is in the range 0.0 to 1.0 after the shift)
 		 */
-		HSVFilter( float_t h = 0, float_t s = 0, float_t v = 0 );
+		HSVFilter( float_t h = 0, float_t s = 0, float_t v = 0 ) {
+			this->h = h;
+			this->s = s;
+			this->v = v;
+		}
 
 		/**
 		 * @brief Apply the filter to the specified pixel
@@ -36,9 +40,27 @@ namespace mac {
 		 * @param a (in/out) The alpha value of the pixel being filtered
 		 * @param c (in/out) The color value of the pixel being filtered
 		 */
-		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c );
+		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c ) {
+			float_t h, s, v;
+			toHSV( c, h, s, v );
+			h += this->h;
+			s += this->s;
+			v += this->v;
+			c = to8888( h, s, v );
+		}
 
-		float_t h, s, v;
+		/**
+		 * @brief Reset filter back to defaults
+		 */
+		void reset() override {
+			h = 0;
+			s = 0;
+			v = 0;
+		}
+
+		float_t h = 0;
+		float_t s = 0;
+		float_t v = 0;
 
 	};
 

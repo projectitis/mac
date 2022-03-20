@@ -16,14 +16,16 @@ namespace mac {
 	/**
 	 * Shade (lighten and darken) filter
 	 */
-	class ShadeFilter : public Filter {
+	class ShadeFilter : public Filter, public MemoryPool<Filter> {
 	public:
 		/**
 		 * @brief Construct a new Shade Filter object
 		 *
 		 * @param shade The amount to shade by (-1.0 is fully dark, 1.0 is fully light)
 		 */
-		ShadeFilter( float_t amount );
+		ShadeFilter( float_t amount ) {
+			_a = ( amount < -1.0 ) ? -1.0 : ( amount > 1.0 ) ? 1.0 : amount;
+		}
 
 		/**
 		 * @brief Apply the filter to the specified pixel
@@ -33,7 +35,10 @@ namespace mac {
 		 * @param a (in/out) The alpha value of the pixel being filtered
 		 * @param c (in/out) The color value of the pixel being filtered
 		 */
-		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c );
+		void filterPixel( int16_t rx, int16_t ry, float_t& a, color888& c ) {
+			if ( _a < 0 ) c = darken( c, -_a );
+			else c = lighten( c, _a );
+		}
 
 		/**
 		 * @brief Set the amount of tint (0.0 - 1,.0)
