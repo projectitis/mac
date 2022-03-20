@@ -273,6 +273,7 @@ namespace mac {
 			charWidth = 0;
 			if ( c == '\0' ) { // EOF
 				_endOfText = true;
+				endCharIndex = _charIndex - 1;
 				break;
 			}
 			else if ( c == '\t' ) { // tab

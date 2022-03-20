@@ -130,9 +130,9 @@ namespace mac {
 		// Normal digital button actions
 		click = 1, // Short click and release
 		dbl_click = 2, // Two quick clicks in succession
-		press = 3, // A longer press and release (not common. See hold)
+		press = 3, // XXX A longer press and release (not common. See hold)
 		hold = 4, // Hold down
-		click_press = 5, // A quick click then a longer press and release (not common. See click_hold)
+		click_press = 5, // XXX A quick click then a longer press and release (not common. See click_hold)
 		click_hold = 6, // A quick click, then hold down
 
 		// Other digital button actions

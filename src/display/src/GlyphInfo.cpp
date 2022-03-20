@@ -18,6 +18,7 @@ namespace mac {
 		dataOffset = 0;
 		renderStarted = false;
 		code = 0;
+		charData = nullptr;
 	}
 
 	void GlyphInfo::set( char c ) {

@@ -1,6 +1,8 @@
 #include "../DisplayILI9341.h"
 #include <SPI.h>
-#include <DMAChannel.h>
+#if MAC_USE_DMA
+	#include <DMAChannel.h>
+#endif
 
 /**
  * Define ILI9341 commands
