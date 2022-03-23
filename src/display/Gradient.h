@@ -4,6 +4,7 @@
 
 #include "display/IDrawable.h"
 #include "graphics/Bitmap.h"
+#include "utils/MemoryPool.h"
 
 /**
  * mac (or μac) stands for "Microprocessor App Creator"
@@ -19,28 +20,13 @@ namespace mac {
 	 * XXX: Pool/recycle
 	 *
 	 **/
-	class GradientStop {
+	class GradientStop : public MemoryPool<GradientStop> {
 	public:
-		/**
-		 * Memory pool of recycled objects
-		 */
-		static GradientStop* pool;
-
-		/**
-		 * Create a new object or take one from the pool
-		 * @return The new or recycled object
-		 */
-		static GradientStop* Create();
-
-		/**
-		 * Return this object to the pool
-		 */
-		void recycle();
 
 		/**
 		 * Reset the object back to default settings
 		 */
-		void reset();
+		void reset() override;
 
 		/**
 		 * @brief update the stop
@@ -60,13 +46,6 @@ namespace mac {
 		float_t dg = 0.0;
 		float_t db = 0.0;
 		float_t da = 0.0;
-
-	protected:
-
-		/**
-		 * Pointer to next object in memory pool of recycled objects
-		 */
-		GradientStop* _poolNext = 0;
 	};
 
 	/**
@@ -91,7 +70,12 @@ namespace mac {
 		/**
 		 * @brief Removes all stops and sets default position
 		 */
-		void reset();
+		virtual void recycle() {}
+
+		/**
+		 * @brief Removes all stops and sets default position
+		 */
+		virtual void reset();
 
 		/**
 		 * @brief Specify the start and end points

@@ -20,27 +20,39 @@ namespace mac {
 	 */
 	#define MAC_USE_DOUBLE 0
 
-	 /**
-	  * Mac makes extensive use of object pooling to recycle objects instead of
-	  * creating new ones. This results in better performance, and less heap
-	  * fragmentation, but does require more RAM. On low RAM systems, or for
-	  * situations where you are using 1000s of simultanious objects you may need
-	  * to switch this off to use less RAM.
-	  */
+	/**
+	 * Mac makes extensive use of object pooling to recycle objects instead of
+	 * creating new ones. This results in better performance, and less heap
+	 * fragmentation, but does require more RAM. On low RAM systems, or for
+	 * situations where you are using 1000s of simultanious objects you may need
+	 * to switch this off to use less RAM.
+	 */
 	#define MAC_OBJECT_REUSE 1
 
-	  /**
-	   * XXX: Implement this flag
-	   * Use DMA for memory operations where possible
-	   */
+	/**
+	 * XXX: Implement this flag
+	 * Use DMA for memory operations where possible
+	 */
 	#define MAC_USE_DMA 0
 
+	/**
+	 * @brief Maximum title length for GUI widgets (default 32)
+	 */
+	#define MAC_GUI_MAX_TITLE_LEN 32
 
+	/**
+	 * @brief Maximum acronyn length for GUI widgets (default 3)
+	 */
+	#define MAC_GUI_MAX_ACRONYM_LEN 3
 
-	   /**
-		* Define the floating point type to be used by mac
-		* Possible: float (default), double
-		*/
+	/**
+	 * ######## ONLY MAKE CHANGES ABOVE THIS LINE ##########
+	*/
+
+	/**
+	 * Define the floating point type to be used by mac
+	 * Possible: float (default), double
+	 */
 	#if MAC_USE_DOUBLE
 	typedef double float_t;
 	#else

@@ -2,33 +2,16 @@
 
 namespace mac {
 
-	LinearGradient* LinearGradient::pool = 0;
-
 	LinearGradient* LinearGradient::Create( uint8_t numStops ) {
-        numStops = max( 2, numStops ); // Ensure at least 2 stops
-		LinearGradient* g;
-		if ( LinearGradient::pool ) {
-			g = LinearGradient::pool;
-			LinearGradient::pool = g->_poolNext;
-
-            g->_numStops = numStops;
-		    g->_stops = new GradientStop* [numStops];
-		    while ( numStops-- ) g->_stops[numStops] = GradientStop::Create();
-		}
-		else {
-			g = new LinearGradient(numStops);
-		}
+		LinearGradient* g = MemoryPool<LinearGradient>::Create();
+		g->_numStops = numStops;
+		g->_stops = new GradientStop * [numStops];
+		while ( numStops-- ) g->_stops[numStops] = GradientStop::Create();
 		return g;
 	}
 
 	void LinearGradient::recycle() {
-#ifdef MAC_OBJECT_REUSE
-		this->reset();
-		this->_poolNext = LinearGradient::pool;
-		LinearGradient::pool = this;
-#else
-		delete this;
-#endif
+		MemoryPool<LinearGradient>::recycle();
 	}
 
 	void LinearGradient::beginRender( ClipRect* updateArea ) {
@@ -51,7 +34,7 @@ namespace mac {
 					reverse();
 				}
 			}
-			else if (_reverse) {
+			else if ( _reverse ) {
 				_reverse = false;
 				reverse();
 			}
@@ -74,16 +57,25 @@ namespace mac {
 			// Screen area
 			_y0 = updateArea->y;
 
-			// Calculate pos at origin (pos0)
-			float_t m = dy/dx;
-			float_t x3 = _x + m*_y;
-			float_t x4 = _x2 + m*_y2;
-			float_t d = (x4-x3);
-			_pos0 = -x3 / d;
+			// vertical?
 
-            // Calculate steps to change gradient
-			_dx = 1.0 / d;
-			_dy = m * _dx;
+			if ( dx == 0.0 ) {
+				_dx = 0;
+				_dy = 1.0 / dy;
+				_pos0 = -_y * _dy;
+			}
+			else {
+				// Calculate pos at origin (pos0)
+				float_t m = dy / dx;
+				float_t x3 = _x + m * _y;
+				float_t x4 = _x2 + m * _y2;
+				float_t d = ( x4 - x3 );
+				_pos0 = -x3 / d;
+
+				// Calculate steps to change gradient
+				_dx = 1.0 / d;
+				_dy = m * _dx;
+			}
 		}
 	}
 
@@ -112,11 +104,11 @@ namespace mac {
 			}
 			_stops[_activeStop]->update( _pos );
 		}
-        _pos += _dx;
+		_pos += _dx;
 	}
 
-    void LinearGradient::skipPixel( int16_t rx, int16_t ry ) {
-        _pos += _dx;
-    }
+	void LinearGradient::skipPixel( int16_t rx, int16_t ry ) {
+		_pos += _dx;
+	}
 
 } // namespace

@@ -60,6 +60,11 @@ namespace mac {
 		virtual ~DisplayObject();
 
 		/**
+		 * @brief type (for RTTI)
+		 */
+		int type = 0;
+
+		/**
 		 * Reset back to default settings
 		 */
 		virtual void reset();
@@ -72,30 +77,30 @@ namespace mac {
 		/**
 		 * Listener for events
 		 */
-		Messenger* messenger;
+		Messenger* messenger = nullptr;
 
 		/**
 		 * Tween object for animations
 		 */
-		Tween* tweens;
+		Tween* tweens = nullptr;
 
 		/**
 		 * @brief Rect describing the bounds in global space (relative to stage)
 		 * This is calculated automatically from the origin and the local bounds during the rendering
 		 * sweep.
 		 */
-		ClipRect* globalBounds;
+		ClipRect* globalBounds = nullptr;
 
 		/**
 		 * @brief Rect describing the part of this object being rendered in the current cycle, in local space
 		 * This is calculated when beginRender is called
 		 */
-		ClipRect* renderBounds;
+		ClipRect* renderBounds = nullptr;
 
 		/**
 		 * @brief Rect describing the last dirty area in global space (relative to stage)
 		 */
-		ClipRect* cleanBounds;
+		ClipRect* cleanBounds = nullptr;
 
 		/**
 		 * Alpha of entire object
@@ -188,11 +193,6 @@ namespace mac {
 		 * Return true if there are children
 		 */
 		boolean hasChildren();
-
-		/**
-		 * Add a sibling as the next one in the list
-		 */
-		void add( DisplayObject* sibling );
 
 		/**
 		 * Get next sibling in the list
@@ -342,6 +342,33 @@ namespace mac {
 		virtual void beginRender( ClipRect* updateArea );
 
 	protected:
+
+		/**
+		 * Add a sibling as the next one in the list
+		 */
+		void _add( DisplayObject* sibling );
+
+		/**
+		 * @brief Called whenever a child is added to this display object
+		 * Override this to perform actions on display objects added using
+		 * any of the 'add' methods.
+		 * @see addChild
+		 * @see addChildBefore
+		 * @see _removed
+		 * @param child The display object that was added
+		 */
+		virtual void _added( DisplayObject* child ) {}
+
+		/**
+		 * @brief Called whenever a child is removed from this display object
+		 * Override this to perform actions on display objects removed using
+		 * any of the 'remove' methods.
+		 * @see removeChild
+		 * @see removeAllChildren
+		 * @see _added
+		 * @param child The display object that was removed
+		 */
+		virtual void _removed( DisplayObject* child ) {}
 
 		/**
 		 * Flag to indicate that the object needs to be redrawn

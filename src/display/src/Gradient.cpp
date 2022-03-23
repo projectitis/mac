@@ -2,38 +2,14 @@
 
 namespace mac {
 
-	GradientStop* GradientStop::pool = 0;
-
-	GradientStop* GradientStop::Create() {
-		GradientStop* g;
-		if ( GradientStop::pool ) {
-			g = GradientStop::pool;
-			GradientStop::pool = g->_poolNext;
-		}
-		else {
-			g = new GradientStop();
-		}
-		return g;
-	}
-
-	void GradientStop::recycle() {
-#ifdef MAC_OBJECT_REUSE
-		this->reset();
-		this->_poolNext = GradientStop::pool;
-		GradientStop::pool = this;
-#else
-		delete this;
-#endif
-	}
-
 	Gradient::Gradient( uint8_t numStops ) {
-		numStops = max(2, numStops);
+		numStops = max( 2, numStops );
 		_numStops = numStops;
-		_stops = new GradientStop* [numStops];
+		_stops = new GradientStop * [numStops];
 		while ( numStops-- ) _stops[numStops] = GradientStop::Create();
 	}
 
-	Gradient::~Gradient(){
+	Gradient::~Gradient() {
 		reset();
 	}
 
@@ -95,16 +71,16 @@ namespace mac {
 	 */
 	Gradient* Gradient::stop( uint8_t index, color888 color, float_t alpha, float_t position ) {
 		_needsCalc = true;
-		if (_reverse) index = _numStops - index - 1;
+		if ( _reverse ) index = _numStops - index - 1;
 		_stops[index]->color = color;
 		_stops[index]->alpha = alpha;
-		_stops[index]->position = _reverse?(1.0-position):position;
+		_stops[index]->position = _reverse ? ( 1.0 - position ) : position;
 		return this;
 	}
 
 	/**
 	 * @brief Reverse the stops
-	 *  
+	 *
 	 */
 	void Gradient::reverse() {
 		uint8_t n = 0;
@@ -116,7 +92,7 @@ namespace mac {
 			n++;
 		}
 		n = 0;
-		while ( n < _numStops) {
+		while ( n < _numStops ) {
 			_stops[n]->position = 1 - _stops[n]->position;
 			n++;
 		}

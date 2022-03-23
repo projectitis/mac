@@ -46,6 +46,11 @@ namespace mac {
 		static Sprite* Create( const TilemapData* tilemapData, uint16_t tileIndex = 0 );
 
 		/**
+		 * @brief Reset the sprite back to defaults
+		 */
+		void reset() override;
+
+		/**
 		 * Update the display object.
 		 * @param	dt 			Time since last update in seconds
 		 */

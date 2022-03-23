@@ -28,8 +28,7 @@
   * Include all mac headers
   */
 #include "Common.h"
-#include "display/App.h"
-#include "display/Stage.h"
+#include "display/GuiApp.h"
 #include "display/hardware/DisplayILI9341.h"
 #include "physics/Tween.h"
 

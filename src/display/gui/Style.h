@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MAC_STYLEH_
-#define _MAC_STYLEH_ 1
+#ifndef _MAC_GUISTYLEH_
+#define _MAC_GUISTYLEH_ 1
 
 #include "Common.h"
 #include "fonts/OpenSans11.h"
@@ -16,6 +16,23 @@
  * mac is distributed under the MIT licence
  **/
 namespace mac {
+
+	/**
+	 * Styles for a text element
+	 */
+	class TextStyle {
+		color888 color = 0xecf0f1;
+		color888 inactiveColor = 0x95a5a6;
+	};
+
+	/**
+	 * Styles for a panel element
+	 */
+	class PanelStyle {
+		color888 backgroundColor = 0x1c1d1e;
+		color888 borderColor = 0x121314;
+		color888 highlightColor = 0x202122;
+	};
 
 	/**
 	 * Styles for GUI
@@ -48,12 +65,6 @@ namespace mac {
 
 		color888 labelColor = 0x7f8c8d;
 		color888 labelInactiveColor = 0x454646;
-
-		/**
-		 * Feature colours
-		 */
-		color888 featureColor[7] = { 0xf2c500, 0xe87e04, 0xe94b35, 0x00bd9c, 0x1fce6d, 0x2c97de, 0x9c56b8 };
-		color888 featureInactiveColor[7] = { 0xf59d00, 0xd55400, 0xc23824, 0x00a185, 0x1aaf5d, 0x227fbb, 0x8f3faf };
 
 		/**
 		 * Icon bitmaps
