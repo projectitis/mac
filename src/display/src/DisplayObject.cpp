@@ -84,9 +84,11 @@ namespace mac {
 			child->_next = 0;
 		}
 		else {
-			_childrenTop->add( child );
+			_childrenTop->_add( child );
 		}
 		_childrenTop = child;
+		dirty();
+		_added( child );
 	}
 
 	/**
@@ -112,6 +114,7 @@ namespace mac {
 				}
 				displayObject->_parent = 0;
 				dirty();
+				_removed( child );
 				break;
 			}
 			displayObject = displayObject->next();
@@ -141,6 +144,7 @@ namespace mac {
 				}
 				displayObject->_parent = 0;
 				dirty();
+				_removed( displayObject );
 				break;
 			}
 			displayObject = displayObject->next();
@@ -156,6 +160,7 @@ namespace mac {
 		DisplayObject* nextDisplayObject;
 		while ( displayObject ) {
 			nextDisplayObject = displayObject->next();
+			_removed( displayObject );
 			if ( free ) delete displayObject;
 			else {
 				displayObject->_parent = 0;
@@ -241,7 +246,7 @@ namespace mac {
 	/**
 	 * Add or insert a sibling after this one
 	 */
-	void DisplayObject::add( DisplayObject* sibling ) {
+	void DisplayObject::_add( DisplayObject* sibling ) {
 		if ( _next ) {
 			_next->_prev = sibling;
 			sibling->_next = _next;

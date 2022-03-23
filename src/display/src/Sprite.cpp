@@ -8,12 +8,21 @@ namespace mac {
 		return sprite;
 	}
 
+	void Sprite::reset() {
+		tilemapData = nullptr;
+		tileIndex = 0;
+		_getPixelAs8888 = nullptr;
+	}
+
 	void Sprite::set( const TilemapData* tilemapData, uint16_t tileIndex ) {
-		this->tilemapData = tilemapData;
-		this->tileIndex = tileIndex;
-		width( tilemapData->tileWidth );
-		height( tilemapData->tileHeight );
-		_getPixelAs8888 = getAccessor8888( tilemapData->pixelFormat );
+		reset();
+		if ( tilemapData ) {
+			this->tilemapData = tilemapData;
+			this->tileIndex = tileIndex;
+			width( tilemapData->tileWidth );
+			height( tilemapData->tileHeight );
+			_getPixelAs8888 = getAccessor8888( tilemapData->pixelFormat );
+		}
 		dirty();
 	}
 

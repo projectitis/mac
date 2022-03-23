@@ -15,7 +15,7 @@
 namespace mac {
 
 	/**
-	 * Common events. Define any user events from 256 onward.
+	 * Common events. 0-255 are reserved. Define any user events from 256 onward.
 	 */
 	typedef enum {
 		input_next = 1,	// Core input events
@@ -54,7 +54,9 @@ namespace mac {
 		action_fastforward = 53,
 
 		update_all = 60,	// Update events
-		update_render = 61
+		update_render = 61,
+
+		gui_menuitem_selected = 70		// Gui events
 	} Event;
 
 	/**
