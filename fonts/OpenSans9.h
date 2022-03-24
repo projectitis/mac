@@ -1,7 +1,7 @@
 #ifndef _PACKEDBDF_OPENSANS9_
 #define _PACKEDBDF_OPENSANS9_
 
-#include "PackedBDF.h"
+#include "display/PackedBDF.h"
 
 static const unsigned char OpenSans9_data[] = {
 0x02,0x20,0x08,0x00,0x04,0xe0,0x08,0x66,0x22,0x10,

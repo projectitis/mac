@@ -41,9 +41,8 @@ namespace mac {
          * @brief Construct a new Widget object
          *
          * @param style The style to set
-         * @param messenger The messneger to use for events (should be passed in from parent)
          */
-        Widget( Style* style, Messenger* messenger );
+        Widget( Style* style );
 
         /**
          * @brief Set the Style object
@@ -61,17 +60,6 @@ namespace mac {
          * @return Style* The style object
          */
         virtual Style* style();
-
-        /**
-         * @brief Get the event messenger object
-         */
-        virtual Messenger* messenger() { return _messenger; }
-
-        /**
-         * @brief Set the event messenger object
-         * Also sets the messenger recursively for all children
-         */
-        virtual void messenger( Messenger* messenger );
 
         /**
          * @brief Change the title and acronym of the widget
@@ -141,11 +129,6 @@ namespace mac {
          * @brief The style object
          */
         Style* _style = nullptr;
-
-        /**
-         * @brief The event messenger object
-         */
-        Messenger* _messenger = nullptr;
 
         /**
          * @brief The widget title

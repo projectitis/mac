@@ -1,7 +1,7 @@
 #ifndef _PACKEDBDF_OPENSANSEXTRABOLD9_
 #define _PACKEDBDF_OPENSANSEXTRABOLD9_
 
-#include "PackedBDF.h"
+#include "display/PackedBDF.h"
 
 static const unsigned char OpenSansExtraBold9_data[] = {
 0x02,0x20,0x10,0x00,0x06,0xe0,0x18,0xb6,0xdb,0x1c,

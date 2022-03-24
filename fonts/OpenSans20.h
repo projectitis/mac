@@ -1,7 +1,7 @@
 #ifndef _PACKEDBDF_OPENSANS20_
 #define _PACKEDBDF_OPENSANS20_
 
-#include "PackedBDF.h"
+#include "display/PackedBDF.h"
 
 static const unsigned char OpenSans20_data[] = {
 0x01,0x08,0x00,0xa0,0x00,0x03,0x70,0x80,0xa0,0x79,

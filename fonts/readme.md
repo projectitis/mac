@@ -1,4 +1,9 @@
-# Packed BDF font format
+# Fonts
+
+All fonts here are available under the OFL. I am not the original creator of the fonts. I have simply converted them to Packed BDF.
+
+## Packed BDF font format
+
 Packed BDF (`packedbdf_t` or `ILI9341_t3_font_t`) is a font format based on BDF for use in c/c++ applications - most notably for the [Teensy](https://www.pjrc.com/teensy/) microprocessor development boards.
 
 ---
@@ -28,4 +33,5 @@ typedef packedbdf_t ILI9341_t3_font_t;
 ```
 ---
 ## Explanation
+
 For full details, including how to generate these fonts yourself, visit [github.com/projectitis/packedbdf](https://github.com/projectitis/packedbdf).

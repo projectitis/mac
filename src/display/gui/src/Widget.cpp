@@ -4,9 +4,8 @@ namespace mac {
 
     Widget::Widget() {}
 
-    Widget::Widget( Style* style, Messenger* messenger ) {
+    Widget::Widget( Style* style ) {
         this->_style = style;
-        this->_messenger = messenger;
         /*
         this->_icon = Sprite::Create( _style->icons, 0 );
         addChild( this->_icon );
@@ -75,7 +74,6 @@ namespace mac {
         // if the child is a GUI Display Object
         if ( child->type >= WidgetType::WTMin && child->type <= WidgetType::WTMax ) {
             ( (Widget*)child )->style( _style, true );
-            ( (Widget*)child )->messenger( _messenger );
         }
         _needsArrange = true;
     }
@@ -101,17 +99,6 @@ namespace mac {
 
     Style* Widget::style() {
         return _style;
-    }
-
-    void Widget::messenger( Messenger* messenger ) {
-        this->_messenger = messenger;
-        DisplayObject* child = _children;
-        while ( child ) {
-            if ( child->type >= WidgetType::WTMin && child->type <= WidgetType::WTMax ) {
-                ( (Widget*)child )->messenger( messenger );
-            }
-            child = child->next();
-        }
     }
 
     void Widget::width( float_t w ) {
