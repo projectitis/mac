@@ -1,7 +1,7 @@
 #ifndef _PACKEDBDF_OPENSANS24_
 #define _PACKEDBDF_OPENSANS24_
 
-#include "PackedBDF.h"
+#include "display/PackedBDF.h"
 
 static const unsigned char OpenSans24_data[] = {
 0x01,0x08,0x00,0xc0,0x00,0x04,0x88,0x80,0xc0,0x3d,

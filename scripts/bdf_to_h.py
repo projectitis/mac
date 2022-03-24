@@ -52,25 +52,25 @@ def log(*args):
 
 # function defs
 def bits_required_unsigned( max ):   
-	n = 1;
+	n = 1
 	if (max < 0): max = 0
 	while max >= (1 << n): n+=1
 	return n
 
 def bits_required_signed(min, max):
-	n = 2;
-	if (min > 0): min = 0;
-	if (max < 0): max = 0;
+	n = 2
+	if (min > 0): min = 0
+	if (max < 0): max = 0
 	while min < -(1 << (n-1)): n+=1
 	while max >= (1 << (n-1)): n+=1
 	return n
 
 def pixel(glyph, x, y):
-	if x >= glyph['width']: return 0;
-	if y >= glyph['height']: return 0;
+	if x >= glyph['width']: return 0
+	if y >= glyph['height']: return 0
 	# grab the correct byte
 	#b = glyph['data'][(((glyph['width'] + 7) >> 3) * y) + (x >> 3)];
-	b = glyph['data'][(((glyph['width']*bits_per_pixel + 7) >> 3) * y) + (x >> (3-bpp_index))];
+	b = glyph['data'][(((glyph['width']*bits_per_pixel + 7) >> 3) * y) + (x >> (3-bpp_index))]
 	# firstly, adjust x to current byte
 	x = x % pix_per_byte
 	# now move pixel to least significant spot
@@ -89,8 +89,8 @@ def output_bit(bit):
 	global output_state_byte, output_state_bytecount, output_state_bitcount, output_state_linelen, outstr
 
 	bitmask = 1 << (7 - output_state_bitcount)
-	if bit: output_state_byte |= bitmask;
-	else: output_state_byte &= ~bitmask;
+	if bit: output_state_byte |= bitmask
+	else: output_state_byte &= ~bitmask
 	
 	output_state_bitcount += 1
 	if output_state_bitcount >= 8:
@@ -158,13 +158,13 @@ def output_glyph(glyph):
 	y = 0
 	if bits_per_pixel==1:
 		while y < glyph['height']:
-			identical_count = num_lines_identical(glyph, y);
+			identical_count = num_lines_identical(glyph, y)
 			if (identical_count == 0):
 				output_bit(0)
 				output_line(glyph, y)
 			else:
 				output_bit(1)
-				if identical_count > 6: identical_count = 6;
+				if identical_count > 6: identical_count = 6
 				output_number(identical_count - 1, 3)
 				output_line(glyph, y)
 				y += identical_count

@@ -6,7 +6,6 @@ namespace mac {
         serialBegin(true);
 
         window = Window::Create( title, acronym, icon );
-        window->messenger( messenger );
         window->width( display->width() );
         window->height( display->height() );
         window->style( style );
