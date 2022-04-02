@@ -81,6 +81,22 @@ namespace mac {
 		 */
 		virtual void endRender() {}
 
+		/**
+		 * @brief Return the color calculated by the last calcPixel call
+		 * @return color888 The color
+		 */
+		inline color888 getCalcColor() {
+			return _rc;
+		}
+
+		/**
+		 * @brief Return the alpha calculated by the last calcPixel call
+		 * @return float_t The alpha
+		 */
+		inline float_t getCalcAlpha() {
+			return _ra;
+		}
+
 	protected:
 		/**
 		 * @brief The color from the previous call to calcPixel

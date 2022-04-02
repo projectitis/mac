@@ -289,36 +289,36 @@ namespace mac {
 		q = v * ( 1.0f - s * f );
 		t = v * ( 1.0f - s * ( 1.0f - f ) );
 		switch ( i ) {
-		case 0:
-			r = v;
-			g = t;
-			b = p;
-			break;
-		case 1:
-			r = q;
-			g = v;
-			b = p;
-			break;
-		case 2:
-			r = p;
-			g = v;
-			b = t;
-			break;
-		case 3:
-			r = p;
-			g = q;
-			b = v;
-			break;
-		case 4:
-			r = t;
-			g = p;
-			b = v;
-			break;
-		default:		// case 5:
-			r = v;
-			g = p;
-			b = q;
-			break;
+			case 0:
+				r = v;
+				g = t;
+				b = p;
+				break;
+			case 1:
+				r = q;
+				g = v;
+				b = p;
+				break;
+			case 2:
+				r = p;
+				g = v;
+				b = t;
+				break;
+			case 3:
+				r = p;
+				g = q;
+				b = v;
+				break;
+			case 4:
+				r = t;
+				g = p;
+				b = v;
+				break;
+			default:		// case 5:
+				r = v;
+				g = p;
+				b = q;
+				break;
 		}
 
 		return ( (uint8_t)( r * 255.0f ) << 16 ) | ( (uint8_t)( g * 255.0f ) << 8 ) | (uint8_t)( b * 255.0f );
