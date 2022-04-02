@@ -83,9 +83,9 @@ namespace mac {
 		color888 color;
 
 		/**
-		 * Set the tilemap and the tileIndex that teh sprite uses.
+		 * Set the tilemap and the tileIndex that the sprite uses.
 		 * @param tilemap 	The tilemap to use
-		 * @param tileIndex The index of teh active tile
+		 * @param tileIndex The index of the active tile
 		 */
 		virtual void set( const TilemapData* tilemapData, uint16_t tileIndex = 0 );
 

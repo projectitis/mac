@@ -214,11 +214,12 @@ namespace mac {
 
 	void Stage::_beginLine( DisplayObject* object, uint16_t y ) {
 		// Process object
-		object->beginLine( object->globalToLocalY( y ) );
+		float_t ly = object->globalToLocalY( y );
+		object->beginLine( ly );
 		// Process filters
 		Filter* filter = object->filters;
 		while ( filter ) {
-			filter->beginLine( y );
+			filter->beginLine( ly );
 			filter = filter->next();
 		}
 		// Process masks

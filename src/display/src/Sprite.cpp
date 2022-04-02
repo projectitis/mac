@@ -63,7 +63,7 @@ namespace mac {
 				_rc = color;
 				break;
 			default:
-				_ra = ( _rc >> 24 ) / 255.0; // TODO: pass as uint8_t?
+				_ra = ( _rc >> 24 ) / 255.0;
 		}
 	}
 
